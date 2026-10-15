@@ -1,7 +1,7 @@
 // Image Generator — the page frame of the module's one page, the style creator
 // (the topbar carries its way back to the Playbook).
 
-import { html } from "../lib/html.js?v=1788";
+import { html } from "../lib/html.js?v=1790";
 
 /**
  * @param {{section?:string, back?:{path:string,label:string}, aside?:object, body:object, fill?:boolean}} opts

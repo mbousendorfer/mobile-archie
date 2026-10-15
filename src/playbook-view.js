@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1788";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1790";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -26,11 +26,11 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1788";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1788";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1788";
-import { isFlagOn } from "./feature-flags.js?v=1788";
-import { parseHashParams } from "./url-state.js?v=1788";
+} from "./playbook-brand-kit.js?v=1790";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1790";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1790";
+import { isFlagOn } from "./feature-flags.js?v=1790";
+import { parseHashParams } from "./url-state.js?v=1790";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -44,16 +44,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1788";
+} from "./network-voice.js?v=1790";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1788";
-import { showToast } from "./components/toast.js?v=1788";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1788";
-import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1788";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1788";
+} from "./voice-coach-store.js?v=1790";
+import { showToast } from "./components/toast.js?v=1790";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1790";
+import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1790";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1790";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2571,8 +2571,13 @@ function nvNetworkReadBlocks(data, net) {
   const parts = NV_FIELDS.map(([field, title], n) => {
     const own = isOverridden(data, net, field);
     const value = nvFieldValue(data, net, field);
-    const body = field === "signatureHooks" || field === "closingPatterns" ? pb2Lines(value) : pb2Text(value);
-    return pb2Block(title, body, {
+    const content = field === "signatureHooks" || field === "closingPatterns" ? pb2Lines(value) : pb2Text(value);
+    // A borrowed part carries its own way out: Optimize, the wizard on this part.
+    const go =
+      !own && canEditView() && !editScope
+        ? `<div class="pb2-nv-block-go"><button type="button" class="ap-button stroked blue" data-nv-optimize-part="${field}" aria-label="${esc(`Optimize ${title.toLowerCase()} for ${networkLabel(net)}`)}"><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Optimize</span></button></div>`
+        : "";
+    return pb2Block(title, content + go, {
       index: 3 + n,
       aside: nvSourceBadge(data, net, field),
       className: own ? "" : "pb2-nv-placeholder",

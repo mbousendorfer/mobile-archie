@@ -3,14 +3,14 @@
 // the Playbook's look, the network's shape. The studio stays one click away for
 // everything else. Headless, and the same services as the studio.
 
-import { QUICK_PRESETS } from "./config/style-presets.js?v=1788";
-import { MOCK } from "./config/mock.js?v=1788";
-import { DRAFT_NETWORK, formatById, shapesForBrand } from "./config/formats.js?v=1788";
-import { hashString } from "./lib/prng.js?v=1788";
-import { copyService, imageGenerationService } from "./services/index.js?v=1788";
-import { styleThumbUrl } from "./ui/style-thumb.js?v=1788";
-import { getBrand, getStyle, getStylesForBrand, registerOneOffStyle } from "./state/store.js?v=1788";
-import { oneOffStyleFrom } from "./state/style-actions.js?v=1788";
+import { QUICK_PRESETS } from "./config/style-presets.js?v=1790";
+import { MOCK } from "./config/mock.js?v=1790";
+import { DRAFT_NETWORK, formatById, shapesForBrand } from "./config/formats.js?v=1790";
+import { hashString } from "./lib/prng.js?v=1790";
+import { copyService, imageGenerationService } from "./services/index.js?v=1790";
+import { styleThumbUrl } from "./ui/style-thumb.js?v=1790";
+import { getBrand, getStyle, getStylesForBrand, registerOneOffStyle } from "./state/store.js?v=1790";
+import { oneOffStyleFrom } from "./state/style-actions.js?v=1790";
 
 /**
  * What the chat can offer: six styles (the Playbook's own first, then one

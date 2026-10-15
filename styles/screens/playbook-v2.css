@@ -1051,6 +1051,20 @@ button.pb2-nv-part__hit:focus-visible {
   color: var(--ref-color-grey-60);
 }
 
+/* Its Optimize sits at the block's foot, hug-width — pinned to the bottom so
+   the two blocks of a row line their buttons up. */
+.pb2-nv-placeholder > .pb2-block__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.pb2-nv-block-go {
+  display: flex;
+  margin-top: auto;
+  padding-top: var(--ref-spacing-sm);
+}
+
 /* A part's state in its block head, on the right where the caption sat. */
 .pb2-nv-status {
   flex-shrink: 0;
