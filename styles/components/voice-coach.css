@@ -118,6 +118,18 @@ i.memory-mark {
   container-type: inline-size;
 }
 
+/* Nothing learned yet: the block reads disabled — the band loses its butter
+   (grey-05), the line goes grey-60 italic. Archie's colour comes back with
+   his first proposal. */
+.pb2-block--memory:has(.pb2-empty) > .pb2-block__head {
+  background: var(--app-surface-subtle);
+}
+
+.pb2-block--memory .pb2-empty {
+  color: var(--ref-color-grey-60);
+  font-style: italic;
+}
+
 /* In the Playbook's block the card fills the width — its only difference from
    the chat's (the chat keeps its 520px). */
 .memory-cards > .memory-card {
