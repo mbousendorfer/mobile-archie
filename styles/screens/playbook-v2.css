@@ -771,6 +771,13 @@
   min-width: 0;
 }
 
+/* Every network has a tab: on a narrow page the row scrolls sideways rather
+   than overflow its panel. */
+.pb2-nettabs > .ap-tabs-nav {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
 /* The level, named in words — weight carries it, never a lighter grey. */
 .pb2-nv-level {
   margin: 0 0 var(--ref-spacing-xs);
@@ -805,6 +812,46 @@
   color: var(--ref-color-grey-80);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Optimize for X — Archie's offer under a network that still writes like the
+   base. A hug-width CTA, never stretched. */
+.pb2-nv-offer {
+  display: flex;
+  margin-top: var(--ref-spacing-sm);
+}
+
+/* The base tab's "Your voice on other networks": one row per network — its
+   name (opens its tab), where it stands in words, the offer when there is one. */
+.pb2-nv-others {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pb2-nv-others__row {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr) auto;
+  gap: var(--ref-spacing-sm);
+  align-items: center;
+  min-height: 44px;
+}
+
+.pb2-nv-others__row + .pb2-nv-others__row {
+  border-top: 1px solid var(--ref-color-grey-20);
+}
+
+.pb2-nv-others__net {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  justify-self: start;
+}
+
+.pb2-nv-others__level {
+  color: var(--ref-color-grey-80);
 }
 
 /* "Adapt for X" / "Use the base voice" sit under the field they switch. */

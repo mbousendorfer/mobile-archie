@@ -21,9 +21,9 @@
 // ON an overridden hook is written in one language. Per-language × per-network
 // examples when a brand actually publishes in two languages on one network.
 
-import { isFlagOn } from "./feature-flags.js?v=1760";
-import { escapeHtml } from "./utils.js?v=1760";
-import { NETWORKS, normalizeNetwork, getConnectedProfileById } from "./social-profiles.js?v=1760";
+import { isFlagOn } from "./feature-flags.js?v=1763";
+import { escapeHtml } from "./utils.js?v=1763";
+import { NETWORKS, normalizeNetwork, getConnectedProfileById } from "./social-profiles.js?v=1763";
 
 export const NETWORK_FIELDS = ["signatureHooks", "closingPatterns", "formattingStyle", "visualStyle"];
 const LIST_FIELDS = new Set(["signatureHooks", "closingPatterns"]);
@@ -53,13 +53,19 @@ export function baseNetwork(ctx) {
   );
 }
 
-// The networks this Playbook has a voice for: the base first, then the ones it
-// publishes on, then any adaptation added by hand.
+// Every network has a voice from the start — the base's, until it's optimized.
+// Order: the base, the ones it publishes on, the rest. Optimizing never moves
+// a network: a tab must not jump under the cursor.
 export function voiceNetworks(ctx) {
-  const list = [baseNetwork(ctx), ...(ctx?.connectedSocials || []), ...Object.keys(ctx?.voiceByNetwork || {})].map(
-    known,
-  );
+  const list = [baseNetwork(ctx), ...(ctx?.connectedSocials || []), ...Object.keys(NETWORKS)].map(known);
   return [...new Set(list.filter(Boolean))];
+}
+
+// Optimized = at least one part adapted to the network. Rules alone don't make
+// it: they were learned from use, the parts are what Optimize writes.
+export function isOptimized(ctx, n) {
+  const e = networkEntry(ctx, n);
+  return !!e && NETWORK_FIELDS.some((f) => e[f] !== undefined);
 }
 
 export function networkEntry(ctx, n) {
@@ -93,7 +99,7 @@ export function maturity(ctx, n) {
   }
   const score = adapted + rules;
   const level = score === 0 ? "new" : score <= 2 ? "learning" : score <= 4 ? "shaping" : "tuned";
-  const label = { new: "Same as base", learning: "Learning", shaping: "Taking shape", tuned: "Tuned" }[level];
+  const label = { new: "Not optimized", learning: "Learning", shaping: "Taking shape", tuned: "Tuned" }[level];
   const parts = [];
   if (rules) parts.push(`${rules} ${rules === 1 ? "rule" : "rules"} learned`);
   if (adapted) parts.push(`${adapted} of ${NETWORK_FIELDS.length} parts adapted`);
@@ -102,7 +108,7 @@ export function maturity(ctx, n) {
     label,
     detail: parts.length
       ? `${parts.join(" · ")}.`
-      : `Writes like your ${networkLabel(baseNetwork(ctx))} voice until it learns otherwise.`,
+      : `Writes like your ${networkLabel(baseNetwork(ctx))} voice for now.`,
   };
 }
 

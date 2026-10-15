@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1760";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1763";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -27,36 +27,37 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1760";
+} from "./playbook-brand-kit.js?v=1763";
 import {
   analyzeWebsite,
   discoverCompetitors,
   competitorKey,
   analyzeNetworkVoices,
-} from "./context-mock-analysis.js?v=1760";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1760";
-import { isFlagOn } from "./feature-flags.js?v=1760";
-import { parseHashParams } from "./url-state.js?v=1760";
+} from "./context-mock-analysis.js?v=1763";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1763";
+import { isFlagOn } from "./feature-flags.js?v=1763";
+import { parseHashParams } from "./url-state.js?v=1763";
 import {
   networkVoicesOn,
   baseNetwork,
   voiceNetworks,
   networkEntry,
   isOverridden,
+  isOptimized,
   maturity,
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1760";
+} from "./network-voice.js?v=1763";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1760";
-import { NETWORKS } from "./social-profiles.js?v=1760";
-import { showToast } from "./components/toast.js?v=1760";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1760";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1760";
+} from "./voice-coach-store.js?v=1763";
+import { NETWORKS } from "./social-profiles.js?v=1763";
+import { showToast } from "./components/toast.js?v=1763";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1763";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1763";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2603,33 +2604,14 @@ function editEntry(data, field) {
 
 function renderNetworkSwitcher(data) {
   const active = activeNetworkFor(data);
-  const nets = voiceNetworks(data);
-  const missing = Object.keys(NETWORKS).filter((n) => !nets.includes(n));
-  const add =
-    canEditView() && !editScope && missing.length
-      ? `<details class="recap__panel-menu" data-recap-learn-menu>
-          <summary class="ap-button ghost grey recap__panel-menu-toggle">
-            <i class="ap-icon-plus" aria-hidden="true"></i><span>Add a network</span>
-          </summary>
-          <div class="ap-action-dropdown recap__panel-menu-pop" role="menu" aria-label="Add a network voice">
-            ${missing
-              .map(
-                (n) => `<button type="button" class="ap-action-dropdown-item" data-nv-add="${n}" role="menuitem">
-                  <i class="${networkIcon(n)}" aria-hidden="true"></i>
-                  <div class="ap-action-dropdown-item-text"><div class="ap-action-dropdown-item-label-container"><span class="ap-action-dropdown-item-label">${esc(networkLabel(n))}</span></div></div>
-                </button>`,
-              )
-              .join("")}
-          </div>
-        </details>`
-      : "";
-  // DS tabs, a second row under the section tabs: one per network voice. The
-  // base is not flagged here — "The voice" block says where it was learned.
+  // DS tabs, a second row under the section tabs: one per network — all of
+  // them, from the start (a network not optimized yet writes in the base
+  // voice). The base is not flagged here — "The voice" block says where it was learned.
   return `
     <div class="pb2-netbar">
       <div class="ap-tabs pb2-nettabs">
         <div class="ap-tabs-nav" role="tablist" aria-label="Voice per network">
-          ${nets
+          ${voiceNetworks(data)
             .map((n) => {
               const on = n === active;
               const pending = getSuggestions(data.id, { network: n }).length;
@@ -2642,8 +2624,15 @@ function renderNetworkSwitcher(data) {
             .join("")}
         </div>
       </div>
-      ${add}
     </div>`;
+}
+
+// Archie offers to optimize a network still writing in the base voice: one
+// click, it adapts the parts to how posts work there (rules kept). Read mode
+// only — in edit, "Adapt for X" does it part by part.
+function nvOptimizeButton(data, net, { tone = "primary orange" } = {}) {
+  if (!canEditView() || editScope || isOptimized(data, net)) return "";
+  return `<button type="button" class="ap-button ${tone}" data-nv-optimize="${net}"><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Optimize for ${esc(networkLabel(net))}</span></button>`;
 }
 
 // A rule already in the voice — plain text beside the olive mark
@@ -2697,10 +2686,13 @@ function nvBaseBlocks(data, ve) {
       icon: "ap-icon-quote",
       caption: `${maturity(data, net).detail} Other networks start from it.`,
     }),
-    nvSuggestionsBlock(data, net, 1),
-    nvRulesBlock(data, net, 2),
-    ...pb2VoiceFieldBlocks(data, ve, 3),
-    pb2AvoidBlock(data, 7, "Every network"),
+    // Where the voice stands elsewhere, and the offer to optimize — a proposal,
+    // so it sits with the proposals.
+    nvOthersBlock(data, 1),
+    nvSuggestionsBlock(data, net, 2),
+    nvRulesBlock(data, net, 3),
+    ...pb2VoiceFieldBlocks(data, ve, 4),
+    pb2AvoidBlock(data, 8, "Every network"),
   ].filter(Boolean);
 }
 
@@ -2709,12 +2701,43 @@ const NV_CAPTION = (data, net, field) =>
 
 function nvIdentityBlock(data, net) {
   const m = maturity(data, net);
+  const base = esc(networkLabel(baseNetwork(data)));
+  const offer = nvOptimizeButton(data, net);
   return pb2Block(
     `Your ${networkLabel(net)} voice`,
     `<p class="pb2-nv-level"><strong>${esc(m.label)}</strong> · ${esc(m.detail)}</p>
-     <p class="pb2-prose">It speaks like your ${esc(networkLabel(baseNetwork(data)))} voice, except for what's adapted below.</p>`,
+     <p class="pb2-prose">${
+       isOptimized(data, net)
+         ? `It speaks like your ${base} voice, except for what's adapted below.`
+         : `I can adapt it to how posts work on ${esc(networkLabel(net))} — the openings, closings, formatting and emoji that fit there. What I've learned stays.`
+     }</p>${offer ? `<div class="pb2-nv-offer">${offer}</div>` : ""}`,
     { wide: true, index: 0, icon: networkIcon(net) },
   );
+}
+
+// On the base tab: where the voice stands on every other network, with the
+// offer to optimize the ones that still write like the base.
+function nvOthersBlock(data, index) {
+  const base = baseNetwork(data);
+  const rows = voiceNetworks(data)
+    .filter((n) => n !== base)
+    .map((n) => {
+      const m = maturity(data, n);
+      return `<li class="pb2-nv-others__row">
+        <button type="button" class="ap-link standalone pb2-nv-others__net" data-nv-net="${n}">
+          <i class="${networkIcon(n)}" aria-hidden="true"></i><span>${esc(networkLabel(n))}</span>
+        </button>
+        <span class="pb2-nv-others__level">${esc(m.label)}</span>
+        <span class="pb2-nv-others__action">${nvOptimizeButton(data, n, { tone: "stroked blue" })}</span>
+      </li>`;
+    })
+    .join("");
+  return pb2Block("Your voice on other networks", `<ul class="pb2-nv-others">${rows}</ul>`, {
+    wide: true,
+    index,
+    icon: "ap-icon-sparkles",
+    caption: `They start from your ${networkLabel(base)} voice`,
+  });
 }
 
 // A part this network inherits, in one line: what the base says, shortened.
@@ -2856,7 +2879,12 @@ function nvRecapBody(data, edit) {
         : renderText(nvFieldValue(data, net, field));
     return renderRow(RECAP_LABELS[field], caption(field) + value);
   });
-  const lead = `<p class="pb2-prose recap__nv-lead">I adapted your ${esc(networkLabel(base))} voice to how posts work on ${esc(networkLabel(net))}. Whatever isn't adapted follows ${esc(networkLabel(base))}.</p>`;
+  const offer = nvOptimizeButton(data, net);
+  const lead = isOptimized(data, net)
+    ? `<p class="pb2-prose recap__nv-lead">I adapted your ${esc(networkLabel(base))} voice to how posts work on ${esc(networkLabel(net))}. Whatever isn't adapted follows ${esc(networkLabel(base))}.</p>`
+    : `<p class="pb2-prose recap__nv-lead">Not optimized yet — it writes like your ${esc(networkLabel(base))} voice. I can adapt it to how posts work on ${esc(networkLabel(net))}.</p>${
+        offer ? `<div class="recap__nv-lead pb2-nv-offer">${offer}</div>` : ""
+      }`;
   return lead + rows.join("");
 }
 
@@ -2878,22 +2906,17 @@ function onNetworkVoiceClick(event) {
     repaint();
     return true;
   }
-  const add = event.target.closest("[data-nv-add]");
-  if (add) {
-    add.closest("details")?.removeAttribute("open");
-    const entry = nvWritableEntry(data, add.dataset.nvAdd);
-    activeNetwork = add.dataset.nvAdd;
-    setNetworkInUrl(activeNetwork);
-    // At creation, Archie drafts the adaptation like it did for the networks
-    // picked in the flow; on a saved Playbook it starts from the base and learns.
-    const drafted = cfg.mode === "onboarding";
-    if (drafted) Object.assign(entry, analyzeNetworkVoices([activeNetwork], baseNetwork(data))[activeNetwork]);
+  const optimize = event.target.closest("[data-nv-optimize]");
+  if (optimize) {
+    const net = optimize.dataset.nvOptimize;
+    // Archie writes the parts; the rules the network learned stay.
+    const parts = { ...analyzeNetworkVoices([net], baseNetwork(data))[net] };
+    delete parts.rules;
+    Object.assign(nvWritableEntry(data, net), parts);
+    activeNetwork = net;
+    setNetworkInUrl(net);
     cfg.commit?.();
-    showToast(
-      drafted
-        ? `I adapted your voice for ${networkLabel(activeNetwork)} — check it below.`
-        : `${networkLabel(activeNetwork)} voice added — it starts from your base voice.`,
-    );
+    showToast(`I optimized your ${networkLabel(net)} voice. Edit anything that's off.`);
     repaint();
     return true;
   }
@@ -3423,7 +3446,7 @@ const WRITE_HOOKS = [
   "[data-recap-kit-pick]",
   "[data-recap-kit-pair-add]",
   "[data-recap-kit-pair-remove]",
-  "[data-nv-add]",
+  "[data-nv-optimize]",
   "[data-nv-accept]",
   "[data-nv-dismiss]",
   "[data-nv-adapt]",
