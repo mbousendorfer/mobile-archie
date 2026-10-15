@@ -540,10 +540,14 @@ body.playbook-revoked .session__composer-card {
    eases in with a small upward rise, staggered top-to-bottom, so the
    empty state assembles itself rather than snapping in. The global
    prefers-reduced-motion guard (base.css) collapses this to instant. */
+/* `backwards`, not `both`: a fill that keeps the last frame leaves a transform
+   on each piece, which makes it the containing block of the composer's
+   `position: fixed` Add menu — the action sheet then opened inside the hero
+   instead of at the screen's bottom (mobile fork). */
 .empty-chat > * {
   position: relative;
   z-index: 1;
-  animation: empty-rise var(--ref-animation-long) var(--app-ease-out) both;
+  animation: empty-rise var(--ref-animation-long) var(--app-ease-out) backwards;
 }
 
 .empty-chat > *:nth-child(1) {
@@ -1862,4 +1866,11 @@ body.playbook-revoked .session__composer-card {
 .empty-chat .session__composer {
   padding-left: 0;
   padding-right: 0;
+}
+
+/* Every piece of the hero is its own z-index: 1 layer, so the composer's Add
+   action sheet (fixed, at the screen's bottom) was painted under the starter
+   cards that follow it in the DOM. The composer goes one layer up. */
+.empty-chat > .session__composer {
+  z-index: 2;
 }

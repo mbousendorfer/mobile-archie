@@ -559,3 +559,34 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Mobile fork: an angle row's stepper goes UNDER its text (right-aligned)
+   instead of beside it — beside, the angle's words had 110px. */
+.analyse__option--stepper {
+  flex-wrap: wrap;
+  row-gap: var(--ref-spacing-xxs);
+}
+
+.analyse__option--stepper .analyse__option-text {
+  flex: 1 1 calc(100% - 3 * var(--ref-spacing-sm));
+}
+
+.analyse__option--stepper .analyse__stepper {
+  margin-left: auto;
+}
+
+/* Mobile fork: a long picker (four angles with their steppers, a long account
+   list…) was taller than the screen, its submit under the fold of a box that
+   doesn't scroll. The bar's inner column caps at 70dvh and scrolls; the bar
+   itself keeps its fade above. */
+.analyse__sticky-bar-inner {
+  max-height: 70dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* …and its children keep their height (an overflow-hidden child of a flex
+   column shrinks to fit instead, clipping its own last rows and the submit). */
+.analyse__sticky-bar-inner > * {
+  flex-shrink: 0;
+}

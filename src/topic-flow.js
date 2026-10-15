@@ -46,14 +46,14 @@
 // each keeps per-session state in a module-local Map, and a second copy at a
 // different URL would keep its own.
 
-import { navigate } from "./router.js?v=1902";
-import { setHandoff } from "./handoff.js?v=1902";
-import { addReadySource } from "./sources-stream.js?v=1902";
-import { postAssistantMessage, postTopicsWidget } from "./assistant.js?v=1902";
-import { getTopicById, topicTitle, markUsed, getPickableTopics } from "./topics-store.js?v=1902";
-import { getFeedById, getFeedForPlaybook } from "./topic-feeds-store.js?v=1902";
-import { findTopicSource } from "./topics-catalog.js?v=1902";
-import { getContextById } from "./contexts-store.js?v=1902";
+import { navigate } from "./router.js?v=1911";
+import { setHandoff } from "./handoff.js?v=1911";
+import { addReadySource } from "./sources-stream.js?v=1911";
+import { postAssistantMessage, postTopicsWidget } from "./assistant.js?v=1911";
+import { getTopicById, topicTitle, markUsed, getPickableTopics } from "./topics-store.js?v=1911";
+import { getFeedById, getFeedForPlaybook } from "./topic-feeds-store.js?v=1911";
+import { findTopicSource } from "./topics-catalog.js?v=1911";
+import { getContextById } from "./contexts-store.js?v=1911";
 
 export const TOPIC_CHAT_HANDOFF = "pendingTopicChat";
 

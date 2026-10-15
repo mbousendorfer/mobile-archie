@@ -1508,3 +1508,15 @@ span.chat-bubble-choice-chip {
 .session__assistant-thread:has(> .e-turn) {
   padding-inline: var(--ref-spacing-md);
 }
+
+/* A picked object's echo (and any user turn) never wider than the thread: its
+   title is one ellipsed line, whose full length was the echo's floor — 420px,
+   pushed out past the LEFT edge since the turn is right-aligned. */
+.chat-turn--user {
+  max-width: 100%;
+}
+
+.selection-echo {
+  max-width: min(420px, 100%);
+  min-width: 0;
+}

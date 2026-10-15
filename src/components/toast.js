@@ -10,7 +10,7 @@
  *   showToast("Failed to import", { variant: "error" });
  */
 
-import { escapeHtml } from "../utils.js?v=1902";
+import { escapeHtml } from "../utils.js?v=1911";
 
 const REGION_ID = "toastRegion";
 const MAX_VISIBLE = 3;

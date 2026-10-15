@@ -44,7 +44,11 @@ safe-area du haut) au-dessus du contenu, sur `100dvh`.
 9. **`?panel=` est la vérité.** Ouvrir le sheet pousse une entrée d'historique :
    le **retour navigateur le ferme**. Changer d'onglet dans le sheet ouvert
    _remplace_ l'entrée (Back ferme le sheet, il ne rejoue pas les onglets).
-10. **Lié à la session** : quitter le chat ferme le sheet.
+10. **Lié à la session** : quitter le chat ferme le sheet. Une action du sheet
+    dont le résultat arrive **dans le chat** (Reference, Draft depuis une idée,
+    drafter des clips, interroger un connecteur) **ferme le sheet** après
+    s'être exécutée (`CHAT_BOUND_ACTIONS`, `right-panel.js`) — sinon le sheet
+    cache ce qu'elle vient de produire.
 11. **Fermeture** : le close, Back, ou Échap. Pas de swipe-to-dismiss pour
     l'instant (à ajouter si le test sur téléphone le réclame).
 
