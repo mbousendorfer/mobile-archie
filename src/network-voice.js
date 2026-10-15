@@ -21,9 +21,9 @@
 // ON an overridden hook is written in one language. Per-language × per-network
 // examples when a brand actually publishes in two languages on one network.
 
-import { isFlagOn } from "./feature-flags.js?v=1814";
-import { escapeHtml } from "./utils.js?v=1814";
-import { NETWORKS, normalizeNetwork, getConnectedProfileById } from "./social-profiles.js?v=1814";
+import { isFlagOn } from "./feature-flags.js?v=1816";
+import { escapeHtml } from "./utils.js?v=1816";
+import { NETWORKS, normalizeNetwork, getConnectedProfileById } from "./social-profiles.js?v=1816";
 
 // The parts of a voice — ONE registry, in reading order. `isNew` marks a part
 // the product just added: a network that hasn't optimized it is told so (an

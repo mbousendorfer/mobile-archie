@@ -859,8 +859,12 @@
   font-size: var(--ref-font-size-sm);
 }
 
+/* The voice's actions, grouped: Learn from… then Optimize / Re-optimize. */
 .pb2-nv-progress__action {
+  display: flex;
   flex-shrink: 0;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
 }
 
 @media (max-width: 640px) {
@@ -874,14 +878,8 @@
   color: var(--ref-color-grey-80);
 }
 
-/* In the network tabs: a green check once a network is all done, an orange dot
-   while a part the product just added waits for it. */
-.pb2-nv-tab-done {
-  width: 14px;
-  height: 14px;
-  color: var(--ref-color-green-100);
-}
-
+/* In the network tabs: an orange dot while a part the product just added
+   waits for it — the only mark beside a name (done is the band's to say). */
 .pb2-nv-tab-new {
   flex-shrink: 0;
   width: 8px;
@@ -985,6 +983,12 @@
   display: flex;
   margin-top: auto;
   padding-top: var(--ref-spacing-sm);
+}
+
+/* A ghost button: pulled back by its own inset so its glyph lines up with the
+   block's text edge. */
+.pb2-nv-block-go > .ap-button {
+  margin-left: calc(-1 * var(--ref-spacing-sm));
 }
 
 /* A part's state in its block head, on the right where the caption sat. */
