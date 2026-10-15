@@ -1,17 +1,17 @@
-import { html, raw, escapeText, escapeAttr } from "../utils.js?v=1845";
-import { showToast } from "./toast.js?v=1845";
-import { getQueueOn, dayKey, addToQueue, subscribe as subscribeQueue } from "../schedule-store.js?v=1845";
-import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1845";
+import { html, raw, escapeText, escapeAttr } from "../utils.js?v=1846";
+import { showToast } from "./toast.js?v=1846";
+import { getQueueOn, dayKey, addToQueue, subscribe as subscribeQueue } from "../schedule-store.js?v=1846";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1846";
 import {
   renderProfileTag,
   profileForNetwork,
   NETWORK_LABEL,
   NETWORK_ICON_BY_PLATFORM,
   normalizeNetwork,
-} from "../social-profiles.js?v=1845";
-import { getContextById } from "../contexts-store.js?v=1845";
-import { canEdit } from "../playbook-access.js?v=1845";
-import { getPreset, savePreset } from "../schedule-presets-store.js?v=1845";
+} from "../social-profiles.js?v=1846";
+import { getContextById } from "../contexts-store.js?v=1846";
+import { canEdit } from "../playbook-access.js?v=1846";
+import { getPreset, savePreset } from "../schedule-presets-store.js?v=1846";
 import {
   CADENCES,
   startOfDay,
@@ -21,7 +21,7 @@ import {
   planSlots,
   queueEntries,
   firstLine as extractFirstLine,
-} from "../schedule-engine.js?v=1845";
+} from "../schedule-engine.js?v=1846";
 
 // Schedule modal — one column, result first.
 //   • Header   — "Schedule N drafts" + one line saying I already picked.

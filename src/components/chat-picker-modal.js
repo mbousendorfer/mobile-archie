@@ -12,14 +12,14 @@
 //     onPick({ kind: "new" } | { kind: "existing", session })
 //   });
 
-import { recentSessions } from "../mocks.js?v=1845";
-import { getSources } from "../sources-stream.js?v=1845";
-import { getIdeas } from "../library.js?v=1845";
-import { getPosts } from "../posts-store.js?v=1845";
-import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1845";
+import { recentSessions } from "../mocks.js?v=1846";
+import { getSources } from "../sources-stream.js?v=1846";
+import { getIdeas } from "../library.js?v=1846";
+import { getPosts } from "../posts-store.js?v=1846";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1846";
 
 const MODAL_ID = "chatPicker";
-import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "../screens/_analyse-common.js?v=1845";
+import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "../screens/_analyse-common.js?v=1846";
 
 let backdrop, modal, body;
 let initialized = false;

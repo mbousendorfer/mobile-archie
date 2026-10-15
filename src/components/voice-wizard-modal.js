@@ -30,10 +30,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1845";
-import { bindReorder } from "../drag-reorder.js?v=1845";
-import { escapeHtml as esc } from "../utils.js?v=1845";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1845";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1846";
+import { bindReorder } from "../drag-reorder.js?v=1846";
+import { escapeHtml as esc } from "../utils.js?v=1846";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1846";
 import {
   networkFields,
   isNewPart,
@@ -43,7 +43,7 @@ import {
   networkEntry,
   resolvedVoice,
   progressRingHtml,
-} from "../network-voice.js?v=1845";
+} from "../network-voice.js?v=1846";
 
 const MODAL_ID = "voiceWizard";
 
@@ -306,11 +306,11 @@ function paintFooter() {
     return;
   }
   const onPart = w.step < review();
-  // Left: the one-click way — every part at Archie's pick, then review. Archie
-  // doing the work for you: the AI action, so primary orange (the house
-  // convention), set apart on the left from the step's own Next (blue).
+  // Left: the one-click way — every part at Archie's pick, then review.
+  // Outlined blue: visible, set apart on the left, without a second primary
+  // beside Next. (Ghost grey read as nothing; primary orange, two primaries.)
   footLeftEl.innerHTML = onPart
-    ? `<button type="button" class="ap-button primary orange" data-vw-archie><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Use all of Archie's picks</span></button>`
+    ? `<button type="button" class="ap-button stroked blue" data-vw-archie><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Use all of Archie's picks</span></button>`
     : "";
   footRightEl.innerHTML = `
     ${w.step > 0 ? `<button type="button" class="ap-button stroked grey" data-vw-back><i class="ap-icon-arrow-left" aria-hidden="true"></i><span>Back</span></button>` : ""}
