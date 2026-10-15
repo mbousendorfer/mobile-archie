@@ -30,10 +30,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1834";
-import { bindReorder } from "../drag-reorder.js?v=1834";
-import { escapeHtml as esc } from "../utils.js?v=1834";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1834";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1835";
+import { bindReorder } from "../drag-reorder.js?v=1835";
+import { escapeHtml as esc } from "../utils.js?v=1835";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1835";
 import {
   networkFields,
   isNewPart,
@@ -42,7 +42,8 @@ import {
   baseNetwork,
   networkEntry,
   resolvedVoice,
-} from "../network-voice.js?v=1834";
+  progressRingHtml,
+} from "../network-voice.js?v=1835";
 
 const MODAL_ID = "voiceWizard";
 
@@ -445,48 +446,58 @@ function renderPart(field) {
     </section>`;
 }
 
+// The review is the voice as it will read: the network's band (its ring —
+// closed with a check once every part is written for it — and one sentence),
+// then the same blocks as the Voice tab, two by two, each with its whole
+// content: lines as quote lines, text as prose. A part that keeps the base
+// reads like on the tab — grey ground, "Same as LinkedIn", the base's words.
+// Change, in each block's head, goes back to that step.
+// (2026-10-15: a table of truncated values with a green pill per row.)
 function renderReview() {
   const label = networkLabel(w.net);
   const baseLabel = networkLabel(w.base);
-  const rows = w.fields
+  const n = w.fields.filter((f) => valueOf(f) !== undefined).length;
+  const sentence = w.isBase
+    ? `Every network that follows your ${label} voice picks up these changes.`
+    : n === review()
+      ? `Every part is written for ${label}.`
+      : n === 0
+        ? `Every part follows your ${baseLabel} voice.`
+        : `${n} of ${review()} parts written for ${label}. The others follow your ${baseLabel} voice.`;
+  const lines = (list) =>
+    `<ul class="pb2-lines">${list
+      .filter(Boolean)
+      .map((l) => `<li class="pb2-line"><i class="ap-icon-quote" aria-hidden="true"></i><span>${esc(l)}</span></li>`)
+      .join("")}</ul>`;
+  const blocks = w.fields
     .map((field, i) => {
       const v = valueOf(field);
-      const shown =
-        v === undefined
-          ? w.isBase
-            ? "Not set yet"
-            : baseSummary(field)
-          : Array.isArray(v)
-            ? `“${v[0]}”${v.length > 1 ? ` and ${v.length - 1} more` : ""}`
-            : v;
-      return `<li class="pb2-nv-row vw-review__row">
-      <span class="pb2-nv-row__name">${esc(PARTS[field].title)}</span>
-      <span class="vw-review__value">
-        ${
-          w.isBase
-            ? "" // the base is the reference — nothing to be "the same as"
-            : v === undefined
-              ? `<span class="ap-status grey">Same as ${esc(baseLabel)}</span>`
-              : `<span class="ap-status green">Optimized</span>`
-        }
-        <span class="vw-review__text">${esc(shown)}</span>
-      </span>
-      <span class="pb2-nv-row__action"><button type="button" class="ap-button ghost blue" data-vw-goto="${i}">Change</button></span>
-    </li>`;
+      const borrowed = v === undefined && !w.isBase;
+      const shown = v === undefined ? baseValue(field) : v;
+      const empty = Array.isArray(shown) ? !shown.filter(Boolean).length : !String(shown || "").trim();
+      const body = empty
+        ? `<p class="pb2-empty">Not set yet.</p>`
+        : Array.isArray(shown)
+          ? lines(shown)
+          : `<p class="pb2-prose">${esc(shown)}</p>`;
+      return `<section class="pb2-block vw-review__block${borrowed ? " pb2-nv-placeholder" : ""}">
+        <header class="pb2-block__head">
+          <h3 class="pb2-block__title">${esc(PARTS[field].title)}</h3>
+          ${borrowed ? `<span class="pb2-block__caption">Same as ${esc(baseLabel)}</span>` : ""}
+          <button type="button" class="ap-button ghost blue vw-review__change" data-vw-goto="${i}">Change</button>
+        </header>
+        <div class="pb2-block__body">${body}</div>
+      </section>`;
     })
     .join("");
-  const n = w.fields.filter((f) => valueOf(f) !== undefined).length;
-  return `<h3 class="vw__ask">Your ${esc(label)} voice</h3>
-    <p class="vw__hint">${
-      w.isBase
-        ? `Every network that follows your ${esc(label)} voice picks up these changes.`
-        : n === review()
-          ? `Every part is written for ${esc(label)}.`
-          : n === 0
-            ? `Every part follows your ${esc(baseLabel)} voice.`
-            : `${n} of ${review()} parts written for ${esc(label)}. The others follow your ${esc(baseLabel)} voice.`
-    }</p>
-    <ul class="pb2-nv-rows vw-review">${rows}</ul>`;
+  return `<div class="pb2-nv-progress vw-review__band">
+      ${progressRingHtml(w.net, { done: w.fields.map((f) => valueOf(f) !== undefined), base: w.isBase, size: 56 })}
+      <div class="pb2-nv-progress__text">
+        <h3 class="pb2-nv-progress__count vw__ask" tabindex="-1">Your ${esc(label)} voice</h3>
+        <p class="pb2-nv-progress__sub">${esc(sentence)}</p>
+      </div>
+    </div>
+    <div class="vw-review">${blocks}</div>`;
 }
 
 // ── Events ───────────────────────────────────────────────────────────────────

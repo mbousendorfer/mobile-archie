@@ -281,23 +281,40 @@
   width: 100%;
 }
 
-/* ── The review ─────────────────────────────────────────────────────────── */
-.vw-review__value {
-  display: flex;
-  align-items: center;
+/* ── The review ──────────────────────────────────────────────────────────
+   The voice as it will read: the network's band (ring + one sentence — the
+   Voice tab's .pb2-nv-progress), then the tab's own blocks (.pb2-block), two
+   by two, whole content. Change sits at the right of each block's head. */
+.vw-review__band {
+  padding: 0;
+}
+
+.vw-review__band .vw__ask {
+  margin: 0;
+}
+
+.vw-review {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--ref-spacing-sm);
-  min-width: 0;
 }
 
-.vw-review__text {
-  overflow: hidden;
-  color: var(--ref-color-grey-80);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* In a dialog the blocks arrive with it — no staggered rise of their own. */
+.vw-review__block {
+  animation: none;
 }
 
-.vw-review .pb2-nv-row {
-  grid-template-columns: 120px minmax(0, 1fr) auto;
+/* A ghost button in a block head: pulled into the head's line height so the
+   head keeps the tab's rhythm, flush with the block's right inset. */
+.vw-review__change {
+  flex-shrink: 0;
+  margin: calc(-1 * var(--ref-spacing-xxs)) calc(-1 * var(--ref-spacing-xs)) calc(-1 * var(--ref-spacing-xxs)) 0;
+}
+
+@media (max-width: 900px) {
+  .vw-review {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .vw__leave {

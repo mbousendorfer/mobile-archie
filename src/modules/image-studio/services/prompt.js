@@ -2,7 +2,7 @@
 // Pure, and shared by every implementation of imageGenerationService, so the
 // day a real API is plugged in it gets exactly the prompt the mock shows.
 
-import { colorByRole, fontByRole } from "../model/schema.js?v=1834";
+import { colorByRole, fontByRole } from "../model/schema.js?v=1835";
 
 function paletteText(brand) {
   return (brand?.palette || []).map((c) => `${c.role} ${c.hex}`).join(", ") || "neutral tones";

@@ -789,40 +789,6 @@
    State is the DS status pill (.ap-status), in the network's mini check, in
    "All networks" and in each part's block head. Logos stay in colour. */
 
-/* The two lists share one row: name · state · action, every row the same
-   height so a button never sits tight against the hairlines (10px of air above
-   and below a 36px button). The action column hugs the right edge. */
-.pb2-nv-rows {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.pb2-nv-row {
-  display: grid;
-  grid-template-columns: 200px minmax(0, 1fr) auto;
-  gap: var(--ref-spacing-md);
-  align-items: center;
-  min-height: 56px;
-}
-
-.pb2-nv-row + .pb2-nv-row {
-  border-top: 1px solid var(--ref-color-grey-20);
-}
-
-.pb2-nv-row__name {
-  justify-self: start;
-  color: var(--ref-color-grey-100);
-  font-weight: var(--sys-text-style-body-bold-weight);
-}
-
-.pb2-nv-row__action {
-  display: flex;
-  justify-content: flex-end;
-}
-
 /* A network's progress band: on the page's grey, no border, no card — the
    ring, the count, one line, Optimize what's left. It spans the grid and sits
    above the voice's blocks as a report on them, not as one of them. */
