@@ -91,19 +91,11 @@
   color: var(--ref-color-grey-80);
 }
 
-/* The base voice, said small under the choices: a note while nothing is
-   picked, a small link back once something is. The link is a <button> — its
-   own class drops the button chrome (the DS .ap-link styles an <a>). */
+/* The base voice, said small under the choices while nothing is picked. */
 .vw-default {
   margin: 0;
   color: var(--ref-color-grey-80);
   font-size: var(--ref-font-size-sm);
-}
-
-.vw-default__reset {
-  padding: 0;
-  border: 0;
-  background: none;
 }
 
 /* "Suggestions" + how to order them, above the list. */

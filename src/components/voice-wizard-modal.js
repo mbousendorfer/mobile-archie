@@ -7,8 +7,8 @@
 // A step: on the left, the choices — the job is to write this part for the
 // network, so they come first, with nothing pre-picked. While nothing is
 // picked the part keeps the base voice; a small note under the choices says
-// so, and once something is picked it turns into a small link back to the
-// base ("Use my LinkedIn closings instead") — the default is never pushed.
+// so; "Use default voice" in the footer, beside Next, puts the part back on
+// the base and moves on — the default is never offered as a choice.
 // For lines: "Your … lines", the ones
 // you keep, numbered in your order of preference (drag by the grip — the
 // shared drag-reorder.js — or ↑ ↓ on it; × gives a line back), write your own,
@@ -30,10 +30,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1836";
-import { bindReorder } from "../drag-reorder.js?v=1836";
-import { escapeHtml as esc } from "../utils.js?v=1836";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1836";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1837";
+import { bindReorder } from "../drag-reorder.js?v=1837";
+import { escapeHtml as esc } from "../utils.js?v=1837";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1837";
 import {
   networkFields,
   isNewPart,
@@ -43,7 +43,7 @@ import {
   networkEntry,
   resolvedVoice,
   progressRingHtml,
-} from "../network-voice.js?v=1836";
+} from "../network-voice.js?v=1837";
 
 const MODAL_ID = "voiceWizard";
 
@@ -312,6 +312,13 @@ function paintFooter() {
   footRightEl.innerHTML = `
     ${w.step > 0 ? `<button type="button" class="ap-button stroked grey" data-vw-back><i class="ap-icon-arrow-left" aria-hidden="true"></i><span>Back</span></button>` : ""}
     ${
+      // The base voice for this part, then on — beside Next, where a skip
+      // goes (ghost grey), never as a choice among the options.
+      onPart && !w.isBase
+        ? `<button type="button" class="ap-button ghost grey" data-vw-skip>Use default voice</button>`
+        : ""
+    }
+    ${
       onPart
         ? `<button type="button" class="ap-button primary blue" data-vw-next>Next</button>`
         : `<button type="button" class="ap-button primary orange" data-vw-save><span>Save ${esc(label)} voice</span></button>`
@@ -354,9 +361,11 @@ function renderGuidance(field) {
 function renderDefaultNote(field) {
   if (w.isBase) return "";
   const what = `${networkLabel(w.base)} ${PARTS[field].noun}`;
+  // Said while nothing is picked; going back to the base is the footer's
+  // "Use default voice".
   return valueOf(field) === undefined
     ? `<p class="vw-default">Until you pick one, ${esc(networkLabel(w.net))} uses your ${esc(what)}.</p>`
-    : `<p class="vw-default"><button type="button" class="ap-link small vw-default__reset" data-vw-reset>Use my ${esc(what)} instead</button></p>`;
+    : "";
 }
 
 function renderPart(field) {
@@ -549,10 +558,10 @@ function onClick(event) {
     w.parts[field].lines.splice(Number(unadd.dataset.vwUnadd), 1);
     return paint();
   }
-  // Back to the base voice for this part: nothing picked.
-  if (t.closest("[data-vw-reset]")) {
+  // Use default voice: this part goes back to the base (nothing picked), on.
+  if (t.closest("[data-vw-skip]")) {
     w.parts[field] = PARTS[field].list ? { lines: [] } : { choice: null, own: "" };
-    return paint();
+    return go(w.step + 1);
   }
   // One of Archie's other suggestions joins your lines, last.
   const take = t.closest("[data-vw-take]");
