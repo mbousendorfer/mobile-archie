@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1775";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1776";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -26,16 +26,16 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1775";
+} from "./playbook-brand-kit.js?v=1776";
 import {
   analyzeWebsite,
   discoverCompetitors,
   competitorKey,
   analyzeNetworkVoices,
-} from "./context-mock-analysis.js?v=1775";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1775";
-import { isFlagOn } from "./feature-flags.js?v=1775";
-import { parseHashParams } from "./url-state.js?v=1775";
+} from "./context-mock-analysis.js?v=1776";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1776";
+import { isFlagOn } from "./feature-flags.js?v=1776";
+import { parseHashParams } from "./url-state.js?v=1776";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -47,15 +47,15 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1775";
+} from "./network-voice.js?v=1776";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1775";
-import { showToast } from "./components/toast.js?v=1775";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1775";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1775";
+} from "./voice-coach-store.js?v=1776";
+import { showToast } from "./components/toast.js?v=1776";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1776";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1776";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2370,10 +2370,9 @@ function renderNetworkSwitcher(data) {
             .map((n) => {
               const on = !nvAllView() && n === active;
               const pending = getSuggestions(data.id, { network: n }).length;
-              // Grey logo = still writing in the base voice (not optimized).
               const borrowed = n !== activeBase && !isOptimized(data, n);
               return `<button type="button" class="ap-tabs-tab${on ? " active" : ""}" role="tab" aria-selected="${on}" data-nv-net="${n}"${borrowed ? ` title="Not optimized — writes like your ${esc(networkLabel(activeBase))} voice"` : ""}>
-                <i class="${networkIcon(n)}${borrowed ? " pb2-nv-borrowed-mark" : ""}" aria-hidden="true"></i>
+                <i class="${networkIcon(n)}" aria-hidden="true"></i>
                 <span>${esc(networkLabel(n))}</span>
                 ${pending ? `<span class="ap-counter normal grey" title="${pending} for Archie to remember">${pending}</span>` : ""}
               </button>`;
@@ -2387,12 +2386,15 @@ function renderNetworkSwitcher(data) {
 // Archie offers to optimize a network still writing in the base voice: one
 // click, it adapts the parts to how posts work there (rules kept). Read mode
 // only — in edit, "Adapt for X" does it part by part.
-function nvOptimizeButton(data, net, { tone = "primary orange" } = {}) {
+// `short`: "Optimize" alone, for a list whose row already names the network —
+// same width on every row, one clean column.
+function nvOptimizeButton(data, net, { tone = "primary orange", short = false } = {}) {
   if (!canEditView() || editScope || net === baseNetwork(data)) return "";
   const done = nvOptimizedCount(data, net);
   if (done === NV_FIELDS.length) return "";
-  const label = done ? "Optimize what's left" : `Optimize for ${networkLabel(net)}`;
-  return `<button type="button" class="ap-button ${tone}" data-nv-optimize="${net}"><i class="ap-icon-sparkles" aria-hidden="true"></i><span>${esc(label)}</span></button>`;
+  const label = short ? "Optimize" : done ? "Optimize what's left" : `Optimize for ${networkLabel(net)}`;
+  const aria = short ? ` aria-label="Optimize your ${esc(networkLabel(net))} voice"` : "";
+  return `<button type="button" class="ap-button ${tone}" data-nv-optimize="${net}"${aria}><i class="ap-icon-sparkles" aria-hidden="true"></i><span>${esc(label)}</span></button>`;
 }
 
 // A rule already in the voice — plain text beside the olive mark
@@ -2453,19 +2455,22 @@ function nvBaseBlocks(data, ve) {
   ].filter(Boolean);
 }
 
-// Voice per network says ONE thing everywhere, with logos rather than words:
-// the network's own logo, in colour, marks what is tuned for it; the base's
-// logo, greyed, marks what it borrows from the base voice. The words live in
-// the tooltip and the accessible name.
-const NV_CAPTION = (data, net, field) =>
-  isOverridden(data, net, field) ? `Adapted for ${networkLabel(net)}` : `Same as ${networkLabel(baseNetwork(data))}`;
-
-// A part's state, in its block head: the checklist's own mark — filled green
-// check = optimized for the network, outline = still the base voice.
+// State, everywhere, as the DS status pill (.ap-status: a dot and a word) —
+// never a logo or a check mark: a greyed logo read as "disabled".
+//   a part:     green Optimized · grey Same as LinkedIn
+//   a network:  green Optimized · orange N of 4 optimized · grey Not optimized
 function nvSourceBadge(data, net, field) {
-  const own = isOverridden(data, net, field);
-  const say = own ? `Optimized for ${networkLabel(net)}` : NV_CAPTION(data, net, field);
-  return `<span class="pb2-nv-source${own ? " is-done" : ""}" role="img" aria-label="${esc(say)}" title="${esc(say)}"><i class="${own ? "ap-icon-rounded-check_fill" : "ap-icon-rounded-check"}" aria-hidden="true"></i></span>`;
+  return isOverridden(data, net, field)
+    ? `<span class="ap-status green pb2-nv-status">Optimized</span>`
+    : `<span class="ap-status grey pb2-nv-status">Same as ${esc(networkLabel(baseNetwork(data)))}</span>`;
+}
+
+function nvNetworkStatus(data, net) {
+  const done = nvOptimizedCount(data, net);
+  const all = NV_FIELDS.length;
+  if (done === all) return `<span class="ap-status green">Optimized</span>`;
+  if (done) return `<span class="ap-status orange">${done} of ${all} optimized</span>`;
+  return `<span class="ap-status grey">Not optimized</span>`;
 }
 
 // How many of a network's four parts are optimized — its own, not the base's.
@@ -2478,31 +2483,23 @@ function nvOptimizedCount(data, net) {
 // The part's name opens its editor, to do it yourself.
 function nvChecklist(data, net) {
   const label = networkLabel(net);
-  const base = networkLabel(baseNetwork(data));
   const live = canEditView() && !editScope;
   const rows = NV_FIELDS.map(([field, title]) => {
     const own = isOverridden(data, net, field);
     const name = live
-      ? `<button type="button" class="ap-link standalone pb2-nv-check__name" data-nv-fit-adapt="${field}" title="Edit ${esc(title.toLowerCase())} for ${esc(label)}">${esc(title)}</button>`
-      : `<span class="pb2-nv-check__name">${esc(title)}</span>`;
+      ? `<button type="button" class="ap-link standalone pb2-nv-row__name" data-nv-fit-adapt="${field}" title="Edit ${esc(title.toLowerCase())} for ${esc(label)}">${esc(title)}</button>`
+      : `<span class="pb2-nv-row__name">${esc(title)}</span>`;
     const action =
       !own && live
         ? `<button type="button" class="ap-button stroked blue" data-nv-optimize-part="${field}" aria-label="Optimize ${esc(title.toLowerCase())} for ${esc(label)}"><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Optimize</span></button>`
         : "";
-    return `<li class="pb2-nv-check__row${own ? " is-done" : ""}">
-        <i class="${own ? "ap-icon-rounded-check_fill" : "ap-icon-rounded-check"} pb2-nv-check__mark" aria-hidden="true"></i>
+    return `<li class="pb2-nv-row">
         ${name}
-        <span class="pb2-nv-check__status">${own ? `Optimized for ${esc(label)}` : `Same as your ${esc(base)} voice`}</span>
-        <span class="pb2-nv-check__action">${action}</span>
+        <span class="pb2-nv-row__state">${nvSourceBadge(data, net, field)}</span>
+        <span class="pb2-nv-row__action">${action}</span>
       </li>`;
   });
-  return `<ul class="pb2-nv-check" aria-label="What's optimized for ${esc(label)}">${rows.join("")}</ul>`;
-}
-
-// The level, as a static grey tag — its detail in the tooltip.
-function nvLevelTag(data, net) {
-  const m = maturity(data, net);
-  return `<span class="ap-tag grey pb2-nv-tag" title="${esc(m.detail)}"><span>${esc(m.label)}</span></span>`;
+  return `<ul class="pb2-nv-rows" aria-label="What's optimized for ${esc(label)}">${rows.join("")}</ul>`;
 }
 
 function nvIdentityBlock(data, net) {
@@ -2528,18 +2525,14 @@ function nvAllBlock(data, index) {
   const rows = voiceNetworks(data)
     .map((n) => {
       const isBase = n === base;
-      return `<li class="pb2-nv-others__row">
-        <button type="button" class="ap-link standalone pb2-nv-others__net" data-nv-net="${n}">
-          <i class="${networkIcon(n)}${isBase || isOptimized(data, n) ? "" : " pb2-nv-borrowed-mark"}" aria-hidden="true"></i><span>${esc(networkLabel(n))}</span>
-        </button>
-        <span class="pb2-nv-others__fit">${isBase ? "" : `${nvOptimizedCount(data, n)} of ${NV_FIELDS.length} optimized`}</span>
-        <span class="pb2-nv-others__action">${
-          isBase ? nvLevelTag(data, n) : nvOptimizeButton(data, n, { tone: "stroked blue" })
-        }</span>
+      return `<li class="pb2-nv-row">
+        <span class="pb2-nv-row__name pb2-nv-row__net"><i class="${networkIcon(n)}" aria-hidden="true"></i>${esc(networkLabel(n))}</span>
+        <span class="pb2-nv-row__state">${isBase ? `<span class="pb2-nv-row__note">Base voice</span>` : nvNetworkStatus(data, n)}</span>
+        <span class="pb2-nv-row__action">${isBase ? "" : nvOptimizeButton(data, n, { tone: "stroked blue", short: true })}</span>
       </li>`;
     })
     .join("");
-  return pb2Block("Your voice on every network", `<ul class="pb2-nv-others">${rows}</ul>`, {
+  return pb2Block("Your voice on every network", `<ul class="pb2-nv-rows">${rows}</ul>`, {
     wide: true,
     index,
     icon: "ap-icon-view-grid",
@@ -2595,7 +2588,7 @@ function nvNetworkReadBlocks(data, net) {
               </li>`,
             )
             .join("")}</ul>`,
-          { wide: true, index: i++, icon: `${networkIcon(baseNetwork(data))} pb2-nv-borrowed-mark` },
+          { wide: true, index: i++, icon: networkIcon(baseNetwork(data)) },
         )
       : "",
     pb2AvoidBlock(data, i, "Every network"),

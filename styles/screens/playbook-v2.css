@@ -816,35 +816,13 @@
 }
 
 /* ── Optimized or not (voice per network) ──────────────────────────────
-   A network still on the base voice wears the base's logo, greyed — in its
-   tab and its rows. */
-.pb2-nv-borrowed-mark {
-  filter: grayscale(1);
-}
+   State is the DS status pill (.ap-status), in the network's mini check, in
+   "All networks" and in each part's block head. Logos stay in colour. */
 
-/* The checklist's marks: filled green check = optimized for the network,
-   outline = still the base voice. */
-.pb2-nv-check__mark,
-.pb2-nv-source > i {
-  flex-shrink: 0;
-  color: var(--ref-color-grey-80);
-}
-
-.pb2-nv-check__row.is-done .pb2-nv-check__mark,
-.pb2-nv-source.is-done > i {
-  color: var(--ref-color-green-100);
-}
-
-/* A part's state in its block head, where the caption sat. */
-.pb2-nv-source {
-  display: inline-flex;
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-/* The mini check at the top of a network voice: one row per part — its mark,
-   its name (opens its editor), where it stands, and Optimize when it's left. */
-.pb2-nv-check {
+/* The two lists share one row: name · state · action, every row the same
+   height so a button never sits tight against the hairlines (10px of air above
+   and below a 36px button). The action column hugs the right edge. */
+.pb2-nv-rows {
   display: flex;
   flex-direction: column;
   margin: 0;
@@ -852,69 +830,50 @@
   list-style: none;
 }
 
-.pb2-nv-check__row {
+.pb2-nv-row {
   display: grid;
-  grid-template-columns: 16px 160px minmax(0, 1fr) auto;
-  gap: var(--ref-spacing-sm);
+  grid-template-columns: 200px minmax(0, 1fr) auto;
+  gap: var(--ref-spacing-md);
   align-items: center;
-  min-height: 48px;
+  min-height: 56px;
 }
 
-.pb2-nv-check__row + .pb2-nv-check__row {
+.pb2-nv-row + .pb2-nv-row {
   border-top: 1px solid var(--ref-color-grey-20);
 }
 
-.pb2-nv-check__name {
+.pb2-nv-row__name {
   justify-self: start;
+  color: var(--ref-color-grey-100);
   font-weight: var(--sys-text-style-body-bold-weight);
 }
 
-.pb2-nv-check__status {
+.pb2-nv-row__net {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.pb2-nv-row__note {
   color: var(--ref-color-grey-80);
 }
 
-.pb2-nv-tag {
+.pb2-nv-row__action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* A part's state in its block head, on the right where the caption sat. */
+.pb2-nv-status {
+  flex-shrink: 0;
   margin-left: auto;
 }
 
-/* Optimize for X — Archie's offer under a network that still writes like the
-   base. A hug-width CTA, never stretched. */
+/* The network-wide offer under the mini check — hug-width, never stretched,
+   with the same air above it as between two rows. */
 .pb2-nv-offer {
   display: flex;
-  margin-top: var(--ref-spacing-sm);
-}
-
-/* The base tab's "Your voice on other networks": one row per network — its
-   name (opens its tab), where it stands in words, the offer when there is one. */
-.pb2-nv-others {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.pb2-nv-others__row {
-  display: grid;
-  grid-template-columns: 160px minmax(0, 1fr) auto;
-  gap: var(--ref-spacing-sm);
-  align-items: center;
-  min-height: 44px;
-}
-
-.pb2-nv-others__row + .pb2-nv-others__row {
-  border-top: 1px solid var(--ref-color-grey-20);
-}
-
-.pb2-nv-others__fit {
-  color: var(--ref-color-grey-80);
-}
-
-.pb2-nv-others__net {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  justify-self: start;
+  margin-top: var(--ref-spacing-md);
 }
 
 /* "Adapt for X" / "Use the base voice" sit under the field they switch. */
