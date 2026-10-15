@@ -778,12 +778,6 @@
   scrollbar-width: none;
 }
 
-/* The level, named in words — weight carries it, never a lighter grey. */
-.pb2-nv-level {
-  margin: 0 0 var(--ref-spacing-xs);
-  font-size: var(--ref-font-size-md);
-}
-
 /* The parts a network inherits, one line each: the part, then what the base
    says, cut to the line — the full text lives on the base tab. */
 .pb2-nv-inherited {
@@ -812,6 +806,94 @@
   color: var(--ref-color-grey-80);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ── Borrowed vs tuned (voice per network) ──────────────────────────────
+   One signal, shown rather than told: a network's own logo in colour marks
+   what is tuned for it; the base's logo, greyed, what it borrows from the
+   base voice. The words are in each element's tooltip. */
+.pb2-nv-borrowed-mark,
+.pb2-nv-source.is-borrowed > i,
+.pb2-nv-fit__glyph.is-borrowed > i {
+  filter: grayscale(1);
+}
+
+/* A part's source, in its block head where the caption sat. */
+.pb2-nv-source {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: auto;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: 50%;
+  background: var(--app-surface);
+}
+
+.pb2-nv-tag {
+  margin-left: auto;
+}
+
+/* The strip: the four parts of a network voice side by side, one surface. A
+   borrowed part sits on the page's grey, a tuned one on white with its
+   network's logo — Not optimized is four grey base logos in a row. */
+.pb2-nv-fit {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  list-style: none;
+}
+
+.pb2-nv-fit__part {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-md) var(--ref-spacing-xs);
+  background: var(--app-surface-subtle);
+  text-align: center;
+}
+
+.pb2-nv-fit__part + .pb2-nv-fit__part {
+  border-left: 1px solid var(--ref-color-grey-20);
+}
+
+.pb2-nv-fit__part.is-tuned {
+  background: var(--app-surface);
+}
+
+.pb2-nv-fit__glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: 50%;
+  background: var(--app-surface);
+}
+
+/* The strip's logos are its content, so they read at 20px (the official
+   network marks are images, not masks: they scale cleanly). */
+.pb2-nv-fit__glyph > i {
+  width: 20px;
+  height: 20px;
+  background-size: contain;
+}
+
+.pb2-nv-fit__name {
+  color: var(--ref-color-grey-100);
+  font-size: var(--ref-font-size-sm);
+}
+
+.pb2-nv-fit__part.is-tuned .pb2-nv-fit__name {
+  font-weight: var(--sys-text-style-body-bold-weight);
 }
 
 /* Optimize for X — Archie's offer under a network that still writes like the
@@ -850,8 +932,37 @@
   justify-self: start;
 }
 
-.pb2-nv-others__level {
-  color: var(--ref-color-grey-80);
+/* The overview's row: the same strip, logos only — four small marks. */
+.pb2-nv-fit--mini {
+  display: inline-flex;
+  gap: var(--ref-spacing-xxs);
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+}
+
+.pb2-nv-fit--mini > .pb2-nv-fit__part,
+.pb2-nv-fit--mini > .pb2-nv-fit__part.is-tuned {
+  padding: 0;
+  background: none;
+}
+
+.pb2-nv-fit--mini > .pb2-nv-fit__part + .pb2-nv-fit__part {
+  border-left: 0;
+}
+
+.pb2-nv-fit--mini .pb2-nv-fit__glyph {
+  width: 28px;
+  height: 28px;
+}
+
+.pb2-nv-fit--mini .pb2-nv-fit__glyph.is-borrowed {
+  background: var(--app-surface-subtle);
+}
+
+.pb2-nv-fit--mini .pb2-nv-fit__glyph > i {
+  width: 14px;
+  height: 14px;
 }
 
 /* "Adapt for X" / "Use the base voice" sit under the field they switch. */

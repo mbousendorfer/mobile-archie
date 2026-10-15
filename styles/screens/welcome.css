@@ -1708,8 +1708,8 @@ button.recap__logotile:hover {
 }
 
 /* Voice per network (flag networkVoices) on the recap: the network tabs and
-   the line under them sit on the rows' inset; a row's "Adapted for X" caption
-   heads its value. */
+   the strip under them sit on the rows' inset; a row's source logo heads its
+   value. */
 .recap__panel-body > .pb2-netbar {
   margin-bottom: 0;
   padding: var(--ref-spacing-sm) var(--ref-spacing-lg) 0;
@@ -1719,9 +1719,13 @@ button.recap__logotile:hover {
   padding: var(--ref-spacing-md) var(--ref-spacing-lg) 0;
 }
 
-.recap__row-value > .pb2-block__caption {
-  display: block;
+.recap__nv-source {
+  display: flex;
   margin-bottom: var(--ref-spacing-xs);
+}
+
+.recap__nv-source > .pb2-nv-source {
+  margin-left: 0;
 }
 
 /* Voice examples — per-language switcher toolbar. Mirrors the Guided /
