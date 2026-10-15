@@ -14,7 +14,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-md);
-  padding: var(--ref-spacing-md) var(--ref-spacing-xl) var(--ref-spacing-xl);
+  /* Mobile fork: 16px gutters, the phone's. */
+  padding: var(--ref-spacing-md) var(--ref-spacing-md) var(--ref-spacing-xl);
   /* The app's measure + this box's own gutters: the cap is `border-box`, so the
      padding has to be added back or it would eat 80px out of the column. Was a
      hand-written 1280 (= 1200 of content), which made this page 120px wider
@@ -85,7 +86,7 @@
    when the right panel pinched the main area. */
 .contexts-view__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: var(--ref-spacing-md);
 }
 

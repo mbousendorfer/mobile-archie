@@ -33,10 +33,10 @@ import {
   postUserProfilesTurn,
   reportDraftFailure,
   GENERATION_TOOLS,
-} from "./assistant.js?v=1868";
-import { getTopPosts, getTopPost } from "./top-posts-store.js?v=1868";
-import { addPostDraft } from "./posts-store.js?v=1868";
-import { addReadySource } from "./sources-stream.js?v=1868";
+} from "./assistant.js?v=1877";
+import { getTopPosts, getTopPost } from "./top-posts-store.js?v=1877";
+import { addPostDraft } from "./posts-store.js?v=1877";
+import { addReadySource } from "./sources-stream.js?v=1877";
 import {
   getConnectedProfiles,
   BRAND_INITIALS,
@@ -45,11 +45,11 @@ import {
   networkMeta,
   normalizeNetwork,
   getConnectedProfileById,
-} from "./social-profiles.js?v=1868";
-import { requireConnectedProfiles } from "./connect-profiles-flow.js?v=1868";
-import { SORTS, PERIODS } from "./components/top-post-card.js?v=1868";
-import * as inlineQuestion from "./inline-question.js?v=1868";
-import { playbookForNewWork } from "./active-playbook.js?v=1868";
+} from "./social-profiles.js?v=1877";
+import { requireConnectedProfiles } from "./connect-profiles-flow.js?v=1877";
+import { SORTS, PERIODS } from "./components/top-post-card.js?v=1877";
+import * as inlineQuestion from "./inline-question.js?v=1877";
+import { playbookForNewWork } from "./active-playbook.js?v=1877";
 
 // Cap on drafts produced in one run — post × angle × channel can multiply fast
 // (e.g. 3 posts × 4 angles × 3 channels = 36). Keep the result turn scannable;

@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1868";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1877";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -26,11 +26,11 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1868";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1868";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1868";
-import { isFlagOn } from "./feature-flags.js?v=1868";
-import { parseHashParams } from "./url-state.js?v=1868";
+} from "./playbook-brand-kit.js?v=1877";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1877";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1877";
+import { isFlagOn } from "./feature-flags.js?v=1877";
+import { parseHashParams } from "./url-state.js?v=1877";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -47,16 +47,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1868";
+} from "./network-voice.js?v=1877";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1868";
-import { showToast } from "./components/toast.js?v=1868";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1868";
-import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1868";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1868";
+} from "./voice-coach-store.js?v=1877";
+import { showToast } from "./components/toast.js?v=1877";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1877";
+import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1877";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1877";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -1951,7 +1951,7 @@ function renderTabs2(data) {
   const cmpCount = rosterList(data, ROSTERS.competitors).filter((c) => !c.suggested).length;
   return `
     <div class="ap-tabs flush pb2-tabs">
-      <div class="ap-tabs-nav" role="tablist" aria-label="Playbook sections">
+      <div class="ap-tabs-nav scrollable" role="tablist" aria-label="Playbook sections">
         ${visibleTabs()
           .map((t) => {
             const on = t.id === activeTab;
@@ -2381,7 +2381,7 @@ function renderNetworkSwitcher(data) {
   return `
     <div class="pb2-netbar">
       <div class="ap-tabs pb2-nettabs">
-        <div class="ap-tabs-nav" role="tablist" aria-label="Voice per network">
+        <div class="ap-tabs-nav scrollable" role="tablist" aria-label="Voice per network">
           <button type="button" class="ap-tabs-tab${nvAllView() ? " active" : ""}" role="tab" aria-selected="${nvAllView()}" data-nv-net="${ALL_NETWORKS}"${
             // Disabled, not hidden, while a voice is edited: a vanishing tab
             // would slide every other one under the cursor.

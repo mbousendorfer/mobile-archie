@@ -17,10 +17,10 @@
 // `loader` cfg, run the (mock) analysis on a timer, then `updateContext` with
 // the section patch — the loader flips to ready and paints the fresh data.
 
-import { navigate, getPath } from "../router.js?v=1868";
-import { parseHashParams } from "../url-state.js?v=1868";
-import { escapeHtml as esc } from "../utils.js?v=1868";
-import { renderTopbar, setTopbarActions, renderIconBack } from "../components/topbar.js?v=1868";
+import { navigate, getPath } from "../router.js?v=1877";
+import { parseHashParams } from "../url-state.js?v=1877";
+import { escapeHtml as esc } from "../utils.js?v=1877";
+import { renderTopbar, setTopbarActions, renderIconBack } from "../components/topbar.js?v=1877";
 import {
   getContextById,
   getContexts,
@@ -28,27 +28,27 @@ import {
   deleteContext,
   duplicateContext,
   appendHistory,
-} from "../contexts-store.js?v=1868";
-import { isWorkspaceMode, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=1868";
-import { mount, snapshotEditable } from "../playbook-view.js?v=1868";
-import { open as openRenameModal } from "../components/rename-modal.js?v=1868";
-import { open as openConfirmModal } from "../components/confirm-modal.js?v=1868";
-import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=1868";
-import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=1868";
+} from "../contexts-store.js?v=1877";
+import { isWorkspaceMode, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=1877";
+import { mount, snapshotEditable } from "../playbook-view.js?v=1877";
+import { open as openRenameModal } from "../components/rename-modal.js?v=1877";
+import { open as openConfirmModal } from "../components/confirm-modal.js?v=1877";
+import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=1877";
+import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=1877";
 import {
   analyzeWebsite,
   analyzeDocument,
   analyzeSocialProfiles,
   analyzeNetworkVoices,
-} from "../context-mock-analysis.js?v=1868";
+} from "../context-mock-analysis.js?v=1877";
 import {
   networkVoicesOn,
   baseNetwork,
   voiceNetworks,
   networkLabel,
   cloneVoiceByNetwork,
-} from "../network-voice.js?v=1868";
-import { sectionPatchFromAnalysis } from "../context-builder.js?v=1868";
+} from "../network-voice.js?v=1877";
+import { sectionPatchFromAnalysis } from "../context-builder.js?v=1877";
 import {
   canView,
   canEdit,
@@ -60,9 +60,10 @@ import {
   isMine,
   ownerOf,
   ownerName,
-} from "../playbook-access.js?v=1868";
-import { open as openShareModal } from "../components/share-playbook-modal.js?v=1868";
-import { showToast } from "../components/toast.js?v=1868";
+} from "../playbook-access.js?v=1877";
+import { open as openShareModal } from "../components/share-playbook-modal.js?v=1877";
+import { showToast } from "../components/toast.js?v=1877";
+import { installMoreMenu } from "../components/more-menu.js?v=1877";
 
 const AUTOFILL_MS = 1500;
 
@@ -101,24 +102,43 @@ function buildTopbarLeft() {
   return renderIconBack(back, backLabel);
 }
 
+// Mobile fork: the topbar keeps ONE action in sight — Start a chat, the AI
+// action, orange — and folds the rest (Duplicate, Share, Re-analyze, Delete)
+// into a ⋯ menu. Same data-* hooks, so the screen's topbar delegate is unchanged.
+let pbMoreInstalled = false;
 function buildTopbarActions(ctx) {
+  if (!pbMoreInstalled) {
+    installMoreMenu({
+      menuSelector: ".pb2-topbar-more-menu",
+      triggerSelector: "[data-pb2-topbar-more]",
+      closeAfterSelectors: [".pb2-topbar-more-menu [role=menuitem]"],
+    });
+    pbMoreInstalled = true;
+  }
   const editable = canEdit(ctx);
-  return [
-    !editable
-      ? `<button type="button" class="ap-button stroked grey" data-playbook-duplicate><i class="ap-icon-copy"></i><span>Duplicate</span></button>`
-      : "",
-    canManageSharing(ctx)
-      ? `<button type="button" class="ap-button stroked grey" data-playbook-share><i class="ap-icon-share"></i><span>Share</span></button>`
-      : "",
-    editable
-      ? `<button type="button" class="ap-button stroked grey" data-fill-website><i class="ap-icon-refresh"></i><span>Re-analyze website</span></button>`
-      : "",
-    // Last and orange: starting a chat hands the brand to Archie — the AI action.
-    `<button type="button" class="ap-button primary orange" data-playbook-start><i class="ap-icon-double-chat-bubbles"></i><span>Start a chat</span></button>`,
-    canDelete(ctx)
-      ? `<button type="button" class="ap-icon-button" data-playbook-delete aria-label="Delete Playbook" data-tooltip="Delete"><i class="ap-icon-trash" aria-hidden="true"></i></button>`
-      : "",
+  const item = (attr, icon, label, red = false) => `
+    <button type="button" role="menuitem" class="ap-action-dropdown-item${red ? " red-mode" : ""}" ${attr}>
+      <i class="${icon}"></i>
+      <div class="ap-action-dropdown-item-text">
+        <div class="ap-action-dropdown-item-label-container">
+          <span class="ap-action-dropdown-item-label">${label}</span>
+        </div>
+      </div>
+    </button>`;
+  const secondary = [
+    !editable ? item("data-playbook-duplicate", "ap-icon-copy", "Duplicate") : "",
+    canManageSharing(ctx) ? item("data-playbook-share", "ap-icon-share", "Share") : "",
+    editable ? item("data-fill-website", "ap-icon-refresh", "Re-analyze website") : "",
+    canDelete(ctx) ? item("data-playbook-delete", "ap-icon-trash", "Delete Playbook", true) : "",
   ].join("");
+  const more = secondary
+    ? `<div class="app-topbar__more">
+        <button type="button" class="ap-icon-button transparent" data-pb2-topbar-more aria-controls="pb2TopbarMore" aria-expanded="false" aria-haspopup="menu" aria-label="More"><i class="ap-icon-more"></i></button>
+        <div class="ap-action-dropdown app-topbar__more-menu pb2-topbar-more-menu" id="pb2TopbarMore" role="menu" hidden>${secondary}</div>
+      </div>`
+    : "";
+  // Orange: starting a chat hands the brand to Archie — the AI action.
+  return `<button type="button" class="ap-button primary orange" data-playbook-start><i class="ap-icon-double-chat-bubbles"></i><span>Start a chat</span></button>${more}`;
 }
 
 // What playbook-view is allowed to say about ownership: a mark beside the name

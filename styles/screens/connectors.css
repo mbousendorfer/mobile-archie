@@ -104,7 +104,7 @@
 
 .connectors-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
   gap: var(--ref-spacing-xs);
 }
 
@@ -447,12 +447,15 @@
     flex-basis: 100%;
   }
   .connectors-grid {
-    grid-template-columns: 1fr;
+    /* minmax(0, …): a bare 1fr floors at the nowrap description's length. */
+    grid-template-columns: minmax(0, 1fr);
   }
   .connectors-detail__hero-main {
     flex-direction: column;
   }
+  /* The hero stacks (column): a flex-basis of 100% there is a HEIGHT, and it
+     drew the actions over the prompts below. They just follow the text. */
   .connectors-detail__actions {
-    flex-basis: 100%;
+    flex-wrap: wrap;
   }
 }

@@ -11,16 +11,16 @@ import {
   canManageSharing,
   canDelete,
   canView,
-} from "../../playbook-access.js?v=1868";
-import { isFlagOn } from "../../feature-flags.js?v=1868";
-import { escapeAttr, escapeText } from "../../utils.js?v=1868";
-import { isWorkspaceMode, getActivePlaybookId } from "../../active-playbook.js?v=1868";
-import { getSessions } from "../../sessions-store.js?v=1868";
-import { renderEmptyState } from "../../components/empty-state.js?v=1868";
-import { getSources, getIdeas } from "../../library.js?v=1868";
-import { getPosts } from "../../posts-store.js?v=1868";
-import { getContextById } from "../../contexts-store.js?v=1868";
-import { pageState } from "../home.js?v=1868";
+} from "../../playbook-access.js?v=1877";
+import { isFlagOn } from "../../feature-flags.js?v=1877";
+import { escapeAttr, escapeText } from "../../utils.js?v=1877";
+import { isWorkspaceMode, getActivePlaybookId } from "../../active-playbook.js?v=1877";
+import { getSessions } from "../../sessions-store.js?v=1877";
+import { renderEmptyState } from "../../components/empty-state.js?v=1877";
+import { getSources, getIdeas } from "../../library.js?v=1877";
+import { getPosts } from "../../posts-store.js?v=1877";
+import { getContextById } from "../../contexts-store.js?v=1877";
+import { pageState } from "../home.js?v=1877";
 
 // The Playbooks tab — a TABLE, the same shape as the Chats tab beside it.
 //
@@ -37,16 +37,18 @@ import { pageState } from "../home.js?v=1868";
 //
 // The grid of tiles survives for `/contexts` flag OFF: there, a Playbook is an
 // object you browse, not a row you pick from.
+//
+// Mobile fork: a LIST of rows rather than columns — a phone has room for one.
+// What the Owner / Access / Updated columns said moves into a meta line, in
+// words, under the brief; the ⋯ stays at the row's end.
 export function renderPlaybooksTable(list) {
   if (!list.length) return renderContextsEmpty(visibleContexts(), pageState);
-  const sharing = isFlagOn("playbookSharing");
   return `
-    <table class="ap-table outer-border header-background clickable-rows home-playbooks">
-      <thead>
+    <table class="ap-table outer-border clickable-rows home-playbooks">
+      <colgroup><col /><col class="home-playbooks__col-action" /></colgroup>
+      <thead class="app-visually-hidden">
         <tr>
           <th scope="col">Playbook</th>
-          ${sharing ? `<th scope="col">Owner</th><th scope="col">Access</th>` : ""}
-          <th scope="col">Updated</th>
           <th scope="col" class="right">Action</th>
         </tr>
       </thead>
@@ -62,7 +64,11 @@ function renderPlaybookRow(ctx) {
   const sharing = isFlagOn("playbookSharing");
   const owner = sharing ? ownerOf(ctx) : null;
   const mine = isMine(ctx);
-  const accessTitle = accessLabel(ctx) || (canEdit(ctx) ? "You can edit this Playbook" : "Read-only");
+  const meta = [
+    `Updated ${ctx.updatedAt || "recently"}`,
+    sharing ? `Owner: ${mine ? "you" : owner?.name || "a teammate"}` : "",
+    sharing && !canEdit(ctx) ? "Read-only" : "",
+  ].filter(Boolean);
   const title = startChatTitle(ctx);
   return `
     <tr
@@ -81,25 +87,10 @@ function renderPlaybookRow(ctx) {
               ${defaultBadge(ctx)}${currentTagFor(ctx)}
             </div>
             <div class="home-playbooks__brief">${escapeText(playbookBrief(ctx))}</div>
+            <div class="home-playbooks__meta">${escapeText(meta.join(" · "))}</div>
           </div>
         </div>
       </td>
-      ${
-        sharing
-          ? `<td>
-              <div class="ap-table-cell-content home-playbooks__owner">
-                <span class="ap-avatar size-24"><span class="ap-avatar-initials">${escapeText(mine ? "MB" : owner?.initials || "?")}</span></span>
-                <span class="home-playbooks__owner-name">${escapeText(mine ? "You" : owner?.name || "a teammate")}</span>
-              </div>
-            </td>
-            <td>
-              <div class="ap-table-cell-content home-playbooks__access" title="${escapeAttr(accessTitle)}" aria-label="${escapeAttr(accessTitle)}">
-                <i class="${canEdit(ctx) ? "ap-icon-pen" : "ap-icon-eye-on"}" aria-hidden="true"></i>
-              </div>
-            </td>`
-          : ""
-      }
-      <td><div class="ap-table-cell-content">${escapeText(ctx.updatedAt || "recently")}</div></td>
       <td class="right">${playbookMoreMenu(ctx)}</td>
     </tr>
   `;
@@ -234,62 +225,42 @@ export function renderChatsTab() {
         });
   }
 
+  // Mobile fork: one row per chat, on two lines — the name and its last
+  // activity, then its Playbook and how far the work got. The counts carry
+  // their names in text ("3 sources"), the header that used to name them gone.
   const body = rows
     .map(
       ({ session, ctx }) => `
       <tr data-home-chat="${escapeAttr(session.id)}" role="button" tabindex="0">
         <td>
-          <div class="ap-table-cell-content">
-            <span class="home-chats__name">${escapeText(session.name)}</span>
+          <div class="home-chats__row">
+            <div class="home-chats__line">
+              <span class="home-chats__name">${escapeText(session.name)}</span>
+              <span class="home-chats__when">${escapeText(session.lastActivity || "")}</span>
+            </div>
+            <div class="home-chats__line home-chats__meta">
+              <span class="home-chats__pb"><span class="app-sidebar__row-color-dot app-sidebar__row-color-dot--${escapeAttr(ctx?.color || "grey")}" aria-hidden="true"></span>${ctx ? escapeText(ctx.name) : "No Playbook"}</span>
+              <span>${counted(getSources(session.id).length, "source")} · ${counted(getIdeas(session.id).length, "idea")} · ${counted(getPosts(session.id).length, "draft")}</span>
+            </div>
           </div>
         </td>
-        ${countCell(getSources(session.id).length)}
-        ${countCell(getIdeas(session.id).length)}
-        ${countCell(getPosts(session.id).length)}
-        <td>
-          <div class="ap-table-cell-content">
-            <span class="app-sidebar__row-color-dot app-sidebar__row-color-dot--${escapeAttr(ctx?.color || "grey")}" aria-hidden="true"></span>
-            <span class="${ctx ? "" : "muted"}">${ctx ? escapeText(ctx.name) : "No Playbook"}</span>
-          </div>
-        </td>
-        <td><div class="ap-table-cell-content">${escapeText(session.lastActivity || "")}</div></td>
       </tr>
     `,
     )
     .join("");
 
   return `
-    <table class="ap-table small outer-border header-background clickable-rows home-chats">
-      <thead>
-        <tr>
-          <th scope="col">Chat</th>
-          <th scope="col" class="right">Sources</th>
-          <th scope="col" class="right">Ideas</th>
-          <th scope="col" class="right">Drafts</th>
-          <th scope="col">Playbook</th>
-          <th scope="col">Last activity</th>
-        </tr>
-      </thead>
+    <table class="ap-table outer-border clickable-rows home-chats">
+      <thead class="app-visually-hidden"><tr><th scope="col">Chat</th></tr></thead>
       <tbody>${body}</tbody>
     </table>
   `;
 }
 
-// How far the work in a chat got — sources in, ideas out, drafts written. Three
-// numbers with a COLUMN HEADER each rather than three icons in one cell: a
-// number needs its name in text, and in a table the header is that name.
-//
-// ⚠️ Not the same call as the Playbooks tab, which just LOST its three counters.
-// The difference is what the reader is doing: nobody picks a brand by how many
-// audiences its fiche lists, but "3 sources · 5 ideas · 2 drafts" is exactly how
-// far a conversation got, which is what you scan a list of work for.
-//
-// A zero prints as a zero, muted: an empty cell in a numeric column reads as
-// "unknown", and "this chat has produced nothing yet" is a fact worth seeing.
-function countCell(n) {
-  return `<td class="right"><div class="ap-table-cell-content">
-    <span class="${n ? "home-chats__count" : "home-chats__count home-chats__count--zero"}">${n}</span>
-  </div></td>`;
+// How far the work in a chat got, said in words: "3 sources", "1 idea".
+// A zero is stated too — "this chat has produced nothing yet" is worth seeing.
+function counted(n, word) {
+  return `${n} ${word}${n === 1 ? "" : "s"}`;
 }
 
 // The Playbook behind a chat, but only if I may open it — same rule the rail's

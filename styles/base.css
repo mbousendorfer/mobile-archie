@@ -131,3 +131,17 @@ a {
     box-shadow: 0 0 0 4px var(--ref-color-electric-blue-20);
   }
 }
+
+/* Read by assistive tech, not drawn — e.g. a table header kept for its
+   semantics where the mobile layout shows no columns. */
+.app-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -107,6 +107,7 @@
   left: 0;
   z-index: 30;
   min-width: 250px;
+  max-width: calc(100vw - 2 * var(--ref-spacing-md));
 }
 
 /* A quiet section label inside the menu — the same treatment the composer's
@@ -131,12 +132,14 @@
 
 /* The DS select ships full-width; clamp it to its content so it sits inline
    with the send button instead of stretching across the card. */
-.home-hero__pb,
+/* Mobile fork: the select takes what the toolbar leaves (Add is an icon
+   button) and truncates the brand's name. */
 .home-hero__pb > .ap-select-trigger {
-  width: auto;
+  width: 100%;
 }
 
 .home-hero__pb {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -287,21 +290,18 @@
   text-overflow: ellipsis;
 }
 
-.home-playbooks__owner {
-  gap: var(--ref-spacing-xxs);
-}
-
-.home-playbooks__owner-name {
+/* What the Owner / Access / Updated columns said, in words, under the brief. */
+.home-playbooks__meta {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
   color: var(--ref-color-grey-80);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.home-playbooks__access {
-  color: var(--ref-color-grey-80);
-}
-
-.home-playbooks__access > i {
-  font-size: var(--sys-icon-css-sm);
+.home-playbooks__brief {
+  max-width: 100%;
 }
 
 /* The kebab's menu drops out of the cell, so nothing on this path may clip. */
@@ -319,18 +319,67 @@
   min-width: 220px;
 }
 
+/* A chat, on two lines: name + last activity, then Playbook + counts. */
+.home-chats__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--ref-spacing-xs) 0;
+  min-width: 0;
+}
+
+.home-chats__line {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  min-width: 0;
+}
+
 .home-chats__name {
+  flex: 1 1 auto;
+  min-width: 0;
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-100);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* The three work counts. Tabular figures so the columns stay in line whatever
-   the digits, and a zero is stated rather than left blank — muted, but there. */
-.home-chats__count {
-  font-variant-numeric: tabular-nums;
-  color: var(--ref-color-grey-100);
-}
-
-.home-chats__count--zero {
+.home-chats__when,
+.home-chats__meta {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
   color: var(--ref-color-grey-80);
+}
+
+.home-chats__when {
+  flex: 0 0 auto;
+}
+
+/* Playbook first, then the counts — each kept whole, the second wrapping
+   under the first when the line runs out. */
+.home-chats__meta {
+  flex-wrap: wrap;
+  column-gap: var(--ref-spacing-xs);
+}
+
+.home-chats__meta > span {
+  white-space: nowrap;
+}
+
+.home-chats__pb {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+/* One column: the table fills the width and lets its cell shrink. */
+.home-chats,
+.home-playbooks {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.home-playbooks__col-action {
+  width: 56px;
 }
