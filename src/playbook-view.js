@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1787";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1788";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -26,11 +26,11 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1787";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1787";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1787";
-import { isFlagOn } from "./feature-flags.js?v=1787";
-import { parseHashParams } from "./url-state.js?v=1787";
+} from "./playbook-brand-kit.js?v=1788";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1788";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1788";
+import { isFlagOn } from "./feature-flags.js?v=1788";
+import { parseHashParams } from "./url-state.js?v=1788";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -44,16 +44,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1787";
+} from "./network-voice.js?v=1788";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1787";
-import { showToast } from "./components/toast.js?v=1787";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1787";
-import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1787";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1787";
+} from "./voice-coach-store.js?v=1788";
+import { showToast } from "./components/toast.js?v=1788";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1788";
+import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1788";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1788";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2000,9 +2000,9 @@ function pb2Palette(data, { roles = false, max = 6 } = {}) {
 
 // `aside`: trusted html in the caption's place (a badge, a tag) — for what a
 // caption would only say in words.
-function pb2Block(title, body, { wide = false, caption = "", aside = "", index = 0, icon = "" } = {}) {
+function pb2Block(title, body, { wide = false, caption = "", aside = "", index = 0, icon = "", className = "" } = {}) {
   return `
-    <section class="pb2-block${wide ? " pb2-block--wide" : ""}" style="--pb2-i:${index}">
+    <section class="pb2-block${wide ? " pb2-block--wide" : ""}${className ? ` ${className}` : ""}" style="--pb2-i:${index}">
       <header class="pb2-block__head">
         ${icon ? `<i class="${icon} pb2-block__icon" aria-hidden="true"></i>` : ""}
         <h3 class="pb2-block__title">${esc(title)}</h3>
@@ -2566,15 +2566,16 @@ function nvAllTiles(data) {
 // base — repeating the base word for word made every network look the same.
 function nvNetworkReadBlocks(data, net) {
   // The same four blocks as the base, in the same order and size. A part not
-  // optimized yet shows the base's version inside, as a placeholder (lines
-  // unfilled, grey-80) under its "Same as LinkedIn" pill — never merged away.
+  // optimized yet shows the base's version inside, as a placeholder — the block
+  // reads disabled (grey ground, grey-60 ink) under its "Same as LinkedIn" pill.
   const parts = NV_FIELDS.map(([field, title], n) => {
     const own = isOverridden(data, net, field);
     const value = nvFieldValue(data, net, field);
     const body = field === "signatureHooks" || field === "closingPatterns" ? pb2Lines(value) : pb2Text(value);
-    return pb2Block(title, own ? body : `<div class="pb2-nv-placeholder">${body}</div>`, {
+    return pb2Block(title, body, {
       index: 3 + n,
       aside: nvSourceBadge(data, net, field),
+      className: own ? "" : "pb2-nv-placeholder",
     });
   });
   return [

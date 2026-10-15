@@ -15,9 +15,9 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1787";
-import { escapeHtml as esc } from "../utils.js?v=1787";
-import { networkVoiceOptions } from "../context-mock-analysis.js?v=1787";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1788";
+import { escapeHtml as esc } from "../utils.js?v=1788";
+import { networkVoiceOptions } from "../context-mock-analysis.js?v=1788";
 import {
   NETWORK_FIELDS,
   networkLabel,
@@ -26,7 +26,7 @@ import {
   networkEntry,
   resolvedVoice,
   progressRingHtml,
-} from "../network-voice.js?v=1787";
+} from "../network-voice.js?v=1788";
 
 const MODAL_ID = "voiceWizard";
 

@@ -1029,17 +1029,26 @@ button.pb2-nv-part__hit:focus-visible {
   }
 }
 
-/* A part not optimized yet: the base's version, as a placeholder — the lines
-   lose their fill (a hairline instead), the ink drops to grey-80. What the
-   network made its own stays filled, in grey-100. */
+/* A part not optimized yet reads DISABLED: the block on the page's grey, the
+   base's version inside in grey-60 (the ink the house keeps for disabled),
+   lines unfilled. Its title stays grey-100 so the four still scan as one set;
+   an optimized part stays white, filled, grey-100. */
+.pb2-block.pb2-nv-placeholder {
+  background: var(--app-surface-subtle);
+}
+
 .pb2-nv-placeholder .pb2-line {
   border: 1px solid var(--ref-color-grey-20);
   background: transparent;
-  color: var(--ref-color-grey-80);
+  color: var(--ref-color-grey-60);
+}
+
+.pb2-nv-placeholder .pb2-line i {
+  color: var(--ref-color-grey-60);
 }
 
 .pb2-nv-placeholder .pb2-prose {
-  color: var(--ref-color-grey-80);
+  color: var(--ref-color-grey-60);
 }
 
 /* A part's state in its block head, on the right where the caption sat. */
