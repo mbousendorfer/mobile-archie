@@ -148,9 +148,9 @@
    Distinct elements on one width and one rhythm. Your lines: white cards
    (grey-20 edge, radius md, 48px), grip · rank badge · text · remove. Every
    element starts its content 12px in — the DS field's own inset — so the
-   field's placeholder, the grips and the suggestions' text share one vertical. His suggestions: the same cards on
-   the page's grey without an edge, the whole card the button, "+ Add" at the
-   right in the action blue; hover = the house blue border. */
+   field's placeholder, the grips and the suggestions' text share one vertical. His suggestions: the DS radio card's
+   surface (white, grey-20 edge, grey-40 on hover), the whole card the button,
+   "+ Add" at the right in the action blue. */
 .vw-stack {
   display: flex;
   flex-direction: column;
@@ -204,16 +204,23 @@
   width: 100%;
   min-height: 48px;
   padding: 0 var(--ref-spacing-sm) 0 var(--ref-spacing-xs);
-  border: 1px solid transparent;
+  /* The DS radio card's surface (.ap-radio-card.card): white, grey-20 edge,
+     radius md; its hover takes the edge to grey-40 (0.2s). Keyboard focus
+     shows the blue of what you act on. */
+  border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
-  background: var(--app-surface-subtle);
+  background: var(--ref-color-white);
   color: var(--ref-color-grey-100);
   font: inherit;
   text-align: left;
   cursor: pointer;
+  transition: border-color 0.2s ease-in-out;
 }
 
-.vw-pick:hover,
+.vw-pick:hover {
+  border-color: var(--ref-color-grey-40);
+}
+
 .vw-pick:focus-visible {
   border-color: var(--ref-color-electric-blue-100);
   outline: none;
