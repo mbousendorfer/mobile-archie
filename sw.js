@@ -16,12 +16,11 @@
 //
 // Bump SHELL when this file's strategy changes (activate drops other caches).
 
-const SHELL = "archie-shell-v1";
+const SHELL = "archie-shell-v2";
 const RUNTIME = "archie-runtime";
 const SHELL_URLS = [
   "./",
   "./index.html",
-  "./frame.html",
   "./manifest.webmanifest",
   "./assets/pwa/icon-192.png",
   "./assets/pwa/icon-512.png",

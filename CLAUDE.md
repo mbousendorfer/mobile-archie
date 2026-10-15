@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Interactive prototype for exploring and validating Agorapulse UI redesigns — specifically **Archie**, an AI content assistant (sources → ideas → drafts → schedule). **This repo is `mobile-archie`, the mobile-only fork of `rebel-racoon`** (the desktop proto): every surface targets a phone (≤ 480px), and on a desktop the app runs inside a phone frame (§ Mobile). No build step, no bundler — static ES modules served locally. The codebase mixes English (code, UI copy) and French (some comments). Archie speaks in the first person ("I", "Let's") — never third-person "Archie" — in user-facing copy.
+Interactive prototype for exploring and validating Agorapulse UI redesigns — specifically **Archie**, an AI content assistant (sources → ideas → drafts → schedule). **This repo is `mobile-archie`, the mobile-only fork of `rebel-racoon`** (the desktop proto): every surface targets a phone (≤ 480px); on a desktop the same app simply opens wider — there is no frame (§ Mobile). No build step, no bundler — static ES modules served locally. The codebase mixes English (code, UI copy) and French (some comments). Archie speaks in the first person ("I", "Let's") — never third-person "Archie" — in user-facing copy.
 
 ## Before you build a feature — read the docs
 
@@ -43,7 +43,7 @@ npm install   # tooling only (prettier / husky / lint-staged) — the DS comes f
 npm start     # runs `npx serve -p 8000` — open http://localhost:8000
 ```
 
-On a desktop, `/` redirects to `frame.html` (the app in a 390×844 iframe). On a real phone, `scripts/dev-server.py` listens on `0.0.0.0`: open `http://<mac-ip>:<port>` on the same Wi-Fi.
+The PWA is live at https://mbousendorfer.github.io/mobile-archie/ — there is no desktop frame: the same app opens on any screen. On a real phone against your local server, `scripts/dev-server.py` listens on `0.0.0.0`: open `http://<mac-ip>:<port>` on the same Wi-Fi.
 
 With Claude Code the dev server auto-launches via `.claude/launch.json` (server name `archie`, `python3 -m http.server` on an auto-assigned port). There is **no test suite**; verify changes by running the app (see the verify/run skills) and the checks: `npm run check:ds` (every token / icon / `.ap-*` class resolves against the DS the app loads), `check:dead`, `check:versions`, `check:templates`.
 
@@ -159,7 +159,7 @@ The **Design System is loaded from jsDelivr at `@latest`** (`index.html`: `@agor
 The plan that produced the fork: [`docs/plans/mobile-fork.md`](docs/plans/mobile-fork.md). Its rules, standing:
 
 - **Mobile-only.** Every rule targets a phone; there is no desktop layout and no breakpoint above 480px to maintain. Don't add one.
-- **The desktop frame is an iframe, never CSS.** An inline script at the top of `index.html` sends a top-level window ≥ 768px wide **with a mouse** (`pointer: fine` — a phone in landscape or a tablet never) to `frame.html`, which loads `index.html` in a 390×844 iframe — so `dvh`, media queries and `position: fixed` (modals, dropdowns, toasts) behave as on a phone. A CSS frame would let fixed layers escape it.
+- **No desktop frame.** The app is served as itself, the PWA, on every screen: a desktop gets the same mobile layout, wider. (A phone-frame `frame.html` existed for a day and was removed at the user's request — don't bring a frame back, in an iframe or in CSS.)
 - **Shell = one column.** Topbar (56px + safe-top) over the content, `height: 100dvh`. The sidebar is a **drawer** (`is-sidebar-open` on `#appShell`, closed on `hashchange`, backdrop tap, Escape); the right panel is a **full-height bottom sheet** with `.ap-tabs` Drafts · Ideas · Sources. `?panel=` stays the source of truth, so the browser's Back closes the sheet. There is no collapsed rail, no panel resize, no sidebar↔panel coupling, no keyboard shortcut — don't bring them back.
 - **Modals are sheets.** The generic rule lives in `ds-patches.css`: anchored to the bottom, full width, top corners only, footer pinned with the bottom safe-area. Big modals add `app-dialog--full`. CTAs stay auto-width, right-grouped.
 - **Deeper levels are pushed**, not split: a Topic article, an Insights detail, the video-clips edit pane take the whole screen with a Back button. Long menus become an action sheet from the bottom.

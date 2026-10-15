@@ -18,16 +18,6 @@
     <!-- iOS takes a PNG only, full-bleed (it rounds the corners itself). -->
     <link rel="apple-touch-icon" href="./assets/pwa/apple-touch-icon.png" />
     <title>Archie</title>
-    <!-- Mobile-only fork: a wide top-level window with a MOUSE gets the phone frame
-         (frame.html loads this page in a 390×844 iframe, so dvh, media queries and
-         fixed layers behave as on a phone). Inside the iframe, window.top !== window.
-         A touch screen never does — a phone in landscape or a tablet is wider than
-         768px, and it IS the device. -->
-    <script>
-      if (window.top === window && window.innerWidth >= 768 && matchMedia("(pointer: fine)").matches) {
-        location.replace("frame.html" + location.hash);
-      }
-    </script>
     <!-- Agorapulse Design System — served by jsDelivr at @latest, never vendored:
          the published package is the only source (design-guidelines skill).
          Critical font preload first — Averta Regular powers virtually every

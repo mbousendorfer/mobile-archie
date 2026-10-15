@@ -21,10 +21,9 @@ With Claude Code the dev server auto-launches via `.claude/launch.json`.
 
 ### On a desktop
 
-Open the server's root: any window 768px wide or more, with a mouse, is sent to `frame.html`,
-which shows the app in a 390×844 phone frame (an iframe, so the app gets a real
-phone viewport). Narrow the window under 768px, or open `index.html` inside a
-device emulator, to get it unframed.
+The app opens as itself — no phone frame — so a desktop browser shows the mobile
+layout at the window's width. To see it at a phone's size, use the browser's
+device emulator (e.g. Chrome DevTools, iPhone 12 Pro).
 
 ### On a phone — install it
 
