@@ -8,7 +8,7 @@
    in the same place, at the same height.
 
    .memory-note--kept — a rule already in the voice ("What I've learned"):
-   plain text beside the olive mark, no surface.
+   plain text beside the olive mark, on the block's butter (.pb2-block--memory).
 
    Butter is Archie's colour (tokens.css). The mark is the DS sparkles glyph in
    olive. Ink stays grey-80…100; no shadow, no edge bar, no capitals. */
@@ -145,6 +145,13 @@ i.memory-mark {
 
 .memory-note__text {
   margin: 0;
+}
+
+/* "What I've learned" on the Voice tab: what Archie remembers, on his butter —
+   the same surface as a proposal's body, so a Remembered rule lands where it
+   looks like it came from. The hairline stays grey-20. */
+.pb2-block.pb2-block--memory {
+  background: var(--app-butter);
 }
 
 .memory-notes {
