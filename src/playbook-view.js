@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1767";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1769";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -27,16 +27,16 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1767";
+} from "./playbook-brand-kit.js?v=1769";
 import {
   analyzeWebsite,
   discoverCompetitors,
   competitorKey,
   analyzeNetworkVoices,
-} from "./context-mock-analysis.js?v=1767";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1767";
-import { isFlagOn } from "./feature-flags.js?v=1767";
-import { parseHashParams } from "./url-state.js?v=1767";
+} from "./context-mock-analysis.js?v=1769";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1769";
+import { isFlagOn } from "./feature-flags.js?v=1769";
+import { parseHashParams } from "./url-state.js?v=1769";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -48,16 +48,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1767";
+} from "./network-voice.js?v=1769";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1767";
-import { NETWORKS } from "./social-profiles.js?v=1767";
-import { showToast } from "./components/toast.js?v=1767";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1767";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1767";
+} from "./voice-coach-store.js?v=1769";
+import { NETWORKS } from "./social-profiles.js?v=1769";
+import { showToast } from "./components/toast.js?v=1769";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1769";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1769";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2724,10 +2724,15 @@ function nvFitStrip(data, net, { mini = false } = {}) {
   const parts = NV_FIELDS.map(([field, title]) => {
     const own = isOverridden(data, net, field);
     const say = `${title}: ${NV_CAPTION(data, net, field).toLowerCase()}`;
-    return `<li class="pb2-nv-fit__part${own ? " is-tuned" : ""}" title="${esc(say)}" aria-label="${esc(say)}">
-        <span class="pb2-nv-fit__glyph${own ? "" : " is-borrowed"}"><i class="${networkIcon(own ? net : baseNetwork(data))}" aria-hidden="true"></i></span>
-        ${mini ? "" : `<span class="pb2-nv-fit__name">${esc(title)}</span>`}
-      </li>`;
+    const inner = `<span class="pb2-nv-fit__glyph${own ? "" : " is-borrowed"}"><i class="${networkIcon(own ? net : baseNetwork(data))}" aria-hidden="true"></i></span>
+        ${mini ? "" : `<span class="pb2-nv-fit__name">${esc(title)}</span>`}`;
+    // A borrowed part is the way in: it opens Edit straight on that part,
+    // already adapted for the network, ready to rewrite.
+    if (!own && !mini && canEditView() && !editScope) {
+      const act = `${title} — adapt for ${label}`;
+      return `<li class="pb2-nv-fit__part"><button type="button" class="pb2-nv-fit__hit" data-nv-fit-adapt="${field}" title="${esc(act)}" aria-label="${esc(act)}">${inner}</button></li>`;
+    }
+    return `<li class="pb2-nv-fit__part${own ? " is-tuned" : ""}" title="${esc(say)}" aria-label="${esc(say)}">${inner}</li>`;
   });
   return `<ul class="pb2-nv-fit${mini ? " pb2-nv-fit--mini" : ""}" aria-label="How your ${esc(label)} voice is built">${parts.join("")}</ul>`;
 }
@@ -2924,6 +2929,13 @@ function setNetworkInUrl(net) {
   history.replaceState(null, "", `#${path}?${q.toString()}`);
 }
 
+// Adapt one part for the active network: it starts as a copy of the base's.
+function nvAdaptField(data, field) {
+  const base =
+    field === "signatureHooks" || field === "closingPatterns" ? voiceEntry(data)[field] || [] : data[field] || "";
+  nvWritableEntry(data, activeNetworkFor(data))[field] = Array.isArray(base) ? base.slice() : base;
+}
+
 function onNetworkVoiceClick(event) {
   if (!nvOn()) return false;
   const data = cfg.getData();
@@ -2962,12 +2974,20 @@ function onNetworkVoiceClick(event) {
     repaint();
     return true;
   }
+  const fitAdapt = event.target.closest("[data-nv-fit-adapt]");
+  if (fitAdapt) {
+    const field = fitAdapt.dataset.nvFitAdapt;
+    openEdit(data, "voice");
+    nvAdaptField(data, field);
+    repaint();
+    const target = mountTarget?.querySelector(`[data-recap-line-list="${field}"], [data-nv-text="${field}"]`);
+    target?.scrollIntoView({ block: "center", behavior: "smooth" });
+    target?.focus({ preventScroll: true });
+    return true;
+  }
   const adapt = event.target.closest("[data-nv-adapt]");
   if (adapt) {
-    const field = adapt.dataset.nvAdapt;
-    const base =
-      field === "signatureHooks" || field === "closingPatterns" ? voiceEntry(data)[field] || [] : data[field] || "";
-    nvWritableEntry(data, activeNetworkFor(data))[field] = Array.isArray(base) ? base.slice() : base;
+    nvAdaptField(data, adapt.dataset.nvAdapt);
     repaint();
     return true;
   }
@@ -3479,10 +3499,26 @@ const WRITE_HOOKS = [
   "[data-nv-accept]",
   "[data-nv-dismiss]",
   "[data-nv-adapt]",
+  "[data-nv-fit-adapt]",
   "[data-nv-reset]",
 ].join(",");
 
 // ── Edit lifecycle ───────────────────────────────────────────────────────
+
+// Open a section in edit: the snapshot Cancel restores, then the baseline the
+// "unsaved changes" check compares against.
+function openEdit(data, scope) {
+  if (scope === "brand") ensureBrand(data);
+  const editRoster = ROSTERS[scope];
+  if (editRoster) rosterList(data, editRoster);
+  snapshot = snapshotEditable(data);
+  editScope = scope;
+  audienceCustom = false;
+  repaint();
+  // Taken AFTER the editor paints: rendering it seeds fields (a language's voice
+  // entry), which would otherwise read as an edit nobody made.
+  editBaseline = JSON.stringify(snapshotEditable(data));
+}
 
 function resetEdit() {
   snapshot = null;
@@ -3637,16 +3673,7 @@ function onClick(event) {
 
   const penBtn = event.target.closest("[data-recap-edit-card]");
   if (penBtn) {
-    if (penBtn.dataset.recapEditCard === "brand") ensureBrand(data);
-    const editRoster = ROSTERS[penBtn.dataset.recapEditCard];
-    if (editRoster) rosterList(data, editRoster);
-    snapshot = snapshotEditable(data);
-    editScope = penBtn.dataset.recapEditCard;
-    audienceCustom = false;
-    repaint();
-    // Taken AFTER the editor paints: rendering it seeds fields (a language's voice
-    // entry), which would otherwise read as an edit nobody made.
-    editBaseline = JSON.stringify(snapshotEditable(data));
+    openEdit(data, penBtn.dataset.recapEditCard);
     mountTarget
       ?.querySelector(
         "[data-recap-editing-card] input, [data-recap-editing-card] textarea, [data-recap-editing-card] select",

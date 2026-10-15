@@ -868,6 +868,32 @@
   background: var(--app-surface);
 }
 
+/* A borrowed part is a button — the way into "Adapt for X". It fills its cell;
+   hover = the blue border of a card (house rule), no lift. */
+.pb2-nv-fit__hit {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  margin: calc(-1 * var(--ref-spacing-md)) calc(-1 * var(--ref-spacing-xs));
+  padding: var(--ref-spacing-md) var(--ref-spacing-xs);
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pb2-nv-fit__part:has(> .pb2-nv-fit__hit:hover),
+.pb2-nv-fit__part:has(> .pb2-nv-fit__hit:focus-visible) {
+  box-shadow: inset 0 0 0 1px var(--ref-color-electric-blue-100);
+}
+
+.pb2-nv-fit__hit:focus-visible {
+  outline: none;
+}
+
 .pb2-nv-fit__glyph {
   display: inline-flex;
   align-items: center;
