@@ -13,22 +13,23 @@ import {
   renderNotice,
   renderResultCard,
   renderFailedTurn,
-} from "./thread-turns.js?v=1749";
-import { getSources as getStreamSources } from "../../sources-stream.js?v=1749";
-import { renderTopPostEcho, renderTopPostsWidget } from "../../components/top-post-card.js?v=1749";
-import { getTopPost } from "../../top-posts-store.js?v=1749";
-import { getTopicById } from "../../topics-store.js?v=1749";
-import { renderTopicsWidget } from "../../components/topic-card.js?v=1749";
-import { renderProfileEchoCard } from "../../social-profiles.js?v=1749";
-import { escapeHtml } from "../../utils.js?v=1749";
-import { getIdeas } from "../../library.js?v=1749";
-import { renderRefs, resolveRef } from "../../chat-refs.js?v=1749";
-import { renderCompactIdeaCard } from "../../components/idea-card-compact.js?v=1749";
-import { getThread, toolName, toolDescription } from "../../assistant.js?v=1749";
-import { getSuggestion } from "../../voice-coach-store.js?v=1749";
-import { networkLabel, networkIcon, memoryCardHtml } from "../../network-voice.js?v=1749";
-import { isFlagOn } from "../../feature-flags.js?v=1749";
-import { CURRENT_USER } from "../../org.js?v=1749";
+} from "./thread-turns.js?v=1756";
+import { getSources as getStreamSources } from "../../sources-stream.js?v=1756";
+import { renderTopPostEcho, renderTopPostsWidget } from "../../components/top-post-card.js?v=1756";
+import { getTopPost } from "../../top-posts-store.js?v=1756";
+import { getTopicById } from "../../topics-store.js?v=1756";
+import { renderTopicsWidget } from "../../components/topic-card.js?v=1756";
+import { renderProfileEchoCard } from "../../social-profiles.js?v=1756";
+import { escapeHtml } from "../../utils.js?v=1756";
+import { getIdeas } from "../../library.js?v=1756";
+import { renderRefs, resolveRef } from "../../chat-refs.js?v=1756";
+import { renderCompactIdeaCard } from "../../components/idea-card-compact.js?v=1756";
+import { getThread, toolName, toolDescription } from "../../assistant.js?v=1756";
+import { getSuggestion } from "../../voice-coach-store.js?v=1756";
+import { draftsToRewrite } from "../../voice-coach.js?v=1756";
+import { networkLabel, networkIcon, memoryCardHtml } from "../../network-voice.js?v=1756";
+import { isFlagOn } from "../../feature-flags.js?v=1756";
+import { CURRENT_USER } from "../../org.js?v=1756";
 
 export function renderThread(messages, sessionId) {
   const turns = messages.map((m) => [m, renderTurn(m, sessionId)]);
@@ -176,7 +177,7 @@ function renderTurn(message, sessionId) {
   }
 
   if (message.role === "assistant" && message.variant === "voice-suggestion") {
-    return renderVoiceSuggestionTurn(message);
+    return renderVoiceSuggestionTurn(message, sessionId);
   }
 
   if (message.role === "user" && message.variant === "selection-echo") {
@@ -339,10 +340,20 @@ function renderSelectionEchoTurn(echo) {
 // network voice, as a memory card (network-voice.js memoryCardHtml). Reads the
 // suggestion's status from its store, so a Remember made on the Playbook's tray
 // turns this card to its answered state too; Undo sends it back to the question.
-function renderVoiceSuggestionTurn(message) {
+// Here the card knows the chat: the drafts the rule came from are links
+// (chat refs — a deleted one just drops out), and a kept rule offers to
+// rewrite the chat's drafts that don't follow it yet.
+function renderVoiceSuggestionTurn(message, sessionId) {
   const s = getSuggestion(message.contextId, message.suggestionId);
   if (!s || s.status === "dismissed") return "";
-  return `<div class="memory-turn">${memoryCardHtml(s, { attr: "voice", value: `${message.contextId}|${s.id}` })}</div>`;
+  const from = (s.postIds || []).filter((id) => resolveRef("post", id, sessionId));
+  const evidence = from.length ? renderRefs(`From ${from.map((id) => `[[post:${id}]]`).join(", ")}`, sessionId) : "";
+  return `<div class="memory-turn">${memoryCardHtml(s, {
+    attr: "voice",
+    value: `${message.contextId}|${s.id}`,
+    evidence,
+    rewrite: draftsToRewrite(sessionId, s).length,
+  })}</div>`;
 }
 
 // "Connect this service first" prompt — Archie can't import a pasted link

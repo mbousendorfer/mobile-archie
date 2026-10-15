@@ -7,9 +7,13 @@
 //   attachImageToDraft(sessionId, postId, imageUrl)
 //   subscribe(sessionId, fn)    → unsubscribe fn
 
-import { postsBySession as seedPostsBySession, allSeedSessions as seedRecentSessions } from "./mocks.js?v=1749";
-import { isNewUser } from "./user-mode.js?v=1749";
-import { createSessionNotifier } from "./store-utils.js?v=1749";
+import { postsBySession as seedPostsBySession, allSeedSessions as seedRecentSessions } from "./mocks.js?v=1756";
+import { isNewUser } from "./user-mode.js?v=1756";
+import { createSessionNotifier } from "./store-utils.js?v=1756";
+import { getSessionById } from "./sessions-store.js?v=1756";
+import { getContextById } from "./contexts-store.js?v=1756";
+import { playbookForNewWork } from "./active-playbook.js?v=1756";
+import { networkVoicesOn, writeInVoice } from "./network-voice.js?v=1756";
 
 // Demo session ids — only these get the seeded posts mock. Brand-new
 // conversations start empty (cf. library.js for the same rationale).
@@ -90,6 +94,14 @@ export function addPostDraft(
     // network's default orientation.
     format: format || null,
   };
+  // Voice per network: every generator lands here, so every draft is written
+  // in its network's voice — the hooks, closings and rules the Playbook holds
+  // for it. `voice` says which, for the card's generation context.
+  if (networkVoicesOn()) {
+    const session = getSessionById(sessionId);
+    const ctx = session?.contextId ? getContextById(session.contextId) : playbookForNewWork();
+    if (ctx) Object.assign(draft, writeInVoice(ctx, network, { text: draft.text, hashtags, language }, posts.length));
+  }
   posts.unshift(draft);
   notify(sessionId);
   return draft;
@@ -171,6 +183,7 @@ export function updatePostContent(sessionId, postId, partial) {
   if (partial.text !== undefined) post.text = partial.text;
   if (partial.hashtags !== undefined) post.hashtags = partial.hashtags;
   if (partial.cta !== undefined) post.cta = partial.cta;
+  if (partial.voice !== undefined) post.voice = partial.voice;
   if (partial.isRegenerating !== undefined) post.isRegenerating = partial.isRegenerating;
   if (partial.regenerateStage !== undefined) post.regenerateStage = partial.regenerateStage;
   if (partial.isGeneratingImage !== undefined) post.isGeneratingImage = partial.isGeneratingImage;

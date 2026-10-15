@@ -6,7 +6,8 @@
 // writes the Playbook, and only because someone clicked Add.
 //
 // Suggestion = { id, network, text, why, source: "edits"|"feedback"|"coaching",
-//                field?: "closingPatterns"|"signatureHooks", status }
+//                field?: "closingPatterns"|"signatureHooks", postIds?: string[], status }
+//   postIds: the drafts it came from, in the chat it was noticed in (the card links them).
 //   status: "pending" | "accepted" | "dismissed". A dismissed one is kept so
 //   the same proposal never resurfaces.
 //
@@ -14,12 +15,12 @@
 //             propose(ctxId, s) → Suggestion | null · accept(ctxId, id) · undo(ctxId, id) · dismiss(ctxId, id)
 //             subscribe(fn)
 
-import { voiceSuggestionsByContext } from "./mocks.js?v=1749";
-import { isNewUser } from "./user-mode.js?v=1749";
-import { createNotifier } from "./store-utils.js?v=1749";
-import { getContextById, updateContext } from "./contexts-store.js?v=1749";
-import { withSuggestion, withoutSuggestion } from "./network-voice.js?v=1749";
-import { normalizeNetwork } from "./social-profiles.js?v=1749";
+import { voiceSuggestionsByContext } from "./mocks.js?v=1756";
+import { isNewUser } from "./user-mode.js?v=1756";
+import { createNotifier } from "./store-utils.js?v=1756";
+import { getContextById, updateContext } from "./contexts-store.js?v=1756";
+import { withSuggestion, withoutSuggestion } from "./network-voice.js?v=1756";
+import { normalizeNetwork } from "./social-profiles.js?v=1756";
 
 const byCtx = new Map(); // contextId → Suggestion[]
 const notifier = createNotifier("voice-coach-store");

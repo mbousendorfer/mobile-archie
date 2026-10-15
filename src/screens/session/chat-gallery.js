@@ -14,8 +14,8 @@
 // ponytail: the catalogue is a hand-kept list — a new turn variant or route has
 // to be added here too, or it won't show in the menu.
 
-import { escapeHtml } from "../../utils.js?v=1749";
-import { isFlagOn } from "../../feature-flags.js?v=1749";
+import { escapeHtml } from "../../utils.js?v=1756";
+import { isFlagOn } from "../../feature-flags.js?v=1756";
 import {
   postAssistantMessage,
   postUserTurn,
@@ -34,22 +34,22 @@ import {
   reportDraftFailure,
   getThread,
   refreshThread,
-} from "../../assistant.js?v=1749";
-import { getSources, getIdeas } from "../../library.js?v=1749";
-import { getPosts } from "../../posts-store.js?v=1749";
-import { getTopPosts } from "../../top-posts-store.js?v=1749";
-import { getConnectedProfiles } from "../../social-profiles.js?v=1749";
-import { extractClipsForSource, updateSourceClips } from "../../sources-stream.js?v=1749";
-import { getConnectedConnectors } from "../../connectors-store.js?v=1749";
-import { detectUrlService } from "../../url-services.js?v=1749";
-import { propose, getSuggestions } from "../../voice-coach-store.js?v=1749";
-import * as inlineQuestion from "../../inline-question.js?v=1749";
-import { startTopPostsInline } from "../../top-posts-flow.js?v=1749";
-import { startTopicPickerInline } from "../../topic-flow.js?v=1749";
-import { askConnector } from "../../connector-ask.js?v=1749";
-import { coachAfterDraft } from "../../voice-coach.js?v=1749";
-import { requireConnectedProfiles } from "../../connect-profiles-flow.js?v=1749";
-import { startIdeaDraft, askVideoIntake } from "./draft-questions.js?v=1749";
+} from "../../assistant.js?v=1756";
+import { getSources, getIdeas } from "../../library.js?v=1756";
+import { getPosts } from "../../posts-store.js?v=1756";
+import { getTopPosts } from "../../top-posts-store.js?v=1756";
+import { getConnectedProfiles } from "../../social-profiles.js?v=1756";
+import { extractClipsForSource, updateSourceClips } from "../../sources-stream.js?v=1756";
+import { getConnectedConnectors } from "../../connectors-store.js?v=1756";
+import { detectUrlService } from "../../url-services.js?v=1756";
+import { propose, getSuggestions } from "../../voice-coach-store.js?v=1756";
+import * as inlineQuestion from "../../inline-question.js?v=1756";
+import { startTopPostsInline } from "../../top-posts-flow.js?v=1756";
+import { startTopicPickerInline } from "../../topic-flow.js?v=1756";
+import { askConnector } from "../../connector-ask.js?v=1756";
+import { coachAfterDraft } from "../../voice-coach.js?v=1756";
+import { requireConnectedProfiles } from "../../connect-profiles-flow.js?v=1756";
+import { startIdeaDraft, askVideoIntake } from "./draft-questions.js?v=1756";
 
 // The intake sample plays the real lifecycle — loading, then ready — under a
 // sample id no source owns, so intake-lifecycle leaves it alone.
@@ -216,12 +216,19 @@ const COMPONENTS = [
     when: (sid, session) => flagOff("networkVoices") || (session.contextId ? null : "Needs a Playbook on this chat"),
     run: (sid, session) => {
       const ctx = session.contextId;
+      // The evidence is this chat's LinkedIn drafts, so the card links them and,
+      // once kept, offers to rewrite them.
+      const from = getPosts(sid)
+        .filter((p) => p.network === "linkedin")
+        .slice(0, 2)
+        .map((p) => p.id);
       const s =
         propose(ctx, {
           network: "linkedin",
-          text: "Keep the opening line under 12 words.",
-          why: "You shortened the hook on your last drafts.",
+          text: "Keep the opening line under 10 words.",
+          why: `You shortened the hook on your last ${from.length > 1 ? `${from.length} ` : ""}LinkedIn drafts.`,
           source: "edits",
+          postIds: from,
         }) || getSuggestions(ctx)[0];
       if (s) postVoiceSuggestion(sid, { contextId: ctx, suggestionId: s.id });
     },

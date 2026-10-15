@@ -16,10 +16,10 @@
 // an AbortController in inFlight ; a second click on the same post is
 // ignored. Session switch, panel close, or any DOM replacement during
 // the stream is handled by re-looking up the target selector each tick
-// — when it disappears the stream aborts cleanly.
+// — when it disappears the stream stops and the content commits at once.
 
-import { getPosts, updatePostContent } from "./posts-store.js?v=1749";
-import { escapeText } from "./utils.js?v=1749";
+import { getPosts, updatePostContent } from "./posts-store.js?v=1756";
+import { escapeText } from "./utils.js?v=1756";
 
 const inFlight = new Map(); // postId → AbortController
 
@@ -32,7 +32,10 @@ const THINKING_MS = 400;
 const TOKEN_MS_MIN = 8;
 const TOKEN_MS_MAX = 18;
 
-export function startRewrite(sessionId, postId, intent = "fresh") {
+// `transform(post) → { text, hashtags, cta, voice? }` replaces the intent's
+// mock rewrite — a caller that knows what the new draft is (voice-coach.js
+// applying a kept rule) keeps the same three-phase animation.
+export function startRewrite(sessionId, postId, intent = "fresh", transform = null) {
   if (!sessionId || !postId) return;
   if (inFlight.has(postId)) return;
 
@@ -46,7 +49,7 @@ export function startRewrite(sessionId, postId, intent = "fresh") {
   const controller = new AbortController();
   inFlight.set(postId, controller);
 
-  const final = fakeRewrite(post, intent);
+  const final = transform ? transform(post) : fakeRewrite(post, intent);
 
   // Phase 1 — thinking. Single notify ; the card subscriber paints the
   // skeleton + Rewriting pill on its own.
@@ -61,11 +64,14 @@ export function startRewrite(sessionId, postId, intent = "fresh") {
     // body with the caret ; then the streamer types into it directly.
     updatePostContent(sessionId, postId, { regenerateStage: "streaming" });
 
-    streamIntoCard(postId, final, controller.signal).then((completed) => {
-      if (!completed || controller.signal.aborted) {
+    streamIntoCard(postId, final, controller.signal).then(() => {
+      if (controller.signal.aborted) {
         inFlight.delete(postId);
         return;
       }
+      // A stream that lost its card (a re-render — another draft's rewrite
+      // repaints the panel) still commits: only the animation was cut. Bailing
+      // out here left the draft stuck on "Rewriting…" for good.
       // Phase 3 — commit. Final single notify with the new canonical
       // content + flags cleared. The card re-renders to its stable
       // post-rewrite state.
@@ -73,6 +79,7 @@ export function startRewrite(sessionId, postId, intent = "fresh") {
         text: final.text,
         hashtags: final.hashtags,
         cta: final.cta,
+        ...(final.voice ? { voice: final.voice } : {}),
         isRegenerating: false,
         regenerateStage: null,
       });

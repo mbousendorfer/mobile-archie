@@ -864,6 +864,20 @@
   line-height: var(--sys-text-style-caption-line-height);
 }
 
+/* The rules the draft's network voice follows (flag networkVoices) — the
+   source detail's inset and ink, as a list. */
+.posts__gencontext-rules {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  margin: 0;
+  padding-left: calc(16px + var(--ref-spacing-xxs) + var(--ref-spacing-sm));
+  color: var(--sys-text-color-light);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  list-style: disc outside;
+}
+
 /* Per-network character count (DS CharacterCounts, node 3185:48434).
    Right-aligned chip under the body: network logo + remaining chars,
    flipping to a red pill when the draft runs over the network limit. */

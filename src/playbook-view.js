@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1749";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1756";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -27,16 +27,16 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1749";
+} from "./playbook-brand-kit.js?v=1756";
 import {
   analyzeWebsite,
   discoverCompetitors,
   competitorKey,
   analyzeNetworkVoices,
-} from "./context-mock-analysis.js?v=1749";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1749";
-import { isFlagOn } from "./feature-flags.js?v=1749";
-import { parseHashParams } from "./url-state.js?v=1749";
+} from "./context-mock-analysis.js?v=1756";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1756";
+import { isFlagOn } from "./feature-flags.js?v=1756";
+import { parseHashParams } from "./url-state.js?v=1756";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -47,16 +47,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1749";
+} from "./network-voice.js?v=1756";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1749";
-import { NETWORKS } from "./social-profiles.js?v=1749";
-import { showToast } from "./components/toast.js?v=1749";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1749";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1749";
+} from "./voice-coach-store.js?v=1756";
+import { NETWORKS } from "./social-profiles.js?v=1756";
+import { showToast } from "./components/toast.js?v=1756";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1756";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1756";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [

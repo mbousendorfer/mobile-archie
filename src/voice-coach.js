@@ -13,15 +13,24 @@
 // ponytail: the edit heuristics are a mock reading of one before/after pair.
 // The real thing compares many drafts per network before proposing.
 
-import { getSessionById } from "./sessions-store.js?v=1749";
-import { getContextById } from "./contexts-store.js?v=1749";
-import { playbookForNewWork } from "./active-playbook.js?v=1749";
-import { getPosts } from "./posts-store.js?v=1749";
-import { postVoiceSuggestion, postSelectionEcho } from "./assistant.js?v=1749";
-import { ask, isActive } from "./inline-question.js?v=1749";
-import { propose, accept } from "./voice-coach-store.js?v=1749";
-import { normalizeNetwork } from "./social-profiles.js?v=1749";
-import { networkVoicesOn, baseNetwork, isOverridden, networkLabel, networkIcon } from "./network-voice.js?v=1749";
+import { getSessionById } from "./sessions-store.js?v=1756";
+import { getContextById } from "./contexts-store.js?v=1756";
+import { playbookForNewWork } from "./active-playbook.js?v=1756";
+import { getPosts } from "./posts-store.js?v=1756";
+import { postVoiceSuggestion, postSelectionEcho, postAssistantMessage } from "./assistant.js?v=1756";
+import { startRewrite } from "./draft-rewrite.js?v=1756";
+import { escapeHtml } from "./utils.js?v=1756";
+import { ask, isActive } from "./inline-question.js?v=1756";
+import { propose, accept } from "./voice-coach-store.js?v=1756";
+import { normalizeNetwork } from "./social-profiles.js?v=1756";
+import {
+  networkVoicesOn,
+  baseNetwork,
+  isOverridden,
+  networkLabel,
+  networkIcon,
+  followRules,
+} from "./network-voice.js?v=1756";
 
 function sessionPlaybook(sessionId) {
   const session = getSessionById(sessionId);
@@ -78,7 +87,8 @@ export function noticeDraftEdit(sessionId, postId, before, after) {
   const ctx = sessionPlaybook(sessionId);
   const post = getPosts(sessionId).find((p) => p.id === postId);
   const read = ctx && post ? readEdit(before, after) : null;
-  if (read) suggest(sessionId, ctx, { ...read, network: normalizeNetwork(post.network), source: "edits" });
+  if (read)
+    suggest(sessionId, ctx, { ...read, network: normalizeNetwork(post.network), source: "edits", postIds: [post.id] });
 }
 
 // Only the reasons that are about HOW it sounds. Off-topic / inaccurate are
@@ -104,7 +114,13 @@ export function noticeDraftFeedback(targetId, reasons = []) {
   const ctx = sessionId && sessionPlaybook(sessionId);
   const post = ctx && getPosts(sessionId).find((p) => p.id === targetId.slice("draft:".length));
   const rule = post && reasons.map((r) => REASON_RULES[r]).find(Boolean);
-  if (rule) suggest(sessionId, ctx, { ...rule, network: normalizeNetwork(post.network), source: "feedback" });
+  if (rule)
+    suggest(sessionId, ctx, {
+      ...rule,
+      network: normalizeNetwork(post.network),
+      source: "feedback",
+      postIds: [post.id],
+    });
 }
 
 // Closings that read native on each network — the answers offered when a
@@ -154,4 +170,42 @@ export function coachAfterDraft(sessionId, drafts = []) {
     onSkip: () => {},
     skipLabel: "Not now",
   });
+}
+
+// ── Using what was kept ──────────────────────────────────────────────────────
+// A kept rule changes the drafts Archie writes next (posts-store writes every
+// draft in its network voice). The drafts already in the chat were written
+// before it: these are the ones it can still rewrite — the rule's network, not
+// scheduled, not mid-rewrite, not already following it. Field proposals (a
+// closing) are not rules: they shape the next drafts only.
+export function draftsToRewrite(sessionId, s) {
+  if (!s || s.field || s.status !== "accepted") return [];
+  return getPosts(sessionId).filter(
+    (p) =>
+      normalizeNetwork(p.network) === s.network &&
+      p.status !== "scheduled" &&
+      !p.isRegenerating &&
+      !(p.voice?.rules || []).includes(s.text),
+  );
+}
+
+// Rewrite them, with the regenerate animation, and say so in the thread with
+// a link to each — the rule is used where the user can see it.
+export function rewriteDraftsWithRule(sessionId, s) {
+  const posts = draftsToRewrite(sessionId, s);
+  if (!posts.length) return;
+  posts.forEach((p) =>
+    startRewrite(sessionId, p.id, "voice", (post) => ({
+      ...followRules(post, [s.text]),
+      cta: post.cta || "",
+      voice: { network: s.network, rules: [...(post.voice?.rules || []), s.text] },
+    })),
+  );
+  const n = posts.length;
+  postAssistantMessage(
+    sessionId,
+    `Rewriting your ${n} ${escapeHtml(networkLabel(s.network))} ${n === 1 ? "draft" : "drafts"} so ${
+      n === 1 ? "it follows" : "they follow"
+    } “${escapeHtml(s.text)}”:${posts.map((p) => `\n- [[post:${p.id}]]`).join("")}`,
+  );
 }

@@ -19,12 +19,12 @@
 // id used to apply the focus pulse animation when navigating in via
 // `?focusPost=<id>`.
 
-import { html, raw, formatClock, escapeText, escapeAttr } from "../utils.js?v=1749";
-import { isPortraitFormat } from "../clip-formats.js?v=1749";
-import { presetById } from "../clip-captions.js?v=1749";
-import { renderFeedbackControl } from "./feedback-control.js?v=1749";
-import { networkMeta } from "../social-profiles.js?v=1749";
-import { REVEAL_MS } from "../archie-pixels.js?v=1749";
+import { html, raw, formatClock, escapeText, escapeAttr } from "../utils.js?v=1756";
+import { isPortraitFormat } from "../clip-formats.js?v=1756";
+import { presetById } from "../clip-captions.js?v=1756";
+import { renderFeedbackControl } from "./feedback-control.js?v=1756";
+import { networkMeta } from "../social-profiles.js?v=1756";
+import { REVEAL_MS } from "../archie-pixels.js?v=1756";
 
 // The media slot of a draft that has no image yet. ONE dashed slot, two tiers
 // (2026-10-07):
@@ -516,8 +516,9 @@ export function renderPostCard(post, opts = {}) {
 // collapse mechanism live in renderPostCard's foot row (a CSS checkbox toggle),
 // so the panel can expand full-width while the toggle stays inline on the right.
 function renderGenerationContextBody(post) {
-  const gc = post.generationContext;
-  if (!gc) return "";
+  const gc = post.generationContext || {};
+  const voice = renderVoiceContext(post);
+  if (!post.generationContext) return voice;
   const tone = gc.kind === "repurpose" ? "repurpose" : gc.kind === "clip" ? "clip" : "angle";
   const headline = gc.headline
     ? `<div class="posts__gencontext-headline posts__gencontext-headline--${tone}">
@@ -534,7 +535,26 @@ function renderGenerationContextBody(post) {
         ${gc.source.detail ? `<p class="posts__gencontext-source-detail">${gc.source.detail}</p>` : ""}
       </div>`
     : "";
-  return `${headline}${source}`;
+  return `${headline}${source}${voice}`;
+}
+
+// Voice per network (flag networkVoices): which network voice wrote this draft
+// and the rules it follows — the proof that what Archie learned is used.
+function renderVoiceContext(post) {
+  const v = post.voice;
+  if (!v?.network) return "";
+  const label = networkMeta(v.network)?.label || v.network;
+  const rules = v.rules || [];
+  const detail = rules.length
+    ? `<ul class="posts__gencontext-rules">${rules.map((r) => `<li>${escapeText(r)}</li>`).join("")}</ul>`
+    : `<p class="posts__gencontext-source-detail">Its hooks and closings. No rules learned for ${escapeText(label)} yet.</p>`;
+  return `<div class="posts__gencontext-source">
+      <span class="posts__gencontext-source-head">
+        <i class="${networkMeta(v.network)?.icon || "ap-icon-sparkles"}" aria-hidden="true"></i>
+        <span>Your ${escapeText(label)} voice${rules.length ? ` · follows ${rules.length} ${rules.length === 1 ? "rule" : "rules"}` : ""}</span>
+      </span>
+      ${detail}
+    </div>`;
 }
 
 // Per-network character budgets + the full-colour DS logo used by the count

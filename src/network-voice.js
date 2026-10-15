@@ -19,9 +19,9 @@
 // ON an overridden hook is written in one language. Per-language × per-network
 // examples when a brand actually publishes in two languages on one network.
 
-import { isFlagOn } from "./feature-flags.js?v=1749";
-import { escapeHtml } from "./utils.js?v=1749";
-import { NETWORKS, normalizeNetwork, getConnectedProfileById } from "./social-profiles.js?v=1749";
+import { isFlagOn } from "./feature-flags.js?v=1756";
+import { escapeHtml } from "./utils.js?v=1756";
+import { NETWORKS, normalizeNetwork, getConnectedProfileById } from "./social-profiles.js?v=1756";
 
 export const NETWORK_FIELDS = ["signatureHooks", "closingPatterns", "formattingStyle", "visualStyle"];
 const LIST_FIELDS = new Set(["signatureHooks", "closingPatterns"]);
@@ -129,7 +129,10 @@ export function withoutSuggestion(ctx, s) {
 // the butter block holds the rule and why; the white row under it holds the
 // question and, once answered, its answer — same place, same height.
 // `attr` names the host's delegation attributes (data-<attr>-accept / -dismiss / -undo).
-export function memoryCardHtml(s, { attr, value, undo = true }) {
+// The chat host adds what only it knows: `evidence` (trusted html — the drafts
+// the rule came from, as chat refs) and `rewrite` (how many of this chat's drafts
+// a kept rule can still rewrite).
+export function memoryCardHtml(s, { attr, value, undo = true, evidence = "", rewrite = 0 }) {
   const esc = escapeHtml;
   const net = `<i class="${esc(networkIcon(s.network))}" aria-hidden="true"></i> ${esc(networkLabel(s.network))}`;
   const kept = s.status === "accepted";
@@ -137,7 +140,16 @@ export function memoryCardHtml(s, { attr, value, undo = true }) {
     ? `<div class="memory-card__answer" role="status">
         <span class="memory-card__ask"><i class="${isFlagOn("newConversationStyles") ? "ap-icon-rounded-check_fill" : "ap-icon-check"} memory-card__done" aria-hidden="true"></i>Remembered for your ${net} voice</span>
         <div class="memory-card__actions">${undo ? `<a class="ap-link standalone small" href="#" role="button" data-${attr}-undo="${esc(value)}">Undo</a>` : ""}</div>
+      </div>${
+        rewrite
+          ? `<div class="memory-card__answer">
+        <span class="memory-card__ask">${rewrite} ${esc(networkLabel(s.network))} ${rewrite === 1 ? "draft here doesn't" : "drafts here don't"} follow it yet.</span>
+        <div class="memory-card__actions">
+          <button type="button" class="ap-button stroked blue" data-${attr}-rewrite="${esc(value)}">Rewrite ${rewrite === 1 ? "it" : "them"}</button>
+        </div>
       </div>`
+          : ""
+      }`
     : `<div class="memory-card__answer">
         <span class="memory-card__ask">Remember this for your ${net} voice?</span>
         <div class="memory-card__actions">
@@ -150,6 +162,7 @@ export function memoryCardHtml(s, { attr, value, undo = true }) {
       <i class="ap-icon-sparkles memory-mark" aria-hidden="true"></i>
       <p class="memory-card__rule">${esc(s.text)}</p>
       ${s.why ? `<p class="memory-card__why">${esc(s.why)}</p>` : ""}
+      ${evidence ? `<p class="memory-card__why memory-card__evidence">${evidence}</p>` : ""}
     </div>
     ${answer}
   </div>`;
@@ -168,4 +181,135 @@ export function cloneVoiceByNetwork(v) {
     out[known(net)] = entry;
   }
   return out;
+}
+
+// ── Writing in a network voice ───────────────────────────────────────────────
+// What a draft for `network` is written with: the network's own parts where it
+// adapted them, the base's elsewhere (in the draft's language when the
+// Playbook has one for it), and the rules the network learned.
+export function resolvedVoice(ctx, network, language = null) {
+  const net = known(network) || baseNetwork(ctx);
+  const lang = (language && ctx?.voiceByLanguage?.[language]) || null;
+  const base = (field) => (lang?.[field]?.length ? lang[field] : ctx?.[field] || []);
+  const e = networkEntry(ctx, net) || {};
+  return {
+    network: net,
+    signatureHooks: e.signatureHooks ?? base("signatureHooks"),
+    closingPatterns: e.closingPatterns ?? base("closingPatterns"),
+    rules: e.rules || [],
+  };
+}
+
+const EMOJI_ALL = /\p{Extended_Pictographic}️?/gu;
+const wordsOf = (s) =>
+  String(s || "")
+    .split(/\s+/)
+    .filter(Boolean);
+// Sentences, the last one kept even without its full stop.
+const sentencesOf = (s) => (String(s || "").match(/[^.!?]+(?:[.!?]+|$)/g) || []).map((x) => x.trim()).filter(Boolean);
+
+// The rules a mock can actually carry out on a draft — the ones Archie's own
+// coaching writes (voice-coach.js). Any other rule is followed by the writer
+// in the real thing; here it changes nothing.
+// ponytail: regex-matched rule shapes; the real generator gets the rules as
+// instructions and needs none of this.
+const RULE_ACTIONS = [
+  [
+    /no emoji/i,
+    (d) => ({
+      ...d,
+      text: d.text.map((l) =>
+        l
+          .replace(EMOJI_ALL, "")
+          .replace(/\s{2,}/g, " ")
+          .trim(),
+      ),
+    }),
+  ],
+  [/no hashtags/i, (d) => ({ ...d, hashtags: [], text: d.text.map((l) => l.replace(/\s*#\w+/g, "").trim()) })],
+  [/(\d+) hashtags? at most/i, (d, m) => ({ ...d, hashtags: d.hashtags.slice(0, Number(m[1])) })],
+  [
+    /opening line under (\d+) words/i,
+    (d, m) => {
+      const [first = "", ...rest] = d.text;
+      const max = Number(m[1]) - 1;
+      if (wordsOf(first).length <= max) return d;
+      // Cut where a person would: the strongest break that fits — a sentence
+      // end, then a colon or dash, then a comma (a comma is often inside a
+      // list) — else the word limit.
+      const words = wordsOf(first);
+      const lastBreak = (re) => {
+        for (let i = max; i > 2; i -= 1) if (re.test(words[i - 1])) return i;
+        return 0;
+      };
+      const cut = lastBreak(/[.!?]$/) || lastBreak(/^[—–-]$|[:;]$/) || lastBreak(/,$/) || max;
+      const head = words
+        .slice(0, cut)
+        .join(" ")
+        .replace(/[,:;—–-]+$/, "")
+        .trim();
+      const tail = words
+        .slice(cut)
+        .join(" ")
+        .replace(/^[—–-]\s*/, "");
+      const lead = `${head}${/[.!?]$/.test(head) ? "" : "."}`;
+      return { ...d, text: [lead, `${tail.charAt(0).toUpperCase()}${tail.slice(1)}`, ...rest] };
+    },
+  ],
+  [
+    /about (\d+) words/i,
+    (d, m) => {
+      const max = Number(m[1]);
+      const text = d.text.slice();
+      const total = () => text.reduce((n, l) => n + wordsOf(l).length, 0);
+      // Drop the last sentence of the longest middle paragraph until it fits.
+      while (total() > max) {
+        const mid = text.map((l, i) => [i, l]).filter(([i]) => i > 0 && i < text.length - 1);
+        const [i, line] = mid.sort((a, b) => wordsOf(b[1]).length - wordsOf(a[1]).length)[0] || [];
+        const sentences = sentencesOf(line);
+        if (sentences.length < 2) break;
+        text[i] = sentences.slice(0, -1).join(" ");
+      }
+      return { ...d, text };
+    },
+  ],
+  [
+    /short paragraphs/i,
+    (d) => ({
+      ...d,
+      text: d.text.flatMap(sentencesOf),
+    }),
+  ],
+];
+
+// One draft, made to follow `rules`. Returns a new { text, hashtags }.
+export function followRules(draft, rules = []) {
+  let d = { text: (draft.text || []).slice(), hashtags: (draft.hashtags || []).slice() };
+  for (const rule of rules) {
+    for (const [re, act] of RULE_ACTIONS) {
+      const m = String(rule).match(re);
+      if (m) d = act(d, m);
+    }
+  }
+  return d;
+}
+
+// A fresh draft, written in the network voice: opens on one of its hooks,
+// closes on one of its closings, follows its rules. `seed` picks which hook
+// and closing, so a batch doesn't open five drafts the same way. Hooks with a
+// [placeholder] are templates for a person, not lines to publish.
+export function writeInVoice(ctx, network, draft, seed = 0) {
+  const v = resolvedVoice(ctx, network, draft.language);
+  const usable = (list) => list.filter((l) => l && !/\[[^\]]*\]/.test(l));
+  const hooks = usable(v.signatureHooks);
+  const closings = usable(v.closingPatterns);
+  const text = [
+    ...(hooks.length ? [hooks[seed % hooks.length]] : []),
+    ...(draft.text || []),
+    ...(closings.length ? [closings[seed % closings.length]] : []),
+  ];
+  return {
+    ...followRules({ text, hashtags: draft.hashtags }, v.rules),
+    voice: { network: v.network, rules: v.rules.slice() },
+  };
 }
