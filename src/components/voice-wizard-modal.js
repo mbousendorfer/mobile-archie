@@ -2,15 +2,17 @@
 //
 // Every Optimize on the Voice tab opens it: the parts of a network voice, one
 // step each (Opens with · Closes with · Formatting · Emoji & casing …), then a
-// review. A step: on the left, Leave as default (the part follows the base
-// voice) or Make it {network}'s, then the choices:
-// for lines, Archie's suggestions and your own in ONE list you order by
-// preference (drag by the grip — the shared drag-reorder.js — or ↑ ↓ on it) — the checked lines, in that
-// order, are the value; for a single-value part, Archie's pick · another way ·
-// your own. On the right, what the network itself recommends for that part —
-// the reason behind Archie's picks. (2026-10-15: a live sample post stood
-// there — "ça n'a pas de sens".)
-// The progress ring in the header is the one on the Voice tab.
+// review. The header names the steps — the DS stepper, each one clickable.
+// A step: on the left, Leave as default (the part follows the base voice) or
+// Make it {network}'s, then the choices. For lines: "Your … lines", the ones
+// you keep, numbered in your order of preference (drag by the grip — the
+// shared drag-reorder.js — or ↑ ↓ on it; × gives a line back), write your own,
+// then "More from Archie" — his suggestions not kept yet, one Add each. For a
+// single-value part: Archie's pick · another way · your own. On the right,
+// what the network itself recommends for that part.
+// (2026-10-15: a live sample post stood in the right column; checkboxes AND an
+// order in one list; a progress ring in the header whose "done" check read as
+// "finished" on step 1; a Skip that said what "Leave as default" says.)
 //
 // A STAGED draft (the objective modal's pattern): nothing reaches the Playbook
 // until Save; the host gets the four final values and writes them. Leaving with
@@ -21,10 +23,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1809";
-import { bindReorder } from "../drag-reorder.js?v=1809";
-import { escapeHtml as esc } from "../utils.js?v=1809";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1809";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1812";
+import { bindReorder } from "../drag-reorder.js?v=1812";
+import { escapeHtml as esc } from "../utils.js?v=1812";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1812";
 import {
   networkFields,
   isNewPart,
@@ -33,8 +35,7 @@ import {
   baseNetwork,
   networkEntry,
   resolvedVoice,
-  progressRingHtml,
-} from "../network-voice.js?v=1809";
+} from "../network-voice.js?v=1812";
 
 const MODAL_ID = "voiceWizard";
 
@@ -42,12 +43,14 @@ const PARTS = {
   signatureHooks: {
     title: "Opens with",
     list: true,
+    yours: "Your opening lines",
     ask: (n) => `How do your posts open on ${n}?`,
     add: "Write your own opening line…",
   },
   closingPatterns: {
     title: "Closes with",
     list: true,
+    yours: "Your closing lines",
     ask: (n) => `How do your posts end on ${n}?`,
     add: "Write your own closing line…",
   },
@@ -80,8 +83,8 @@ let footRightEl = null;
 let initialized = false;
 
 // { data, net, base, opts, fields, step, parts: { [field]: part }, initial, startParts, leaving, onSave }
-//   list part: { keep, order: string[], picked: string[] } — order = every line
-//     (Archie's + yours) in preference order; picked = the checked ones
+//   list part: { keep, lines: string[] } — the lines you keep, in preference
+//     order; Archie's options not in it are "More from Archie"
 //   text part: { choice: 0 | 1 | "keep" | "own", own, prev } — prev = the choice
 //     to come back to when you leave "default"
 let w = null;
@@ -192,9 +195,7 @@ function requestClose() {
 // Archie's picks otherwise (the first two lines, the first option).
 function initialPart(field, value, options) {
   if (PARTS[field].list) {
-    if (value === undefined) return { keep: false, order: [...options], picked: options.slice(0, 2) };
-    // The saved order first, then Archie's other options to pick from.
-    return { keep: false, order: [...value, ...options.filter((o) => !value.includes(o))], picked: [...value] };
+    return { keep: false, lines: value === undefined ? options.slice(0, 2) : [...value] };
   }
   if (value === undefined) return { choice: 0, own: "" };
   const i = options.indexOf(value);
@@ -206,8 +207,7 @@ function valueOf(field) {
   const p = w.parts[field];
   if (PARTS[field].list) {
     if (p.keep) return undefined;
-    const lines = p.order.filter((l) => p.picked.includes(l));
-    return lines.length ? lines : undefined;
+    return p.lines.length ? [...p.lines] : undefined;
   }
   if (p.choice === "keep") return undefined;
   if (p.choice === "own") return p.own.trim() || undefined;
@@ -240,21 +240,9 @@ function paint() {
   if (!w) return;
   const label = networkLabel(w.net);
   const onPart = w.step < review();
-  const done = w.fields.map((f) => valueOf(f) !== undefined);
   headEl.innerHTML = `
-    ${progressRingHtml(w.net, {
-      done,
-      current: onPart ? w.step : -1,
-      // A part the product just added, still on the base in the draft: orange.
-      attention: w.fields.map((f) => isNewPart(f) && valueOf(f) === undefined),
-      size: 48,
-    })}
-    <div class="vw__titles">
-      <span class="ap-dialog-title" id="vwTitle">Optimize your ${esc(label)} voice</span>
-      <span class="ap-dialog-subtitle">${
-        onPart ? `${esc(PARTS[w.fields[w.step]].title)} · ${w.step + 1} of ${review()}` : "Review your choices"
-      }</span>
-    </div>`;
+    <span class="ap-dialog-title vw__title" id="vwTitle"><i class="${networkIcon(w.net)}" aria-hidden="true"></i>Optimize your ${esc(label)} voice</span>
+    ${renderSteps()}`;
   // Right column: what the network itself recommends for this step's part.
   // The review has none — it spans the dialog.
   const guide = onPart ? renderGuidance(w.fields[w.step]) : "";
@@ -263,6 +251,21 @@ function paint() {
     <div class="vw__main">${onPart ? renderPart(w.fields[w.step]) : renderReview()}</div>
     ${guide}`;
   paintFooter();
+}
+
+// The DS stepper (CSS-UI .ap-stepper): every part, then Review. Passed steps
+// read completed, the current one active; any step opens on click.
+function renderSteps() {
+  const names = [...w.fields.map((f) => PARTS[f].title), "Review"];
+  return `<nav class="ap-stepper vw__steps" aria-label="Steps">${names
+    .map((name, i) => {
+      const state = i < w.step ? "completed" : i === w.step ? "active" : "pending";
+      return `${i ? `<span class="ap-stepper-separator" aria-hidden="true"><i class="ap-icon-chevron-right"></i></span>` : ""}
+        <div class="ap-stepper-item ${state} clickable" role="button" tabindex="0" data-vw-goto="${i}"${
+          i === w.step ? ' aria-current="step"' : ""
+        }><span>${state === "completed" ? `<i class="ap-icon-check" aria-hidden="true"></i>` : i + 1}</span><span>${esc(name)}</span></div>`;
+    })
+    .join("")}</nav>`;
 }
 
 function paintFooter() {
@@ -281,7 +284,6 @@ function paintFooter() {
     : "";
   footRightEl.innerHTML = `
     ${w.step > 0 ? `<button type="button" class="ap-button stroked grey" data-vw-back><i class="ap-icon-arrow-left" aria-hidden="true"></i><span>Back</span></button>` : ""}
-    ${onPart ? `<button type="button" class="ap-button ghost grey" data-vw-skip>Skip</button>` : ""}
     ${
       onPart
         ? `<button type="button" class="ap-button primary blue" data-vw-next>Next</button>`
@@ -333,12 +335,12 @@ function renderMode(field, isDefault) {
       <input type="radio" name="vw-mode" data-vw-mode="${value}" ${on ? "checked" : ""} />
       <div class="vw-radio__body">
         <span class="ap-radio-card-title">${esc(title)}</span>
-        <span class="vw-radio__text">${esc(text)}</span>
+        <span class="vw-radio__text" title="${esc(text)}">${esc(text)}</span>
       </div>
     </label>`;
   return `<div class="vw-mode" role="radiogroup" aria-label="${esc(PARTS[field].title)}">
-      ${card("default", "Leave as default", `Same as your ${networkLabel(w.base)} voice: ${baseSummary(field)}`, isDefault)}
-      ${card("own", `Make it ${label}'s`, PARTS[field].list ? "Pick, write and order the lines." : "Pick one, or write your own.", !isDefault)}
+      ${card("default", "Leave as default", `As on ${networkLabel(w.base)}: ${baseSummary(field)}`, isDefault)}
+      ${card("own", `Make it ${label}'s`, `Written for ${label}, from my suggestions or your own.`, !isDefault)}
     </div>`;
 }
 
@@ -352,35 +354,47 @@ function renderPart(field) {
     ${renderMode(field, isDefault)}`;
   if (isDefault) return head;
   if (P.list) {
-    const n = p.order.length;
-    const rows = p.order
+    const n = p.lines.length;
+    const kept = p.lines
       .map((line, i) => {
-        const own = !w.opts[field].includes(line);
-        const archie = w.opts[field].slice(0, 2).includes(line);
-        return `<div class="vw-option vw-line app-reorder__item">
+        const archie = w.opts[field].includes(line);
+        return `<li class="vw-option vw-line app-reorder__item">
           <button type="button" class="app-reorder__grip" data-vw-handle="${i}" title="Drag to reorder" aria-label="${esc(`Move “${line}” — ${i + 1} of ${n}. Use the up and down arrow keys.`)}"><i class="ap-icon-move"></i></button>
-          <label class="ap-checkbox-container vw-line__check">
-            <input type="checkbox" data-vw-pick="${i}" ${p.picked.includes(line) ? "checked" : ""} />
-            <i aria-hidden="true"></i>
-            <span class="vw-option__text">“${esc(line)}”</span>
-          </label>
-          ${
-            own
-              ? `<button type="button" class="ap-icon-button transparent grey" data-vw-unadd="${i}" aria-label="Remove this line"><i class="ap-icon-close"></i></button>`
-              : archie
-                ? ARCHIE_MARK
-                : ""
-          }
-        </div>`;
+          <span class="vw-line__rank" aria-hidden="true">${i + 1}</span>
+          <span class="vw-option__text">“${esc(line)}”</span>
+          ${archie ? ARCHIE_MARK : ""}
+          <button type="button" class="ap-icon-button transparent grey" data-vw-unadd="${i}" aria-label="${esc(`Remove “${line}”`)}"><i class="ap-icon-close"></i></button>
+        </li>`;
       })
       .join("");
+    const more = w.opts[field]
+      .filter((o) => !p.lines.includes(o))
+      .map(
+        (o) => `<li class="vw-option vw-more">
+          <span class="vw-option__text">“${esc(o)}”</span>
+          ${ARCHIE_MARK}
+          <button type="button" class="ap-button ghost blue" data-vw-take="${esc(o)}"><i class="ap-icon-plus" aria-hidden="true"></i><span>Add</span></button>
+        </li>`,
+      )
+      .join("");
     return `${head}
-      <div class="vw-list-head"><span class="vw-list-head__title">Suggestions</span><span class="vw-list-head__hint">Drag to order by preference</span></div>
-      <div class="vw-options app-reorder">${rows}</div>
+      <div class="vw-list-head"><span class="vw-list-head__title">${esc(P.yours)}</span>${
+        n > 1 ? `<span class="vw-list-head__hint">I lead with the first one. Drag to reorder.</span>` : ""
+      }</div>
+      ${
+        n
+          ? `<ol class="vw-options app-reorder">${kept}</ol>`
+          : `<p class="vw__empty">No line yet. Add one of mine below, or write your own.</p>`
+      }
       <div class="vw-add">
         <div class="ap-input-group"><input type="text" data-vw-add placeholder="${esc(P.add)}" aria-label="${esc(P.add)}" /></div>
         <button type="button" class="ap-button stroked blue" data-vw-add-btn><i class="ap-icon-plus" aria-hidden="true"></i><span>Add</span></button>
-      </div>`;
+      </div>
+      ${
+        more
+          ? `<div class="vw-list-head"><span class="vw-list-head__title">More from Archie</span></div><ul class="vw-options">${more}</ul>`
+          : ""
+      }`;
   }
   const radio = (value, title, text, archie = false) => `
     <label class="ap-radio-card card vw-radio">
@@ -391,7 +405,7 @@ function renderPart(field) {
       </div>
     </label>`;
   return `${head}
-    <div class="vw-list-head"><span class="vw-list-head__title">Suggestions</span></div>
+    <div class="vw-list-head"><span class="vw-list-head__title">Pick one</span></div>
     <div class="vw-options">
       ${radio(0, "Archie's pick", w.opts[field][0], true)}
       ${radio(1, "Another way", w.opts[field][1])}
@@ -446,21 +460,20 @@ function focusFirst() {
   });
 }
 
-// A line you write goes to the end of the list, checked.
+// A line you write goes to the end of your lines.
 function addLine(field) {
   const input = bodyEl.querySelector("[data-vw-add]");
   const text = (input?.value || "").trim();
   if (!text) return;
   const p = w.parts[field];
-  if (!p.order.includes(text)) p.order.push(text);
-  if (!p.picked.includes(text)) p.picked.push(text);
+  if (!p.lines.includes(text)) p.lines.push(text);
   paint();
   bodyEl.querySelector("[data-vw-add]")?.focus();
 }
 
 // Preference order: move one line, by drag or by ↑ ↓ on its handle.
 function moveLine(field, from, to) {
-  const order = w.parts[field].order;
+  const order = w.parts[field].lines;
   if (to < 0 || to >= order.length || from === to) return false;
   const [line] = order.splice(from, 1);
   order.splice(to, 0, line);
@@ -479,12 +492,6 @@ function onClick(event) {
   }
   if (t.closest("[data-vw-next]")) return go(w.step + 1);
   if (t.closest("[data-vw-back]")) return go(w.step - 1);
-  if (t.closest("[data-vw-skip]")) {
-    // Skip = this part keeps following the base voice.
-    if (PARTS[field].list) w.parts[field].keep = true;
-    else w.parts[field].choice = "keep";
-    return go(w.step + 1);
-  }
   if (t.closest("[data-vw-archie]")) {
     archieAll();
     return go(review());
@@ -494,9 +501,14 @@ function onClick(event) {
   if (t.closest("[data-vw-add-btn]")) return addLine(field);
   const unadd = t.closest("[data-vw-unadd]");
   if (unadd) {
+    w.parts[field].lines.splice(Number(unadd.dataset.vwUnadd), 1);
+    return paint();
+  }
+  // One of Archie's other suggestions joins your lines, last.
+  const take = t.closest("[data-vw-take]");
+  if (take) {
     const p = w.parts[field];
-    const [line] = p.order.splice(Number(unadd.dataset.vwUnadd), 1);
-    p.picked = p.picked.filter((l) => l !== line);
+    if (!p.lines.includes(take.dataset.vwTake)) p.lines.push(take.dataset.vwTake);
     return paint();
   }
   if (t.closest("[data-vw-save]")) {
@@ -515,11 +527,6 @@ function onChange(event) {
   const t = event.target;
   const field = w.fields[w.step];
   const p = w.parts[field];
-  if (t.matches("[data-vw-pick]")) {
-    const line = p.order[Number(t.dataset.vwPick)];
-    p.picked = t.checked ? [...p.picked, line] : p.picked.filter((l) => l !== line);
-    return paint();
-  }
   if (t.matches("[data-vw-mode]")) {
     const toDefault = t.dataset.vwMode === "default";
     if (PARTS[field].list) p.keep = toDefault;
@@ -548,6 +555,13 @@ function onKeydown(event) {
   if (event.key === "Enter" && event.target.matches("[data-vw-add]")) {
     event.preventDefault();
     addLine(w.fields[w.step]);
+  }
+  // A step of the stepper is a div (the DS's markup): Enter / Space opens it.
+  const step = event.target.closest?.("[data-vw-goto][role='button']");
+  if (step && (event.key === "Enter" || event.key === " ")) {
+    event.preventDefault();
+    go(Number(step.dataset.vwGoto));
+    return;
   }
   // ↑ ↓ on a row's handle: the keyboard way to reorder; focus follows the line.
   const handle = event.target.closest?.("[data-vw-handle]");

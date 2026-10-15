@@ -18,20 +18,31 @@
   box-shadow: var(--app-shadow-popover-lg);
 }
 
-/* The head: the network's progress ring, the title, the step in words. */
+/* The head: the network's glyph + the title, then the DS stepper — where you
+   are, and every step one click away. */
 .vw__header {
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: var(--ref-spacing-sm);
   padding-right: var(--ref-spacing-xxl);
 }
 
-.vw__titles {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
-  min-width: 0;
+.vw__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.vw__steps {
+  flex-wrap: wrap;
+  row-gap: var(--ref-spacing-xxs);
+}
+
+.vw__steps .ap-stepper-item:focus-visible {
+  border-radius: var(--ref-border-radius-sm);
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 2px;
 }
 
 .vw__content {
@@ -74,6 +85,15 @@
   gap: var(--ref-spacing-xs);
 }
 
+/* The two cards stay a pair: the base's version is cut at two lines (whole
+   in the title), so a long LinkedIn layout doesn't stretch them. */
+.vw-mode .vw-radio__text {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 /* "Suggestions" + how to order them, above the list. */
 .vw-list-head {
   display: flex;
@@ -94,13 +114,16 @@
 }
 
 /* ── The options ─────────────────────────────────────────────────────────
-   Lines (hooks, closings) are DS checkboxes on option cards; layouts and
-   conventions are DS radio cards. A picked card takes the blue border — the
-   colour of what you act on. */
+   Lines (hooks, closings): your lines, ranked, as white cards you drag; then
+   Archie's other suggestions on the page's grey, one Add each. Layouts and
+   conventions are DS radio cards; a picked card takes the blue border. */
 .vw-options {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .vw-option {
@@ -139,16 +162,37 @@
   color: var(--app-butter-accent);
 }
 
-/* A line row: grip · checkbox + line · Archie's mark or remove. The grip,
-   the lift and the slide are the shared reorder (drag-reorder.css). */
-.vw-line {
+/* A kept line: grip · rank · line · Archie's mark · remove. The grip, the
+   lift and the slide are the shared reorder (drag-reorder.css). The 36px icon
+   buttons set the height; a 4px inset keeps the row at ≈ 46px. */
+.vw-line,
+.vw-more {
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs) var(--ref-spacing-xxxs) var(--ref-spacing-sm);
   cursor: default;
 }
 
-.vw-line__check {
-  flex: 1;
-  min-width: 0;
-  cursor: pointer;
+/* The rank IS the preference: 1 = the line used most. */
+.vw-line__rank {
+  flex-shrink: 0;
+  min-width: 16px;
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  text-align: center;
+}
+
+/* Archie's other suggestions: no card edge, the page's grey — a shelf to take
+   from, not your list. */
+.vw-more {
+  border-color: transparent;
+  background: var(--app-surface-subtle);
+}
+
+.vw__empty {
+  margin: 0;
+  color: var(--ref-color-grey-60);
+  font-style: italic;
 }
 
 .vw-add {
@@ -213,6 +257,8 @@
    page's grey. Its glyph and name head it; the sentences read as a short
    list, ink grey-100. The review has no column (vw__content--single). */
 .vw__aside {
+  position: sticky;
+  top: 0;
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-sm);

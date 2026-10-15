@@ -1,18 +1,18 @@
 // The Top posts repurpose screen as the session hosts it: its steps, the
 // winners picker, and its Playbook control. Moved out of session.js, unchanged.
 
-import { isWorkspaceMode } from "../../active-playbook.js?v=1809";
-import { usableContexts } from "../../playbook-access.js?v=1809";
-import { escapeHtml, html, raw } from "../../utils.js?v=1809";
-import * as topPostsFlow from "../../top-posts-flow.js?v=1809";
-import { renderEmptyState } from "../../components/empty-state.js?v=1809";
-import { profileForNetwork } from "../../social-profiles.js?v=1809";
-import { renderPicker } from "../_analyse-common.js?v=1809";
-import * as inlineQuestion from "../../inline-question.js?v=1809";
-import { getContextById } from "../../contexts-store.js?v=1809";
-import { buildWorkflowFlow } from "./workflow-flow.js?v=1809";
-import { TOP_POSTS_LIMIT, renderTopPostsBoard } from "../../components/top-post-card.js?v=1809";
-import { dotColorVar } from "../session.js?v=1809";
+import { isWorkspaceMode } from "../../active-playbook.js?v=1812";
+import { usableContexts } from "../../playbook-access.js?v=1812";
+import { escapeHtml, html, raw } from "../../utils.js?v=1812";
+import * as topPostsFlow from "../../top-posts-flow.js?v=1812";
+import { renderEmptyState } from "../../components/empty-state.js?v=1812";
+import { profileForNetwork } from "../../social-profiles.js?v=1812";
+import { renderPicker } from "../_analyse-common.js?v=1812";
+import * as inlineQuestion from "../../inline-question.js?v=1812";
+import { getContextById } from "../../contexts-store.js?v=1812";
+import { buildWorkflowFlow } from "./workflow-flow.js?v=1812";
+import { TOP_POSTS_LIMIT, renderTopPostsBoard } from "../../components/top-post-card.js?v=1812";
+import { dotColorVar } from "../session.js?v=1812";
 
 // Playbook picker for the top-posts step 1 (account screen) — the chosen
 // Playbook governs the voice of the repurposed drafts. Mirrors the batch / clip
