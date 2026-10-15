@@ -8,10 +8,10 @@
 //   hashtags({ brand, brief, network }) → Promise<string[]>
 //   promptFromImages({ colors, look }) → Promise<string>   (a style prompt read from reference images)
 
-import { MOCK } from "../../config/mock.js?v=1841";
-import { COPY_LIMITS } from "../../config/copy-limits.js?v=1841";
-import { hashString, prng, shuffle } from "../../lib/prng.js?v=1841";
-import { wait } from "../../lib/delegate.js?v=1841";
+import { MOCK } from "../../config/mock.js?v=1842";
+import { COPY_LIMITS } from "../../config/copy-limits.js?v=1842";
+import { hashString, prng, shuffle } from "../../lib/prng.js?v=1842";
+import { wait } from "../../lib/delegate.js?v=1842";
 
 function delay(signal, [min, max] = MOCK.copy.delayMs) {
   return wait(min + Math.random() * (max - min), signal);

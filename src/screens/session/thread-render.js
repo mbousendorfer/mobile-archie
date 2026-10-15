@@ -13,23 +13,23 @@ import {
   renderNotice,
   renderResultCard,
   renderFailedTurn,
-} from "./thread-turns.js?v=1841";
-import { getSources as getStreamSources } from "../../sources-stream.js?v=1841";
-import { renderTopPostEcho, renderTopPostsWidget } from "../../components/top-post-card.js?v=1841";
-import { getTopPost } from "../../top-posts-store.js?v=1841";
-import { getTopicById } from "../../topics-store.js?v=1841";
-import { renderTopicsWidget } from "../../components/topic-card.js?v=1841";
-import { renderProfileEchoCard } from "../../social-profiles.js?v=1841";
-import { escapeHtml } from "../../utils.js?v=1841";
-import { getIdeas } from "../../library.js?v=1841";
-import { renderRefs, resolveRef } from "../../chat-refs.js?v=1841";
-import { renderCompactIdeaCard } from "../../components/idea-card-compact.js?v=1841";
-import { getThread, toolName, toolDescription } from "../../assistant.js?v=1841";
-import { getSuggestion } from "../../voice-coach-store.js?v=1841";
-import { draftsToRewrite } from "../../voice-coach.js?v=1841";
-import { networkLabel, networkIcon, memoryCardHtml } from "../../network-voice.js?v=1841";
-import { isFlagOn } from "../../feature-flags.js?v=1841";
-import { CURRENT_USER } from "../../org.js?v=1841";
+} from "./thread-turns.js?v=1842";
+import { getSources as getStreamSources } from "../../sources-stream.js?v=1842";
+import { renderTopPostEcho, renderTopPostsWidget } from "../../components/top-post-card.js?v=1842";
+import { getTopPost } from "../../top-posts-store.js?v=1842";
+import { getTopicById } from "../../topics-store.js?v=1842";
+import { renderTopicsWidget } from "../../components/topic-card.js?v=1842";
+import { renderProfileEchoCard } from "../../social-profiles.js?v=1842";
+import { escapeHtml } from "../../utils.js?v=1842";
+import { getIdeas } from "../../library.js?v=1842";
+import { renderRefs, resolveRef } from "../../chat-refs.js?v=1842";
+import { renderCompactIdeaCard } from "../../components/idea-card-compact.js?v=1842";
+import { getThread, toolName, toolDescription } from "../../assistant.js?v=1842";
+import { getSuggestion } from "../../voice-coach-store.js?v=1842";
+import { draftsToRewrite } from "../../voice-coach.js?v=1842";
+import { networkLabel, networkIcon, memoryCardHtml } from "../../network-voice.js?v=1842";
+import { isFlagOn } from "../../feature-flags.js?v=1842";
+import { CURRENT_USER } from "../../org.js?v=1842";
 
 export function renderThread(messages, sessionId) {
   const turns = messages.map((m) => [m, renderTurn(m, sessionId)]);

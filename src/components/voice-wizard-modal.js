@@ -30,10 +30,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1841";
-import { bindReorder } from "../drag-reorder.js?v=1841";
-import { escapeHtml as esc } from "../utils.js?v=1841";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1841";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1842";
+import { bindReorder } from "../drag-reorder.js?v=1842";
+import { escapeHtml as esc } from "../utils.js?v=1842";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1842";
 import {
   networkFields,
   isNewPart,
@@ -43,7 +43,7 @@ import {
   networkEntry,
   resolvedVoice,
   progressRingHtml,
-} from "../network-voice.js?v=1841";
+} from "../network-voice.js?v=1842";
 
 const MODAL_ID = "voiceWizard";
 
@@ -420,7 +420,8 @@ function renderPart(field) {
   }
   // Every option is one of Archie's suggestions, so a card IS its text — no
   // "Archie's pick" / "Another way" titles. The one he recommends wears his
-  // status (the butter .ap-status); "Write my own" is the one titled card.
+  // status (the butter .ap-status). "Write my own" is not his: it sits in its
+  // own section, "Your own", under them — still the same radio group.
   const radio = (value, inner) => `
     <label class="ap-radio-card card vw-radio">
       <input type="radio" name="vw-choice" data-vw-choice="${value}" ${String(p.choice) === String(value) ? "checked" : ""} />
@@ -439,6 +440,11 @@ function renderPart(field) {
     <div class="vw-options">
       ${option(0)}
       ${option(1)}
+    </div>
+    </section>
+    <section class="vw-section">
+    <div class="vw-list-head"><span class="vw-list-head__title">Your own</span></div>
+    <div class="vw-options">
       ${radio("own", `<span class="ap-radio-card-title">Write my own</span>`)}
       ${
         p.choice === "own"
