@@ -30,10 +30,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1835";
-import { bindReorder } from "../drag-reorder.js?v=1835";
-import { escapeHtml as esc } from "../utils.js?v=1835";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1835";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1836";
+import { bindReorder } from "../drag-reorder.js?v=1836";
+import { escapeHtml as esc } from "../utils.js?v=1836";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1836";
 import {
   networkFields,
   isNewPart,
@@ -43,7 +43,7 @@ import {
   networkEntry,
   resolvedVoice,
   progressRingHtml,
-} from "../network-voice.js?v=1835";
+} from "../network-voice.js?v=1836";
 
 const MODAL_ID = "voiceWizard";
 
@@ -316,17 +316,6 @@ function paintFooter() {
         ? `<button type="button" class="ap-button primary blue" data-vw-next>Next</button>`
         : `<button type="button" class="ap-button primary orange" data-vw-save><span>Save ${esc(label)} voice</span></button>`
     }`;
-}
-
-// The base's version of a part, shortened for one line.
-function baseSummary(field) {
-  const v = baseValue(field);
-  if (Array.isArray(v)) {
-    const list = v.filter((x) => x && !/\[[^\]]*\]/.test(x));
-    if (!list.length) return "Nothing set yet";
-    return `“${list[0]}”${list.length > 1 ? ` and ${list.length - 1} more` : ""}`;
-  }
-  return v || "Nothing set yet";
 }
 
 function baseValue(field) {
