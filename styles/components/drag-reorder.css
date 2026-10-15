@@ -1,0 +1,58 @@
+/* Drag-to-reorder (src/drag-reorder.js) — the app's one reorder look, born in
+   the schedule modal: a grey grip that turns blue, the item's border going
+   soft blue as you reach for it, then lifted (shadow + blue border) while the
+   others slide to open the gap. */
+
+.app-reorder__item {
+  transition: border-color 120ms var(--app-ease-standard, ease);
+}
+
+/* Hovering the grip previews the grab. */
+.app-reorder__item:has(.app-reorder__grip:hover) {
+  border-color: var(--ref-color-electric-blue-40);
+}
+
+/* Only the grip is the handle; touch-action:none lets a touch-drag reorder
+   instead of scrolling. A <button> grip (keyboard reorder) loses its chrome. */
+.app-reorder__grip {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ref-color-grey-40);
+  cursor: grab;
+  touch-action: none;
+  transition: color 120ms var(--app-ease-standard, ease);
+}
+
+.app-reorder__grip:hover,
+.app-reorder__grip:focus-visible {
+  color: var(--ref-color-electric-blue-100);
+}
+
+.app-reorder__grip:active {
+  cursor: grabbing;
+}
+
+/* While a reorder runs, the other items slide (the grabbed one tracks the
+   pointer 1:1 — its transition is killed inline — and animates on release),
+   and the list lets the lifted item and its shadow overflow. */
+.app-reorder.is-reordering .app-reorder__item {
+  transition: transform 160ms var(--app-ease-standard, ease);
+  will-change: transform;
+}
+
+.app-reorder.is-reordering {
+  overflow: visible;
+}
+
+.app-reorder__item.is-dragging {
+  position: relative;
+  z-index: 5;
+  cursor: grabbing;
+  box-shadow: var(--app-shadow-popover-lg, 0 12px 28px -6px rgba(33, 46, 68, 0.28));
+  border-color: var(--ref-color-electric-blue-100);
+}

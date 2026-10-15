@@ -1,5 +1,6 @@
-import { html, raw, escapeText } from "../utils.js?v=1807";
-import { showToast } from "./toast.js?v=1807";
+import { html, raw, escapeText } from "../utils.js?v=1808";
+import { showToast } from "./toast.js?v=1808";
+import { bindReorder } from "../drag-reorder.js?v=1808";
 import {
   getQueue,
   getQueueOn,
@@ -7,9 +8,9 @@ import {
   dayKey,
   addToQueue,
   subscribe as subscribeQueue,
-} from "../schedule-store.js?v=1807";
-import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1807";
-import { renderProfileTag, profileForNetwork } from "../social-profiles.js?v=1807";
+} from "../schedule-store.js?v=1808";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1808";
+import { renderProfileTag, profileForNetwork } from "../social-profiles.js?v=1808";
 
 // ⚠️ LEGACY — the schedule modal as it was before the redesign, kept behind
 // the `newScheduleModal` flag ("New SM", default ON) so the two can be
@@ -64,7 +65,6 @@ let state = {
 
 let unsubscribeQueue = null;
 let computeTimer = null; // pending "Compute best times" timeout
-let drag = null; // active pointer drag-reorder session (multi-draft only)
 
 // DS branded network glyphs — the `-official` variants carry each
 // network's brand color. The generic `ap-icon-<network>` set is grey
@@ -192,12 +192,13 @@ export function init() {
   modal.addEventListener("click", onClick);
   modal.addEventListener("input", onInput);
   modal.addEventListener("change", onInput);
-  // Drag-to-reorder the draft cards (multi-draft only). Delegated on the
-  // modal root so it survives every re-render.
-  modal.addEventListener("pointerdown", onPointerDown);
-  modal.addEventListener("pointermove", onPointerMove);
-  modal.addEventListener("pointerup", onPointerUp);
-  modal.addEventListener("pointercancel", onPointerCancel);
+  // Drag-to-reorder the draft cards (multi-draft only) — the shared
+  // primitive (drag-reorder.js), delegated on the modal root. Reordering
+  // re-pairs the dates by position; the re-render clears the transforms.
+  bindReorder(modal, (from, to) => {
+    if (from !== to) reorderByIndex(from, to);
+    render();
+  });
   // Backdrop click + Escape go through the shared coordinator. `state.open`
   // is the canonical isOpen — the modal element's `.open` class isn't set
   // here (visibility is driven by .hidden), so we pass a custom isOpen.
@@ -874,12 +875,12 @@ function renderSlotList({ header = true } = {}) {
         .join("");
       return `
         <div
-          class="schedule-modal-legacy__slot ${multi ? "schedule-modal-legacy__slot--draggable" : ""}"
+          class="schedule-modal-legacy__slot ${multi ? "schedule-modal-legacy__slot--draggable app-reorder__item" : ""}"
           data-schedule-post="${escapeText(post.id)}"
         >
           ${
             multi
-              ? `<span class="schedule-modal-legacy__slot-grip" aria-hidden="true" title="Drag to reorder"><i class="ap-icon-move"></i></span>`
+              ? `<span class="app-reorder__grip" aria-hidden="true" title="Drag to reorder"><i class="ap-icon-move"></i></span>`
               : ""
           }
           <div class="schedule-modal-legacy__slot-post">
@@ -893,105 +894,13 @@ function renderSlotList({ header = true } = {}) {
       `;
     })
     .join("");
-  return `<div class="schedule-modal-legacy__slots">${headerHtml}${cards}</div>`;
+  return `<div class="schedule-modal-legacy__slots app-reorder">${headerHtml}${cards}</div>`;
 }
 
 // ── Drag-to-reorder drafts ────────────────────────────────────────────
 // Reordering the cards re-pairs each draft with the (sorted) publish dates
 // by position: the new first draft takes the earliest date(s), and so on —
 // the dates "follow the order" without the user re-typing them.
-// Pointer-based reorder (grip handle). The grabbed card lifts and tracks the
-// pointer 1:1 (no transition) while the other cards slide — with a transition
-// — to open a gap at the target index. On release the card settles into the
-// gap, then we commit the new order and re-pair the dates.
-function onPointerDown(event) {
-  if (event.button) return; // primary button / touch only
-  const grip = event.target.closest(".schedule-modal-legacy__slot-grip");
-  if (!grip) return;
-  const card = grip.closest(".schedule-modal-legacy__slot--draggable");
-  if (!card) return;
-  const list = card.parentElement;
-  const items = Array.from(list.querySelectorAll(".schedule-modal-legacy__slot--draggable"));
-  if (items.length < 2) return;
-  event.preventDefault();
-
-  const rect = card.getBoundingClientRect();
-  const gap = parseFloat(getComputedStyle(list).rowGap) || 0;
-  const fromIndex = items.indexOf(card);
-  drag = {
-    card,
-    list,
-    items,
-    fromIndex,
-    toIndex: fromIndex,
-    startY: event.clientY,
-    step: rect.height + gap,
-    pointerId: event.pointerId,
-    done: false,
-  };
-
-  try {
-    card.setPointerCapture(event.pointerId);
-  } catch {
-    /* ignore */
-  }
-  list.classList.add("is-reordering");
-  card.classList.add("is-dragging");
-  card.style.transition = "none";
-  card.style.transform = "translateY(0) scale(1.02)";
-}
-
-function onPointerMove(event) {
-  if (!drag || event.pointerId !== drag.pointerId) return;
-  const dy = event.clientY - drag.startY;
-  drag.card.style.transform = `translateY(${dy}px) scale(1.02)`;
-
-  const toIndex = Math.max(0, Math.min(drag.items.length - 1, drag.fromIndex + Math.round(dy / drag.step)));
-  if (toIndex === drag.toIndex) return;
-  drag.toIndex = toIndex;
-
-  // Slide each non-grabbed card to open the gap at toIndex.
-  drag.items.forEach((el, i) => {
-    if (i === drag.fromIndex) return;
-    let shift = 0;
-    if (drag.fromIndex < toIndex && i > drag.fromIndex && i <= toIndex) shift = -drag.step;
-    else if (drag.fromIndex > toIndex && i >= toIndex && i < drag.fromIndex) shift = drag.step;
-    el.style.transform = shift ? `translateY(${shift}px)` : "";
-  });
-}
-
-function onPointerUp(event) {
-  if (!drag || event.pointerId !== drag.pointerId) return;
-  const d = drag;
-  drag = null;
-  try {
-    d.card.releasePointerCapture(event.pointerId);
-  } catch {
-    /* ignore */
-  }
-
-  // Settle the grabbed card into the gap, then commit + re-render once.
-  const rest = (d.toIndex - d.fromIndex) * d.step;
-  d.card.style.transition = "transform 160ms var(--app-ease-standard, ease)";
-  d.card.style.transform = `translateY(${rest}px) scale(1)`;
-
-  const commit = () => {
-    if (d.done) return;
-    d.done = true;
-    d.card.removeEventListener("transitionend", commit);
-    if (d.fromIndex !== d.toIndex) reorderByIndex(d.fromIndex, d.toIndex);
-    render(); // rebuilds in the committed order (inline transforms cleared)
-  };
-  d.card.addEventListener("transitionend", commit);
-  setTimeout(commit, 220); // fallback if transitionend doesn't fire
-}
-
-function onPointerCancel(event) {
-  if (!drag || event.pointerId !== drag.pointerId) return;
-  drag = null;
-  render(); // discard transforms, restore the original order
-}
-
 // Move state.posts[from] to index `to`, then re-pair the sorted publish
 // dates with the new order (each draft keeps its date count; values shift so
 // position drives chronology).

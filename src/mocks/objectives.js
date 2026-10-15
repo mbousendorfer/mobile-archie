@@ -1,4 +1,4 @@
-import { TOP_POST_IMAGES } from "./top-posts.js?v=1807";
+import { TOP_POST_IMAGES } from "./top-posts.js?v=1808";
 
 // ---- Objectives — the data an objective is read from (Insights) -------------
 //

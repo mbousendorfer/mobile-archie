@@ -139,33 +139,16 @@
   color: var(--app-butter-accent);
 }
 
-/* A line row: handle · checkbox + line · Archie's mark or remove. The row is
-   what you drag; the handle says so (and takes ↑ ↓ from the keyboard). The
-   row being dragged fades; the one it would land on takes the blue border. */
-/* The handle is a 36px DS icon button: a 4px inset keeps the row at the
-   height the checkbox rows had (≈ 46px). */
+/* A line row: grip · checkbox + line · Archie's mark or remove. The grip,
+   the lift and the slide are the shared reorder (drag-reorder.css). */
 .vw-line {
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xxxs) var(--ref-spacing-md) var(--ref-spacing-xxxs) var(--ref-spacing-xxxs);
   cursor: default;
-}
-
-.vw-line__handle {
-  cursor: grab;
 }
 
 .vw-line__check {
   flex: 1;
   min-width: 0;
   cursor: pointer;
-}
-
-.vw-line.is-dragging {
-  opacity: 0.4;
-}
-
-.vw-line.is-drop {
-  border-color: var(--ref-color-electric-blue-100);
 }
 
 .vw-add {

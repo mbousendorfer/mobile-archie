@@ -275,60 +275,16 @@
   font-weight: var(--sys-text-style-caption-weight);
 }
 
-/* A leading grip column appears only on draggable (multi-draft) cards. */
+/* A leading grip column appears only on draggable (multi-draft) cards. The
+   grip, the lift and the slide are the shared reorder (drag-reorder.css). */
 .schedule-modal-legacy__slot--draggable {
   grid-template-columns: auto minmax(0, 1fr) auto;
-  transition: border-color 120ms var(--app-ease-standard, ease);
-}
-
-/* Hovering the grip previews the grab: the card border highlights to a soft
-   accent blue. */
-.schedule-modal-legacy__slot:has(.schedule-modal-legacy__slot-grip:hover) {
-  border-color: var(--ref-color-electric-blue-40);
-}
-
-/* Only the grip is the drag handle (keeps the date input / remove clickable);
-   touch-action:none lets a touch-drag reorder instead of scrolling. */
-.schedule-modal-legacy__slot-grip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--ref-color-grey-40);
-  cursor: grab;
-  touch-action: none;
-  transition: color 120ms var(--app-ease-standard, ease);
-}
-.schedule-modal-legacy__slot-grip:hover {
-  color: var(--ref-color-electric-blue-100);
-}
-.schedule-modal-legacy__slot-grip:active {
-  cursor: grabbing;
-}
-
-/* While a reorder is active, the non-grabbed cards slide smoothly to open the
-   gap. The grabbed card tracks the pointer 1:1 (its transition is killed
-   inline) and only animates on release. */
-.schedule-modal-legacy__slots.is-reordering .schedule-modal-legacy__slot--draggable {
-  transition: transform 160ms var(--app-ease-standard, ease);
-  will-change: transform;
 }
 
 /* During the drag, let the lifted card + its shadow escape the scroll
-   containers — otherwise the card's sides and drop shadow get clipped. */
-.schedule-modal-legacy__slots.is-reordering {
+   container too. */
+.schedule-modal-legacy__left:has(.app-reorder.is-reordering) {
   overflow: visible;
-}
-.schedule-modal-legacy__left:has(.schedule-modal-legacy__slots.is-reordering) {
-  overflow: visible;
-}
-
-/* The grabbed card lifts above the others with a shadow + grab cursor. */
-.schedule-modal-legacy__slot.is-dragging {
-  position: relative;
-  z-index: 5;
-  cursor: grabbing;
-  box-shadow: var(--app-shadow-popover-lg, 0 12px 28px -6px rgba(33, 46, 68, 0.28));
-  border-color: var(--ref-color-electric-blue-100);
 }
 
 /* ── Calendar ───────────────────────────────────────────────────────── */

@@ -5,7 +5,7 @@
 // review. A step: on the left, Leave as default (the part follows the base
 // voice) or Make it {network}'s, then the choices:
 // for lines, Archie's suggestions and your own in ONE list you order by
-// preference (drag, or ↑ ↓ on a row's handle) — the checked lines, in that
+// preference (drag by the grip — the shared drag-reorder.js — or ↑ ↓ on it) — the checked lines, in that
 // order, are the value; for a single-value part, Archie's pick · another way ·
 // your own. On the right, what the network itself recommends for that part —
 // the reason behind Archie's picks. (2026-10-15: a live sample post stood
@@ -21,9 +21,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1807";
-import { escapeHtml as esc } from "../utils.js?v=1807";
-import { networkVoiceOptions, networkGuidance } from "../context-mock-analysis.js?v=1807";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1808";
+import { bindReorder } from "../drag-reorder.js?v=1808";
+import { escapeHtml as esc } from "../utils.js?v=1808";
+import { networkVoiceOptions, networkGuidance } from "../context-mock-analysis.js?v=1808";
 import {
   networkFields,
   isNewPart,
@@ -33,7 +34,7 @@ import {
   networkEntry,
   resolvedVoice,
   progressRingHtml,
-} from "../network-voice.js?v=1807";
+} from "../network-voice.js?v=1808";
 
 const MODAL_ID = "voiceWizard";
 
@@ -116,10 +117,11 @@ export function init() {
   panel.addEventListener("change", onChange);
   panel.addEventListener("input", onInput);
   panel.addEventListener("keydown", onKeydown);
-  panel.addEventListener("dragstart", onDragStart);
-  panel.addEventListener("dragover", onDragOver);
-  panel.addEventListener("drop", onDrop);
-  panel.addEventListener("dragend", onDragEnd);
+  // Reorder the lines by their grip — the app's shared drag (drag-reorder.js).
+  bindReorder(panel, (from, to) => {
+    if (w) moveLine(w.fields[w.step], from, to);
+    paint();
+  });
   backdrop.addEventListener("click", (e) => {
     if (e.target === backdrop) requestClose();
   });
@@ -348,8 +350,8 @@ function renderPart(field) {
       .map((line, i) => {
         const own = !w.opts[field].includes(line);
         const archie = w.opts[field].slice(0, 2).includes(line);
-        return `<div class="vw-option vw-line" data-vw-line="${i}" draggable="true">
-          <button type="button" class="ap-icon-button transparent grey vw-line__handle" data-vw-handle="${i}" aria-label="${esc(`Move “${line}” — ${i + 1} of ${n}. Use the up and down arrow keys.`)}"><i class="ap-icon-move"></i></button>
+        return `<div class="vw-option vw-line app-reorder__item">
+          <button type="button" class="app-reorder__grip" data-vw-handle="${i}" title="Drag to reorder" aria-label="${esc(`Move “${line}” — ${i + 1} of ${n}. Use the up and down arrow keys.`)}"><i class="ap-icon-move"></i></button>
           <label class="ap-checkbox-container vw-line__check">
             <input type="checkbox" data-vw-pick="${i}" ${p.picked.includes(line) ? "checked" : ""} />
             <i aria-hidden="true"></i>
@@ -367,7 +369,7 @@ function renderPart(field) {
       .join("");
     return `${head}
       <div class="vw-list-head"><span class="vw-list-head__title">Suggestions</span><span class="vw-list-head__hint">Drag to order by preference</span></div>
-      <div class="vw-options">${rows}</div>
+      <div class="vw-options app-reorder">${rows}</div>
       <div class="vw-add">
         <div class="ap-input-group"><input type="text" data-vw-add placeholder="${esc(P.add)}" aria-label="${esc(P.add)}" /></div>
         <button type="button" class="ap-button stroked blue" data-vw-add-btn><i class="ap-icon-plus" aria-hidden="true"></i><span>Add</span></button>
@@ -550,42 +552,4 @@ function onKeydown(event) {
     paint();
     bodyEl.querySelector(`[data-vw-handle="${to}"]`)?.focus();
   }
-}
-
-// Drag a row onto another to put it there. The row under the pointer takes
-// the blue border (the drop target); the dragged one fades.
-let dragFrom = -1;
-
-function onDragStart(event) {
-  const row = event.target.closest?.("[data-vw-line]");
-  if (!w || !row) return;
-  dragFrom = Number(row.dataset.vwLine);
-  event.dataTransfer.effectAllowed = "move";
-  event.dataTransfer.setData("text/plain", String(dragFrom));
-  row.classList.add("is-dragging");
-}
-
-function onDragOver(event) {
-  const row = event.target.closest?.("[data-vw-line]");
-  if (!w || dragFrom < 0 || !row) return;
-  event.preventDefault();
-  event.dataTransfer.dropEffect = "move";
-  bodyEl.querySelectorAll(".vw-line.is-drop").forEach((r) => r !== row && r.classList.remove("is-drop"));
-  if (Number(row.dataset.vwLine) !== dragFrom) row.classList.add("is-drop");
-}
-
-function onDrop(event) {
-  const row = event.target.closest?.("[data-vw-line]");
-  if (!w || dragFrom < 0 || !row) return;
-  event.preventDefault();
-  const from = dragFrom;
-  dragFrom = -1;
-  if (moveLine(w.fields[w.step], from, Number(row.dataset.vwLine))) paint();
-}
-
-function onDragEnd() {
-  dragFrom = -1;
-  bodyEl
-    ?.querySelectorAll(".vw-line.is-dragging, .vw-line.is-drop")
-    .forEach((r) => r.classList.remove("is-dragging", "is-drop"));
 }

@@ -46,6 +46,7 @@ src/
   app.js                — entry: imports + route table + init() calls + start()
   router.js             — hash router (route() / navigate() / getPath() / start())
   url-state.js          — parseHashParams() / setHashQuery() (hash query params)
+  drag-reorder.js       — bindReorder(): the app's one drag-to-reorder (grip, lift, slide); styles/components/drag-reorder.css
   handoff.js            — single-use sessionStorage bridge across navigations
   utils.js              — html`` / raw() tagged-template helpers + escapeHtml (html`` escapes by default)
   store-utils.js        — createNotifier() subscribe/notify primitive used by stores

@@ -274,6 +274,10 @@ Le drag/drop est câblé dans [`right-panel.js`](../../src/components/right-pane
   [`image-studio-v2.css`](../../styles/screens/image-studio-v2.css) la masque dans les previews du
   studio. Et `[data-post-drop]` doit rester sur l'élément qui porte `-slot`.
 
+### Réordonner une liste — `drag-reorder.js`
+
+**Une seule façon de réordonner dans l'app** : `bindReorder(root, done)` ([`src/drag-reorder.js`](../../src/drag-reorder.js)) + [`drag-reorder.css`](../../styles/components/drag-reorder.css). Markup : la liste `.app-reorder`, ses éléments `.app-reorder__item`, une poignée `.app-reorder__grip` (`ap-icon-move`, grey-40 → bleu au survol ; un `<button>` si la liste se réordonne aussi au clavier). Au pointeur, pas de DnD natif : l'élément saisi se soulève (ombre + bordure bleue) et suit le pointeur, les autres glissent pour ouvrir la place, il s'y pose, puis `done(from, to)` — l'hôte réordonne son état et re-rend. Né dans la modale de programmation (legacy), partagé le 2026-10-15 (« on avait déjà un style défini… réutilise les styles existants ») : la modale et l'assistant Optimize (les lignes d'une voix) l'utilisent. ⚠️ Ne pas refaire un glisser-déposer à côté.
+
 ### Modals / backdrop
 
 DS `.ap-dialog` centré par `modals.css` sur `.open`. `.app-modal-backdrop` patché (fade via `@keyframes app-modal-backdrop-fade`). Radius `--app-radius-modal` (16). Modals empilés → couches `--app-z-modal-stacked*`.
