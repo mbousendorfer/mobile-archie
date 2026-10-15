@@ -15,12 +15,12 @@
 //             propose(ctxId, s) → Suggestion | null · accept(ctxId, id) · undo(ctxId, id) · dismiss(ctxId, id)
 //             subscribe(fn)
 
-import { voiceSuggestionsByContext } from "./mocks.js?v=1790";
-import { isNewUser } from "./user-mode.js?v=1790";
-import { createNotifier } from "./store-utils.js?v=1790";
-import { getContextById, updateContext } from "./contexts-store.js?v=1790";
-import { withSuggestion, withoutSuggestion } from "./network-voice.js?v=1790";
-import { normalizeNetwork } from "./social-profiles.js?v=1790";
+import { voiceSuggestionsByContext } from "./mocks.js?v=1791";
+import { isNewUser } from "./user-mode.js?v=1791";
+import { createNotifier } from "./store-utils.js?v=1791";
+import { getContextById, updateContext } from "./contexts-store.js?v=1791";
+import { withSuggestion, withoutSuggestion } from "./network-voice.js?v=1791";
+import { normalizeNetwork } from "./social-profiles.js?v=1791";
 
 const byCtx = new Map(); // contextId → Suggestion[]
 const notifier = createNotifier("voice-coach-store");

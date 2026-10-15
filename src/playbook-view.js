@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1790";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1791";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -26,11 +26,11 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1790";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1790";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1790";
-import { isFlagOn } from "./feature-flags.js?v=1790";
-import { parseHashParams } from "./url-state.js?v=1790";
+} from "./playbook-brand-kit.js?v=1791";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1791";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1791";
+import { isFlagOn } from "./feature-flags.js?v=1791";
+import { parseHashParams } from "./url-state.js?v=1791";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -44,16 +44,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1790";
+} from "./network-voice.js?v=1791";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1790";
-import { showToast } from "./components/toast.js?v=1790";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1790";
-import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1790";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1790";
+} from "./voice-coach-store.js?v=1791";
+import { showToast } from "./components/toast.js?v=1791";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1791";
+import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1791";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1791";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2468,36 +2468,6 @@ function nvOptimizedCount(data, net) {
   return NV_FIELDS.filter(([field]) => isOverridden(data, net, field)).length;
 }
 
-// The network voice's mini check: one line per part — optimized or still the
-// base voice — and, for each part left, Optimize (Archie writes that part).
-// The part's name opens its editor, to do it yourself.
-function nvChecklist(data, net) {
-  const label = networkLabel(net);
-  const base = networkLabel(baseNetwork(data));
-  const live = canEditView() && !editScope;
-  // One cell per part, side by side, and the whole cell is ONE button: it
-  // opens the Optimize wizard on that part (done ones too — to revise them).
-  // The name says what, the pill says where it stands; "Optimize" only where
-  // there's something left to do.
-  const cells = NV_FIELDS.map(([field, title]) => {
-    const own = isOverridden(data, net, field);
-    const status = own
-      ? `<span class="ap-status green">Optimized</span>`
-      : `<span class="ap-status grey">Same as ${esc(base)}</span>`;
-    const inner = `<span class="pb2-nv-part__top">
-          <span class="pb2-nv-part__name">${esc(title)}</span>
-          ${!own && live ? `<span class="pb2-nv-part__cta">Optimize</span>` : ""}
-        </span>
-        ${status}`;
-    return `<li class="pb2-nv-part">${
-      live
-        ? `<button type="button" class="pb2-nv-part__hit" data-nv-optimize-part="${field}" aria-label="${esc(`${own ? "Revise" : "Optimize"} ${title.toLowerCase()} for ${label}`)}">${inner}</button>`
-        : `<div class="pb2-nv-part__hit">${inner}</div>`
-    }</li>`;
-  });
-  return `<ul class="pb2-nv-parts" aria-label="What's optimized for ${esc(label)}">${cells.join("")}</ul>`;
-}
-
 // The arcs a wizard save just completed — set for one repaint, so they fill once.
 let nvFresh = null;
 const nvFreshFor = (n) => (nvFresh?.net === n ? nvFresh.arcs : []);
@@ -2512,8 +2482,10 @@ function nvProgressText(data, net, { short = false } = {}) {
   return done ? `${done} of ${NV_FIELDS.length} parts optimized` : "Not optimized yet";
 }
 
-// A network's head: its ring and where it stands, then its four parts side by
-// side; the offer sits in the block's head.
+// Where a network's voice stands — a progress band ON the page, above the
+// parts, not a card: it reports on the voice, it isn't one of its settings
+// (dressed as a block, it read as a fifth part). The parts below carry their
+// own state and Optimize; the band carries the count and Optimize what's left.
 function nvIdentityBlock(data, net) {
   const label = networkLabel(net);
   const done = nvOptimizedCount(data, net);
@@ -2522,20 +2494,14 @@ function nvIdentityBlock(data, net) {
     done === NV_FIELDS.length
       ? `Every part is written for ${label}.`
       : `The others follow your ${networkLabel(baseNetwork(data))} voice.`;
-  return pb2Block(
-    `Your ${label} voice`,
-    `<div class="pb2-nv-overview">
-       <div class="pb2-nv-summary">
-         ${progressRingHtml(net, { done: partsDone(data, net), size: 56, fresh: nvFreshFor(net) })}
-         <div class="pb2-nv-summary__text">
-           <p class="pb2-nv-summary__count">${esc(nvProgressText(data, net))}</p>
-           <p class="pb2-nv-summary__sub">${esc(sub)}</p>
-         </div>
-       </div>
-       ${nvChecklist(data, net)}
-     </div>`,
-    { wide: true, index: 0, aside: offer ? `<span class="pb2-nv-summary__action">${offer}</span>` : "" },
-  );
+  return `<div class="pb2-nv-progress" role="status">
+      ${progressRingHtml(net, { done: partsDone(data, net), size: 48, fresh: nvFreshFor(net) })}
+      <div class="pb2-nv-progress__text">
+        <p class="pb2-nv-progress__count">${esc(nvProgressText(data, net))}</p>
+        <p class="pb2-nv-progress__sub">${esc(sub)}</p>
+      </div>
+      ${offer ? `<div class="pb2-nv-progress__action">${offer}</div>` : ""}
+    </div>`;
 }
 
 // The "All networks" tab: one tile per network, the base first — its ring,
