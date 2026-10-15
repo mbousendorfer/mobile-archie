@@ -3,8 +3,12 @@
 // Every Optimize on the Voice tab opens it: the parts of a network voice, one
 // step each (Opens with · Closes with · Formatting · Emoji & casing …), then a
 // review. The header names the steps — the DS stepper, each one clickable.
-// A step: on the left, Leave as default (the part follows the base voice) or
-// Make it {network}'s, then the choices. For lines: "Your … lines", the ones
+// A step: on the left, the choices — the job is to write this part for the
+// network, so they come first, with nothing pre-picked. While nothing is
+// picked the part keeps the base voice; a small note under the choices says
+// so, and once something is picked it turns into a small link back to the
+// base ("Use my LinkedIn closings instead") — the default is never pushed.
+// For lines: "Your … lines", the ones
 // you keep, numbered in your order of preference (drag by the grip — the
 // shared drag-reorder.js — or ↑ ↓ on it; × gives a line back), write your own,
 // and under them, in the same list but lighter, his suggestions not kept yet
@@ -13,7 +17,8 @@
 // what the network itself recommends for that part.
 // (2026-10-15: a live sample post stood in the right column; checkboxes AND an
 // order in one list; a progress ring in the header whose "done" check read as
-// "finished" on step 1; a Skip that said what "Leave as default" says.)
+// "finished" on step 1; a Skip; "Leave as default / Make it X's" cards at the
+// top of each step — the default set level with the job.)
 //
 // A STAGED draft (the objective modal's pattern): nothing reaches the Playbook
 // until Save; the host gets the four final values and writes them. Leaving with
@@ -24,10 +29,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1824";
-import { bindReorder } from "../drag-reorder.js?v=1824";
-import { escapeHtml as esc } from "../utils.js?v=1824";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1824";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1826";
+import { bindReorder } from "../drag-reorder.js?v=1826";
+import { escapeHtml as esc } from "../utils.js?v=1826";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1826";
 import {
   networkFields,
   isNewPart,
@@ -36,13 +41,14 @@ import {
   baseNetwork,
   networkEntry,
   resolvedVoice,
-} from "../network-voice.js?v=1824";
+} from "../network-voice.js?v=1826";
 
 const MODAL_ID = "voiceWizard";
 
 const PARTS = {
   signatureHooks: {
     title: "Opens with",
+    noun: "openings",
     list: true,
     yours: "Your opening lines",
     ask: (n) => `How do your posts open on ${n}?`,
@@ -50,6 +56,7 @@ const PARTS = {
   },
   closingPatterns: {
     title: "Closes with",
+    noun: "closings",
     list: true,
     yours: "Your closing lines",
     ask: (n) => `How do your posts end on ${n}?`,
@@ -57,18 +64,21 @@ const PARTS = {
   },
   formattingStyle: {
     title: "Formatting",
+    noun: "formatting",
     list: false,
     ask: (n) => `How should a post be laid out on ${n}?`,
     add: "How posts are structured on this network…",
   },
   hashtagStyle: {
     title: "Hashtags",
+    noun: "hashtags",
     list: false,
     ask: (n) => `How do you use hashtags on ${n}?`,
     add: "How many, where, which kind…",
   },
   visualStyle: {
     title: "Emoji & casing",
+    noun: "emoji and capitals",
     list: false,
     ask: (n) => `How do you use emoji and capitals on ${n}?`,
     add: "Emoji, capitalisation, hashtags, links…",
@@ -84,9 +94,9 @@ let footRightEl = null;
 let initialized = false;
 
 // { data, net, base, opts, fields, step, parts: { [field]: part }, initial, startParts, leaving, onSave }
-//   list part: { keep, lines: string[] } — the lines you keep, in preference
+//   list part: { lines: string[] } — the lines you keep, in preference
 //     order; Archie's options not in it follow, as suggestions
-//   text part: { choice: 0 | 1 | "keep" | "own", own, prev } — prev = the choice
+//   text part: { choice: null | 0 | 1 | "own", own } — null = nothing picked
 //     to come back to when you leave "default"
 let w = null;
 
@@ -152,7 +162,7 @@ export function open({ data, network, part = null, onSave }) {
   const parts = {};
   // The parts on screen when it opens (a flag can add one — voiceParts()).
   const fields = networkFields().filter((f) => opts[f]);
-  for (const field of fields) parts[field] = initialPart(field, own(entry[field]), opts[field], isBase);
+  for (const field of fields) parts[field] = initialPart(field, own(entry[field]), opts[field]);
   const firstLeft = isBase ? -1 : fields.findIndex((f) => entry[f] === undefined);
   const asked = part ? fields.indexOf(part) : -1;
   w = {
@@ -202,17 +212,12 @@ function own(value) {
   return value ? value : undefined;
 }
 
-// What a part starts as: its own value when the network already has one;
-// otherwise as it is on the page — Leave as default. Archie's picks are
-// suggestions to choose, never pre-selected: a Next must not optimize a part
-// behind your back (2026-10-15 usability audit). The base has no default to
-// leave: an empty base part starts empty.
-function initialPart(field, value, options, isBase) {
-  if (PARTS[field].list) {
-    if (value !== undefined) return { keep: false, lines: [...value] };
-    return { keep: !isBase, lines: [] };
-  }
-  if (value === undefined) return { choice: isBase ? null : "keep", own: "" };
+// What a part starts as: its own value when it has one, nothing picked
+// otherwise (= it keeps the base voice). Archie's picks are suggestions to
+// choose, never pre-selected: a Next must not optimize a part behind your back.
+function initialPart(field, value, options) {
+  if (PARTS[field].list) return { lines: value === undefined ? [] : [...value] };
+  if (value === undefined) return { choice: null, own: "" };
   const i = options.indexOf(value);
   return i >= 0 ? { choice: i, own: "" } : { choice: "own", own: value };
 }
@@ -220,24 +225,21 @@ function initialPart(field, value, options, isBase) {
 // Archie's picks for a part — what "Use all of Archie's picks" writes: the
 // first two lines, or the first option.
 function archiePart(field, options) {
-  return PARTS[field].list ? { keep: false, lines: options.slice(0, 2) } : { choice: 0, own: "" };
+  return PARTS[field].list ? { lines: options.slice(0, 2) } : { choice: 0, own: "" };
 }
 
 // A part's final value — undefined = it follows the base voice.
 function valueOf(field) {
   const p = w.parts[field];
-  if (PARTS[field].list) {
-    if (p.keep) return undefined;
-    return p.lines.length ? [...p.lines] : undefined;
-  }
-  if (p.choice === "keep") return undefined;
+  if (PARTS[field].list) return p.lines.length ? [...p.lines] : undefined;
+  if (p.choice === null) return undefined;
   if (p.choice === "own") return p.own.trim() || undefined;
   return w.opts[field][p.choice];
 }
 
 function isArchieDefault(field) {
   const p = w.parts[field];
-  if (PARTS[field].list) return !p.keep && (valueOf(field) || []).join("\n") === w.opts[field].slice(0, 2).join("\n");
+  if (PARTS[field].list) return (valueOf(field) || []).join("\n") === w.opts[field].slice(0, 2).join("\n");
   return p.choice === 0;
 }
 
@@ -355,35 +357,22 @@ function renderGuidance(field) {
     </aside>`;
 }
 
-// Leave as default (the part follows the base voice) or make it the network's.
-function renderMode(field, isDefault) {
-  const label = networkLabel(w.net);
-  const card = (value, title, text, on) => `
-    <label class="ap-radio-card card vw-radio">
-      <input type="radio" name="vw-mode" data-vw-mode="${value}" ${on ? "checked" : ""} />
-      <div class="vw-radio__body">
-        <span class="ap-radio-card-title">${esc(title)}</span>
-        <span class="vw-radio__text" title="${esc(text)}">${esc(text)}</span>
-      </div>
-    </label>`;
-  return `<div class="vw-mode" role="radiogroup" aria-label="${esc(PARTS[field].title)}">
-      ${card("default", "Leave as default", `As on ${networkLabel(w.base)}: ${baseSummary(field)}`, isDefault)}
-      ${card("own", `Make it ${label}'s`, `Written for ${label}, from my suggestions or your own.`, !isDefault)}
-    </div>`;
+// The base voice, said small under the choices — never offered as a choice.
+// Nothing picked: the part keeps it. Something picked: a small link back.
+function renderDefaultNote(field) {
+  if (w.isBase) return "";
+  const what = `${networkLabel(w.base)} ${PARTS[field].noun}`;
+  return valueOf(field) === undefined
+    ? `<p class="vw-default">Until you pick one, ${esc(networkLabel(w.net))} uses your ${esc(what)}.</p>`
+    : `<p class="vw-default"><button type="button" class="ap-link small vw-default__reset" data-vw-reset>Use my ${esc(what)} instead</button></p>`;
 }
 
 function renderPart(field) {
   const P = PARTS[field];
   const p = w.parts[field];
-  const isDefault = !w.isBase && (P.list ? p.keep : p.choice === "keep");
-  const ask = `<h3 class="vw__ask">${esc(P.ask(networkLabel(w.net)))}${
+  const head = `<h3 class="vw__ask" tabindex="-1">${esc(P.ask(networkLabel(w.net)))}${
     isNewPart(field) ? ` <span class="ap-status orange vw__new">New in your voice</span>` : ""
   }</h3>`;
-  // Lines: first Leave as default / Make it X's, then the list. A one-value
-  // part needs no such switch — "Leave as default" is simply its first choice
-  // (two radio groups stacked read as a decision inside a decision).
-  const head = `${ask}${w.isBase || !P.list ? "" : renderMode(field, isDefault)}`;
-  if (P.list && isDefault) return head;
   if (P.list) {
     const n = p.lines.length;
     const kept = p.lines
@@ -425,7 +414,8 @@ function renderPart(field) {
       <div class="vw-add">
         <div class="ap-input-group"><input type="text" data-vw-add placeholder="${esc(P.add)}" aria-label="${esc(P.add)}" /></div>
         <button type="button" class="ap-button stroked blue" data-vw-add-btn><i class="ap-icon-plus" aria-hidden="true"></i><span>Add</span></button>
-      </div>`;
+      </div>
+      ${renderDefaultNote(field)}`;
   }
   const radio = (value, title, text, archie = false) => `
     <label class="ap-radio-card card vw-radio">
@@ -437,7 +427,6 @@ function renderPart(field) {
     </label>`;
   return `${head}
     <div class="vw-options">
-      ${w.isBase ? "" : radio("keep", "Leave as default", `As on ${networkLabel(w.base)}: ${baseSummary(field)}`)}
       ${radio(0, "Archie's pick", w.opts[field][0], true)}
       ${radio(1, "Another way", w.opts[field][1])}
       ${radio("own", "Write my own", "")}
@@ -446,7 +435,8 @@ function renderPart(field) {
           ? `<div class="ap-textarea-field resizable vw-own"><textarea data-vw-own rows="3" placeholder="${esc(P.add)}" aria-label="${esc(P.add)}">${esc(p.own)}</textarea></div>`
           : ""
       }
-    </div>`;
+    </div>
+    ${renderDefaultNote(field)}`;
 }
 
 function renderReview() {
@@ -502,7 +492,9 @@ function go(step) {
 }
 
 function focusFirst() {
-  (bodyEl.querySelector(".vw__main input:not([disabled]), .vw__main button") || panel)?.focus?.({
+  // The step's question: read first by a screen reader, and no control lit up
+  // (the first button of a line step is a grip).
+  (bodyEl.querySelector(".vw__ask") || panel)?.focus?.({
     preventScroll: true,
   });
 }
@@ -551,6 +543,11 @@ function onClick(event) {
     w.parts[field].lines.splice(Number(unadd.dataset.vwUnadd), 1);
     return paint();
   }
+  // Back to the base voice for this part: nothing picked.
+  if (t.closest("[data-vw-reset]")) {
+    w.parts[field] = PARTS[field].list ? { lines: [] } : { choice: null, own: "" };
+    return paint();
+  }
   // One of Archie's other suggestions joins your lines, last.
   const take = t.closest("[data-vw-take]");
   if (take) {
@@ -574,18 +571,9 @@ function onChange(event) {
   const t = event.target;
   const field = w.fields[w.step];
   const p = w.parts[field];
-  if (t.matches("[data-vw-mode]")) {
-    const toDefault = t.dataset.vwMode === "default";
-    if (PARTS[field].list) p.keep = toDefault;
-    else if (toDefault) {
-      if (p.choice !== "keep") p.prev = p.choice;
-      p.choice = "keep";
-    } else p.choice = p.prev ?? 0;
-    return paint();
-  }
   if (t.matches("[data-vw-choice]")) {
     const v = t.dataset.vwChoice;
-    p.choice = v === "keep" || v === "own" ? v : Number(v);
+    p.choice = v === "own" ? v : Number(v);
     paint();
     if (v === "own") bodyEl.querySelector("[data-vw-own]")?.focus();
   }
@@ -594,7 +582,11 @@ function onChange(event) {
 // Typing in "Write my own" keeps the draft current without repainting the field.
 function onInput(event) {
   if (!w || !event.target.matches("[data-vw-own]")) return;
-  w.parts[w.fields[w.step]].own = event.target.value;
+  const field = w.fields[w.step];
+  w.parts[field].own = event.target.value;
+  // The note under the choices follows (empty text = still the base voice).
+  const note = bodyEl.querySelector(".vw-default");
+  if (note) note.outerHTML = renderDefaultNote(field);
 }
 
 function onKeydown(event) {

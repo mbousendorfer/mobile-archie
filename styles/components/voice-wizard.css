@@ -72,6 +72,11 @@
   font-weight: var(--sys-text-style-body-bold-weight);
 }
 
+/* Focused on each step for screen readers (tabindex -1) — no ring. */
+.vw__ask:focus {
+  outline: none;
+}
+
 .vw__new {
   margin-left: var(--ref-spacing-xs);
   vertical-align: middle;
@@ -83,21 +88,19 @@
   color: var(--ref-color-grey-80);
 }
 
-/* Leave as default · Make it {network}'s — two radio cards side by side. */
-.vw-mode {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--ref-spacing-xs);
+/* The base voice, said small under the choices: a note while nothing is
+   picked, a small link back once something is. The link is a <button> — its
+   own class drops the button chrome (the DS .ap-link styles an <a>). */
+.vw-default {
+  margin: var(--ref-spacing-xs) 0 0;
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
 }
 
-/* The two cards stay a pair: the base's version is cut at two lines (whole
-   in the title), so a long LinkedIn layout doesn't stretch them. */
-.vw-mode .vw-radio__text,
-.vw-radio:has([data-vw-choice="keep"]) .vw-radio__text {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+.vw-default__reset {
+  padding: 0;
+  border: 0;
+  background: none;
 }
 
 /* "Suggestions" + how to order them, above the list. */
@@ -360,9 +363,6 @@
 
 @media (max-width: 900px) {
   .vw__content {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .vw-mode {
     grid-template-columns: minmax(0, 1fr);
   }
 }
