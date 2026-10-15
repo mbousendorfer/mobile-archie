@@ -7,7 +7,8 @@
 // Make it {network}'s, then the choices. For lines: "Your … lines", the ones
 // you keep, numbered in your order of preference (drag by the grip — the
 // shared drag-reorder.js — or ↑ ↓ on it; × gives a line back), write your own,
-// then "More from Archie" — his suggestions not kept yet, one Add each. For a
+// and under them, in the same list but lighter, his suggestions not kept yet
+// (one click adds one). For a
 // single-value part: Archie's pick · another way · your own. On the right,
 // what the network itself recommends for that part.
 // (2026-10-15: a live sample post stood in the right column; checkboxes AND an
@@ -23,10 +24,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1818";
-import { bindReorder } from "../drag-reorder.js?v=1818";
-import { escapeHtml as esc } from "../utils.js?v=1818";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1818";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1820";
+import { bindReorder } from "../drag-reorder.js?v=1820";
+import { escapeHtml as esc } from "../utils.js?v=1820";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1820";
 import {
   networkFields,
   isNewPart,
@@ -35,7 +36,7 @@ import {
   baseNetwork,
   networkEntry,
   resolvedVoice,
-} from "../network-voice.js?v=1818";
+} from "../network-voice.js?v=1820";
 
 const MODAL_ID = "voiceWizard";
 
@@ -84,7 +85,7 @@ let initialized = false;
 
 // { data, net, base, opts, fields, step, parts: { [field]: part }, initial, startParts, leaving, onSave }
 //   list part: { keep, lines: string[] } — the lines you keep, in preference
-//     order; Archie's options not in it are "More from Archie"
+//     order; Archie's options not in it follow, as suggestions
 //   text part: { choice: 0 | 1 | "keep" | "own", own, prev } — prev = the choice
 //     to come back to when you leave "default"
 let w = null;
@@ -384,34 +385,34 @@ function renderPart(field) {
         </li>`;
       })
       .join("");
+    // Archie's other suggestions continue the same list, lighter: no card, a
+    // + where the grip sits — one click and the line joins yours, last.
     const more = w.opts[field]
       .filter((o) => !p.lines.includes(o))
       .map(
-        (o) => `<li class="vw-option vw-more">
+        (o) => `<li><button type="button" class="vw-suggest" data-vw-take="${esc(o)}" aria-label="${esc(`Add “${o}”`)}">
+          <i class="ap-icon-plus vw-suggest__plus" aria-hidden="true"></i>
           <span class="vw-option__text">“${esc(o)}”</span>
           ${ARCHIE_MARK}
-          <button type="button" class="ap-button ghost blue" data-vw-take="${esc(o)}"><i class="ap-icon-plus" aria-hidden="true"></i><span>Add</span></button>
-        </li>`,
+        </button></li>`,
       )
       .join("");
     return `${head}
       <div class="vw-list-head"><span class="vw-list-head__title">${esc(P.yours)}</span>${
         n > 1 ? `<span class="vw-list-head__hint">I lead with the first one. Drag to reorder.</span>` : ""
       }</div>
-      ${
-        n
-          ? `<ol class="vw-options app-reorder">${kept}</ol>`
-          : `<p class="vw__empty">No line yet. Add one of mine below, or write your own.</p>`
-      }
+      <div class="vw-lines">
+        ${
+          n
+            ? `<ol class="vw-options app-reorder">${kept}</ol>`
+            : `<p class="vw__empty">No line yet. Add one of my suggestions, or write your own.</p>`
+        }
+        ${more ? `<ul class="vw-suggests" aria-label="More suggestions">${more}</ul>` : ""}
+      </div>
       <div class="vw-add">
         <div class="ap-input-group"><input type="text" data-vw-add placeholder="${esc(P.add)}" aria-label="${esc(P.add)}" /></div>
         <button type="button" class="ap-button stroked blue" data-vw-add-btn><i class="ap-icon-plus" aria-hidden="true"></i><span>Add</span></button>
-      </div>
-      ${
-        more
-          ? `<div class="vw-list-head"><span class="vw-list-head__title">More from Archie</span></div><ul class="vw-options">${more}</ul>`
-          : ""
-      }`;
+      </div>`;
   }
   const radio = (value, title, text, archie = false) => `
     <label class="ap-radio-card card vw-radio">

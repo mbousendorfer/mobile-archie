@@ -165,8 +165,7 @@
 /* A kept line: grip · rank · line · Archie's mark · remove. The grip, the
    lift and the slide are the shared reorder (drag-reorder.css). The 36px icon
    buttons set the height; a 4px inset keeps the row at ≈ 46px. */
-.vw-line,
-.vw-more {
+.vw-line {
   gap: var(--ref-spacing-xs);
   padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs) var(--ref-spacing-xxxs) var(--ref-spacing-sm);
   cursor: default;
@@ -182,11 +181,57 @@
   text-align: center;
 }
 
-/* Archie's other suggestions: no card edge, the page's grey — a shelf to take
-   from, not your list. */
-.vw-more {
-  border-color: transparent;
+/* Your lines, then Archie's other suggestions — one list. The suggestions
+   are compact rows without a card: a blue + in the grip's column, the line in
+   body ink, his olive mark. The whole row is the button. */
+.vw-lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.vw-suggests {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vw-suggest {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  border: 1px solid transparent;
+  border-radius: var(--ref-border-radius-md);
+  background: none;
+  color: var(--ref-color-grey-80);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vw-suggest:hover,
+.vw-suggest:focus-visible {
   background: var(--app-surface-subtle);
+  color: var(--ref-color-grey-100);
+}
+
+/* Past an empty rank column, so the text lines up with your lines'. */
+.vw-suggest .vw-option__text {
+  flex: 1;
+  min-width: 0;
+  margin-left: calc(16px + var(--ref-spacing-xs));
+  color: inherit;
+}
+
+.vw-suggest__plus {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--ref-color-electric-blue-100);
 }
 
 .vw__empty {

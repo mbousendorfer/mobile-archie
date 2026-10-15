@@ -7,13 +7,13 @@
 //   attachImageToDraft(sessionId, postId, imageUrl)
 //   subscribe(sessionId, fn)    → unsubscribe fn
 
-import { postsBySession as seedPostsBySession, allSeedSessions as seedRecentSessions } from "./mocks.js?v=1818";
-import { isNewUser } from "./user-mode.js?v=1818";
-import { createSessionNotifier } from "./store-utils.js?v=1818";
-import { getSessionById } from "./sessions-store.js?v=1818";
-import { getContextById } from "./contexts-store.js?v=1818";
-import { playbookForNewWork } from "./active-playbook.js?v=1818";
-import { networkVoicesOn, writeInVoice } from "./network-voice.js?v=1818";
+import { postsBySession as seedPostsBySession, allSeedSessions as seedRecentSessions } from "./mocks.js?v=1820";
+import { isNewUser } from "./user-mode.js?v=1820";
+import { createSessionNotifier } from "./store-utils.js?v=1820";
+import { getSessionById } from "./sessions-store.js?v=1820";
+import { getContextById } from "./contexts-store.js?v=1820";
+import { playbookForNewWork } from "./active-playbook.js?v=1820";
+import { networkVoicesOn, writeInVoice } from "./network-voice.js?v=1820";
 
 // Demo session ids — only these get the seeded posts mock. Brand-new
 // conversations start empty (cf. library.js for the same rationale).
