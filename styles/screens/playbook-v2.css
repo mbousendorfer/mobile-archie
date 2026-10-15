@@ -979,3 +979,17 @@
   flex-wrap: wrap;
   margin-left: auto;
 }
+
+/* Mobile fork: beside the logo the facts line is one item wide, so every item
+   wrapped onto its own line and each line ended on a dangling hairline. It is
+   a list here — one fact per line, no separators. */
+.pb2-meta {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.pb2-meta__item {
+  padding-right: 0;
+  margin-right: 0;
+  border-right: 0;
+}

@@ -2,11 +2,11 @@
 // the per-card feedback and "why this idea" state. Moved out of right-panel.js,
 // unchanged; the filter state it reads is owned (and written) by the shell.
 
-import { html, raw } from "../../utils.js?v=1912";
-import { getSources as getStreamSources } from "../../sources-stream.js?v=1912";
-import { renderClipCard } from "../clip-card.js?v=1912";
-import { renderCompactIdeaCard } from "../idea-card-compact.js?v=1912";
-import { activeSessionId, clipSelection, ideasFilter, outputsView, sessionIdeas } from "../right-panel.js?v=1912";
+import { html, raw } from "../../utils.js?v=1924";
+import { getSources as getStreamSources } from "../../sources-stream.js?v=1924";
+import { renderClipCard } from "../clip-card.js?v=1924";
+import { renderCompactIdeaCard } from "../idea-card-compact.js?v=1924";
+import { activeSessionId, clipSelection, ideasFilter, outputsView, sessionIdeas } from "../right-panel.js?v=1924";
 
 // Idea kind taxonomy — handoff Ideas filter rail (§ 2.6). Order is the order
 // shown in the chip row. The .kind selector also drives the per-kind tag
@@ -21,45 +21,14 @@ const IDEA_KINDS = [
 ];
 
 export function renderIdeasView() {
-  const ideaCount = sessionIdeas().length;
   const clips = collectAllClips();
-  const clipCount = clips.length;
   const ideasActive = outputsView === "ideas";
 
-  // Outputs tabs — Ideas | Clips. Always rendered so the user can
-  // discover the Clips surface even when empty; the Clips tab carries
-  // an empty state on its own when no clips have been extracted yet.
-  const tabs = `
-    <div class="ap-tabs rpanel-outputs__tabs">
-      <div class="ap-tabs-nav">
-        <button
-          type="button"
-          class="ap-tabs-tab ${ideasActive ? "active" : ""}"
-          data-rpanel-outputs-tab="ideas"
-          role="tab"
-          aria-selected="${ideasActive}"
-        >
-          <span>Ideas</span>
-          ${ideaCount > 0 ? `<span class="ap-counter normal ${ideasActive ? "blue" : "grey"}">${ideaCount}</span>` : ""}
-        </button>
-        <button
-          type="button"
-          class="ap-tabs-tab ${!ideasActive ? "active" : ""}"
-          data-rpanel-outputs-tab="clips"
-          role="tab"
-          aria-selected="${!ideasActive}"
-        >
-          <span>Clips</span>
-          ${clipCount > 0 ? `<span class="ap-counter normal ${!ideasActive ? "blue" : "grey"}">${clipCount}</span>` : ""}
-        </button>
-      </div>
-    </div>
-  `;
-
+  // No Ideas | Clips sub-tabs (mobile fork): Clips is a tab of the sheet itself
+  // (right-panel.js renderSheetHead); `outputsView` says which one is open.
   if (!ideasActive) {
     return html`
       <div class="rpanel-ideas">
-        ${raw(tabs)}
         <div class="rpanel-ideas__body" data-rpanel-ideas-body>${raw(renderClipsList(clips))}</div>
       </div>
     `;
@@ -74,7 +43,6 @@ export function renderIdeasView() {
 
   return html`
     <div class="rpanel-ideas">
-      ${raw(tabs)}
       <div class="rpanel-ideas__head">
         <div class="rpanel-ideas__filters" role="group" aria-label="Filter ideas by kind">
           ${raw(

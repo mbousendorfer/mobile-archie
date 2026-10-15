@@ -1,30 +1,30 @@
-import { html, raw } from "../utils.js?v=1912";
-import { subscribe as subscribeThread } from "../assistant.js?v=1912";
-import { isFlagOn } from "../feature-flags.js?v=1912";
-import { getPath, navigate } from "../router.js?v=1912";
-import { parseHashParams, setHashQuery } from "../url-state.js?v=1912";
+import { html, raw } from "../utils.js?v=1924";
+import { subscribe as subscribeThread } from "../assistant.js?v=1924";
+import { isFlagOn } from "../feature-flags.js?v=1924";
+import { getPath, navigate } from "../router.js?v=1924";
+import { parseHashParams, setHashQuery } from "../url-state.js?v=1924";
 import {
   getPosts,
   attachImageToDraft,
   updatePostClip,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=1912";
-import { onFeedbackClick } from "./feedback-control.js?v=1912";
+} from "../posts-store.js?v=1924";
+import { onFeedbackClick } from "./feedback-control.js?v=1924";
 // Shared compact idea card — same component the standalone Ideas page uses.
-import { open as openVideoClipsModal } from "./video-clips-modal.js?v=1912";
+import { open as openVideoClipsModal } from "./video-clips-modal.js?v=1924";
 import {
   getSources as getStreamSources,
   subscribeSources,
   updateSourceClips,
   removeSources,
   renameSource,
-} from "../sources-stream.js?v=1912";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=1912";
-import { open as openRenameModal } from "./rename-modal.js?v=1912";
-import { askConnector } from "../connector-ask.js?v=1912";
-import { open as openConnectorsModal } from "./connectors-modal.js?v=1912";
-import { addMention as addComposerMention } from "../composer-mentions.js?v=1912";
-import { getIdeas, removeIdeasForSources } from "../library.js?v=1912";
+} from "../sources-stream.js?v=1924";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=1924";
+import { open as openRenameModal } from "./rename-modal.js?v=1924";
+import { askConnector } from "../connector-ask.js?v=1924";
+import { open as openConnectorsModal } from "./connectors-modal.js?v=1924";
+import { addMention as addComposerMention } from "../composer-mentions.js?v=1924";
+import { getIdeas, removeIdeasForSources } from "../library.js?v=1924";
 
 // The ideas of the chat the panel is looking at.
 //
@@ -39,16 +39,16 @@ export function sessionIdeas() {
   const sid = activeSessionId();
   return sid ? getIdeas(sid) : [];
 }
-import { open as openConfirmModal } from "./confirm-modal.js?v=1912";
-import { showToast } from "./toast.js?v=1912";
-import { closeAllSourceMenus, renderSourcesView } from "./right-panel/sources-view.js?v=1912";
+import { open as openConfirmModal } from "./confirm-modal.js?v=1924";
+import { showToast } from "./toast.js?v=1924";
+import { closeAllSourceMenus, renderSourcesView } from "./right-panel/sources-view.js?v=1924";
 import {
   collectAllClips,
   renderIdeasView,
   toggleClipWhyInPlace,
   toggleIdeaFeedback,
   toggleWhyOpen,
-} from "./right-panel/ideas-view.js?v=1912";
+} from "./right-panel/ideas-view.js?v=1924";
 import {
   cancelEdit,
   closeAllRewriteMenus,
@@ -74,7 +74,7 @@ import {
   setNetworkSelection,
   startEdit,
   visibleNetworkPosts,
-} from "./right-panel/drafts-view.js?v=1912";
+} from "./right-panel/drafts-view.js?v=1924";
 
 // Global Right Panel — on mobile a full-height BOTTOM SHEET over the chat, with
 // its own tabs Drafts · Ideas · Sources (renderSheetHead). `?panel=` is the
@@ -134,7 +134,13 @@ let state = {
 // The user-facing panel modes (drafts / ideas / sources) are encoded in
 // the hash query as `?panel=<mode>` so the panel re-opens on reload and
 // deep-links work.
-const VALID_URL_MODES = new Set(["drafts", "ideas", "sources"]);
+const VALID_URL_MODES = new Set(["drafts", "ideas", "clips", "sources"]);
+
+// The sheet's tab on screen, as the URL names it: Clips is the Ideas mode on its
+// Clips view (mobile fork — Clips is a sheet tab, no longer a sub-tab of Ideas).
+function urlModeOf() {
+  return state.mode === "ideas" && outputsView === "clips" ? "clips" : state.mode;
+}
 
 // Opening the sheet PUSHES a history entry, so the browser's Back closes it
 // (hashchange → syncFromUrl). Switching tabs inside an open sheet REPLACES it:
@@ -174,9 +180,10 @@ function syncFromUrl() {
     return;
   }
   const urlMode = readUrlPanel();
-  if (urlMode === state.mode) return;
+  if (urlMode === urlModeOf()) return;
   if (urlMode === "drafts") openDrafts(null);
   else if (urlMode === "ideas") openIdeas();
+  else if (urlMode === "clips") openClips();
   else if (urlMode === "sources") openSources();
   else if (state.mode && VALID_URL_MODES.has(state.mode)) closePanel();
 }
@@ -267,7 +274,7 @@ export function openClips() {
   outputsView = "clips";
   renderPanel();
   notify();
-  writeUrlPanel("ideas");
+  writeUrlPanel("clips");
 }
 
 // Sources mode — shows the list of sources currently attached to the
@@ -362,6 +369,8 @@ export function init() {
     const shell = document.getElementById("appShell") || document.body;
     shell.appendChild(el);
   }
+  bindSheetDrag(el);
+
   // Drag & drop an image straight onto a draft's empty media slot.
   //
   // Delegated on the panel root so it survives every re-render, and DRAG EVENTS
@@ -435,6 +444,7 @@ export function init() {
       const mode = sheetTab.dataset.rpanelSheetTab;
       if (mode === "drafts") openDrafts(null);
       else if (mode === "ideas") openIdeas();
+      else if (mode === "clips") openClips();
       else openSources();
       return;
     }
@@ -677,7 +687,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session/clip-draft-flow.js?v=1912").then(({ startClipDraftFlow }) => {
+          import("../screens/session/clip-draft-flow.js?v=1924").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -848,7 +858,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session/clip-draft-flow.js?v=1912").then(({ startClipDraftFlow }) => {
+      import("../screens/session/clip-draft-flow.js?v=1924").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -866,7 +876,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session/clip-draft-flow.js?v=1912").then(({ startClipDraftFlow }) => {
+      import("../screens/session/clip-draft-flow.js?v=1924").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -1085,18 +1095,21 @@ export function init() {
   window.addEventListener("hashchange", syncFromUrl);
 }
 
-// The sheet's head: a grab handle (a cue, not a control — Back, the close and
-// Escape dismiss it), then the three panels as DS tabs with their counts, and
-// the close. Each mode's own view starts under it.
+// The sheet's head: the grab handle and the close on one line — drag the head
+// down to dismiss (bindSheetDrag), or the close, Back, Escape — then the panels
+// as DS tabs with their counts (Clips only when there are clips). Each mode's
+// own view starts under it.
 function renderSheetHead() {
   const sid = activeSessionId();
   const counts = {
     drafts: sid ? getPosts(sid).length : 0,
     ideas: sessionIdeas().length,
+    clips: collectAllClips().length,
     sources: sid ? getStreamSources(sid).length : 0,
   };
+  const current = urlModeOf();
   const tab = (mode, label) => {
-    const on = state.mode === mode;
+    const on = current === mode;
     const count =
       counts[mode] > 0 ? `<span class="ap-counter normal ${on ? "blue" : "grey"}">${counts[mode]}</span>` : "";
     return `<button type="button" class="ap-tabs-tab${on ? " active" : ""}" role="tab" aria-selected="${on}" data-rpanel-sheet-tab="${mode}"><span>${label}</span>${count}</button>`;
@@ -1104,13 +1117,13 @@ function renderSheetHead() {
   return `
     <div class="app-right-panel__head">
       <span class="app-right-panel__grip" aria-hidden="true"></span>
+      <button type="button" class="ap-icon-button transparent app-right-panel__close" data-rpanel-close aria-label="Close panel">
+        <i class="ap-icon-close"></i>
+      </button>
       <div class="ap-tabs app-right-panel__tabs">
         <div class="ap-tabs-nav" role="tablist" aria-label="Chat panels">
-          ${tab("drafts", "Drafts")}${tab("ideas", "Ideas")}${tab("sources", "Sources")}
+          ${tab("drafts", "Drafts")}${tab("ideas", "Ideas")}${counts.clips || current === "clips" ? tab("clips", "Clips") : ""}${tab("sources", "Sources")}
         </div>
-        <button type="button" class="ap-icon-button transparent" data-rpanel-close aria-label="Close panel">
-          <i class="ap-icon-close"></i>
-        </button>
       </div>
     </div>
   `;
@@ -1174,6 +1187,39 @@ export function renderPanel() {
   }
 }
 
+// --- Swipe the sheet down to dismiss (mobile fork) --------------------
+// The grip promised it, so the head honours it: a pointer drag on the head
+// (not on a tab or the close) moves the sheet with the finger; released past
+// 96px it closes — through closePanel, so the URL and history stay the truth —
+// otherwise it springs back. Pointer events, so mouse and touch alike.
+const DISMISS_PX = 96;
+function bindSheetDrag(el) {
+  let startY = null;
+  let dy = 0;
+  el.addEventListener("pointerdown", (event) => {
+    if (!event.target.closest(".app-right-panel__head")) return;
+    if (event.target.closest("button, a")) return;
+    startY = event.clientY;
+    dy = 0;
+    el.setPointerCapture(event.pointerId);
+    el.style.transition = "none";
+  });
+  el.addEventListener("pointermove", (event) => {
+    if (startY === null) return;
+    dy = Math.max(0, event.clientY - startY);
+    el.style.transform = `translateY(${dy}px)`;
+  });
+  const end = () => {
+    if (startY === null) return;
+    startY = null;
+    el.style.transition = "";
+    el.style.transform = "";
+    if (dy > DISMISS_PX) closePanel();
+  };
+  el.addEventListener("pointerup", end);
+  el.addEventListener("pointercancel", end);
+}
+
 // --- Drafts mode (Lot 21 — rich PostCard feed) -------------------------
 //
 // Source-of-truth shifted from the per-batch `message.drafts` payload to
@@ -1222,7 +1268,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session/draft-questions.js?v=1912").then(({ askAngleQuestion }) => {
+  import("../screens/session/draft-questions.js?v=1924").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

@@ -35,11 +35,14 @@ safe-area du haut) au-dessus du contenu, sur `100dvh`.
 6. **Un sheet plein écran** ancré en bas (`position: fixed`,
    `height: calc(100dvh − safe-top − 8px)`, coins hauts arrondis), qui monte à
    l'ouverture.
-7. **Sa tête** : une poignée (un repère, pas un contrôle), puis les `.ap-tabs`
-   **Drafts · Ideas · Sources** avec leurs compteurs, et le close. Le
-   sous-onglet Ideas | Clips reste dans Ideas.
-8. **Ouverture** : le bouton **Drafts** de la topbar (avec le compteur de drafts)
-   ouvre Drafts s'il y en a, sinon Ideas, sinon Sources. Les cartes du chat
+7. **Sa tête** : la poignée et le close sur une même ligne, puis les `.ap-tabs`
+   **Drafts · Ideas · Clips · Sources** avec leurs compteurs (Clips seulement
+   s'il y a des clips — ce n'est plus un sous-onglet d'Ideas : un onglet Ideas
+   dans un onglet Ideas). Sous les onglets, pas d'autre rangée d'onglets : un
+   filtre est une `.ap-filter-chip` (Drafts : All / Needs fixes, à côté du
+   select réseau).
+8. **Ouverture** : le bouton de la topbar **nomme ce qu'il ouvre** — « Drafts N »
+   s'il y a des drafts, sinon « Ideas N », sinon « Sources N ». Les cartes du chat
    (Review, refs, status) ouvrent directement le bon onglet.
 9. **`?panel=` est la vérité.** Ouvrir le sheet pousse une entrée d'historique :
    le **retour navigateur le ferme**. Changer d'onglet dans le sheet ouvert
@@ -49,8 +52,9 @@ safe-area du haut) au-dessus du contenu, sur `100dvh`.
     drafter des clips, interroger un connecteur) **ferme le sheet** après
     s'être exécutée (`CHAT_BOUND_ACTIONS`, `right-panel.js`) — sinon le sheet
     cache ce qu'elle vient de produire.
-11. **Fermeture** : le close, Back, ou Échap. Pas de swipe-to-dismiss pour
-    l'instant (à ajouter si le test sur téléphone le réclame).
+11. **Fermeture** : tirer la tête vers le bas (au-delà de 96px, sinon le sheet
+    revient — `bindSheetDrag`, événements pointeur), le close, Back, ou Échap.
+    La poignée tient donc sa promesse.
 
 ---
 

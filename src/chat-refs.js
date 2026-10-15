@@ -9,11 +9,11 @@
 // inline button (`.chat-ref`): hover previews the object (ref-preview.js),
 // click opens it in the right panel (session.js → focusInPanel).
 
-import { getPosts } from "./posts-store.js?v=1912";
-import { getIdeas, getSources } from "./library.js?v=1912";
-import { networkLabel } from "./network-voice.js?v=1912";
-import { getQueue } from "./schedule-store.js?v=1912";
-import { escapeHtml, escapeAttr } from "./utils.js?v=1912";
+import { getPosts } from "./posts-store.js?v=1924";
+import { getIdeas, getSources } from "./library.js?v=1924";
+import { networkLabel } from "./network-voice.js?v=1924";
+import { getQueue } from "./schedule-store.js?v=1924";
+import { escapeHtml, escapeAttr } from "./utils.js?v=1924";
 
 const TOKEN = /\[\[(post|idea|source):([^\]\s]+)\]\]/g;
 const GONE = { post: "a deleted draft", idea: "a deleted idea", source: "a deleted source" };
@@ -83,6 +83,10 @@ export function renderRefs(text, sessionId) {
   return text.replace(TOKEN, (_, kind, id) => {
     const obj = resolveRef(kind, id, sessionId);
     if (!obj) return kind === "post" ? scheduledLabel(id) || GONE.post : GONE[kind];
-    return `<button type="button" class="chat-ref" data-chat-ref="${escapeAttr(`${kind}:${id}`)}" data-chat-ref-session="${escapeAttr(sessionId)}">${escapeHtml(refLabel(kind, obj))}</button>`;
+    // A <span role="button">, not a <button>: a button is an atomic box even at
+    // display: inline, so a label longer than the line wrapped INSIDE it and threw
+    // the sentence's next comma onto a line of its own (mobile fork). A span wraps
+    // with the sentence; session.js gives it Enter / Space like a button.
+    return `<span role="button" tabindex="0" class="chat-ref" data-chat-ref="${escapeAttr(`${kind}:${id}`)}" data-chat-ref-session="${escapeAttr(sessionId)}">${escapeHtml(refLabel(kind, obj))}</span>`;
   });
 }

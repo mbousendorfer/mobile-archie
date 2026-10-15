@@ -57,22 +57,23 @@
   color: var(--ref-color-grey-80);
 }
 
+/* Mobile fork: the search takes the row's width, Create keeps its own beside
+   it (a 100% search pushed Create off the screen's edge). */
 .contexts-view__head-actions {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
+  flex: 1 1 100%;
+  min-width: 0;
 }
 
 .contexts-view__search {
-  flex: 0 0 240px;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
-/* Narrow viewports (right panel open or mobile) — let the search input
-   shrink to fit so the row never overflows horizontally. */
-@media (max-width: 720px) {
-  .contexts-view__search {
-    flex: 1 1 100%;
-  }
+.contexts-view__head-actions > .ap-button {
+  flex: 0 0 auto;
 }
 
 .contexts-view__body {

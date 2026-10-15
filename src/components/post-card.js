@@ -19,12 +19,32 @@
 // id used to apply the focus pulse animation when navigating in via
 // `?focusPost=<id>`.
 
-import { html, raw, formatClock, escapeText, escapeAttr } from "../utils.js?v=1912";
-import { isPortraitFormat } from "../clip-formats.js?v=1912";
-import { presetById } from "../clip-captions.js?v=1912";
-import { renderFeedbackControl } from "./feedback-control.js?v=1912";
-import { networkMeta } from "../social-profiles.js?v=1912";
-import { REVEAL_MS } from "../archie-pixels.js?v=1912";
+import { html, raw, formatClock, escapeText, escapeAttr } from "../utils.js?v=1924";
+import { isPortraitFormat } from "../clip-formats.js?v=1924";
+import { presetById } from "../clip-captions.js?v=1924";
+import { renderFeedbackControl } from "./feedback-control.js?v=1924";
+import { networkMeta } from "../social-profiles.js?v=1924";
+import { REVEAL_MS } from "../archie-pixels.js?v=1924";
+import { installMoreMenu } from "./more-menu.js?v=1924";
+
+// A draft's ⋯ menu (mobile fork) — toggle, outside tap and Escape; an item
+// closes it once its action (handled by right-panel.js) has run.
+installMoreMenu({
+  menuSelector: ".posts__more-menu",
+  triggerSelector: "[data-post-more]",
+  closeAfterSelectors: [".posts__more-menu [role=menuitem]"],
+});
+
+function moreItem(attr, icon, label, danger = false) {
+  return `<button type="button" role="menuitem" class="ap-action-dropdown-item${danger ? " red-mode" : ""}" ${attr}>
+    <i class="${icon}" aria-hidden="true"></i>
+    <div class="ap-action-dropdown-item-text">
+      <div class="ap-action-dropdown-item-label-container">
+        <span class="ap-action-dropdown-item-label">${label}</span>
+      </div>
+    </div>
+  </button>`;
+}
 
 // The media slot of a draft that has no image yet. ONE dashed slot, two tiers
 // (2026-10-07):
@@ -315,7 +335,6 @@ export function renderPostCard(post, opts = {}) {
       data-post-id="${post.id}"
       ${regenerating ? `data-regenerating="true" data-stage="${regenerateStage}"` : ""}
     >
-      ${raw(checkbox)}
       <div class="posts__card-wrap">
         ${raw(renderPostErrors(post))}
         <article class="ap-card posts__card ${editing ? "is-editing" : ""}">
@@ -359,42 +378,23 @@ export function renderPostCard(post, opts = {}) {
         ${raw(belowCard)}
       </div>
 
+      <!-- Mobile fork: ONE row of labelled actions under the card — the desktop
+           rail of seven icon buttons read as mystery meat without its tooltips
+           (off on touch). Select · Rewrite (its own menu) · Schedule, the CTA ·
+           ⋯ for the rest. Same data-* hooks, so right-panel.js is unchanged. -->
       <div class="posts__row-actions" aria-label="Post actions">
-        <button
-          type="button"
-          class="ap-icon-button stroked blue"
-          aria-label="Reference in chat"
-          title="Reference"
-          data-post-mention="${post.id}"
-          ${regenerating ? "disabled" : ""}
-        >
-          <i class="ap-icon-at"></i>
-        </button>
-        ${raw(
-          inlineEdit
-            ? `<button
-                type="button"
-                class="ap-icon-button stroked"
-                aria-label="Edit post"
-                title="Edit"
-                data-post-edit="${post.id}"
-                ${regenerating ? "disabled" : ""}
-              >
-                <i class="ap-icon-pen"></i>
-              </button>`
-            : "",
-        )}
+        ${raw(checkbox)}
         <div class="posts__rewrite">
           <button
             type="button"
-            class="ap-icon-button stroked ${regenerating ? "loading" : ""}"
-            aria-label="Regenerate draft"
+            class="ap-button stroked grey ${regenerating ? "loading" : ""}"
             aria-haspopup="true"
             aria-expanded="false"
             data-post-rewrite-menu="${post.id}"
             ${regenerating ? "disabled" : ""}
           >
             <i class="ap-icon-sparkles"></i>
+            <span>Rewrite</span>
           </button>
           <div
             class="ap-action-dropdown posts__rewrite-menu"
@@ -446,65 +446,38 @@ export function renderPostCard(post, opts = {}) {
             </button>
           </div>
         </div>
-        <!-- Image Studio. It lives in the rail rather than in the media block
-             because it is the ONE entry that has to work in every media state:
-             no image (steer a generation instead of the one-click Generate), a
-             single image (open it in Edit), or a carousel (reopen the set). The
-             media block's own controls are contextual and partly hover-only, so
-             on an image-less draft nothing reached the studio at all. -->
         <button
           type="button"
-          class="ap-icon-button stroked"
-          aria-label="Open the Image Studio"
-          title="Image Studio"
-          data-post-studio="${post.id}"
-          ${regenerating ? "disabled" : ""}
-        >
-          <i class="ap-icon-image"></i>
-        </button>
-        <!-- Upload. It is in the rail and NOT in the empty slot because the slot
-             holds exactly one filled primary plus one link — a third action
-             there flattened the hierarchy every time it was tried. The rail is
-             also the only place it can work once the draft HAS an image, and it
-             is the keyboard route to a file: dragging onto the slot cannot be
-             the sole way in. Same handler as the slot's old link. -->
-        <button
-          type="button"
-          class="ap-icon-button stroked"
-          aria-label="Upload an image"
-          title="Upload"
-          data-post-image-upload="${post.id}"
-          ${regenerating ? "disabled" : ""}
-        >
-          <i class="ap-icon-upload"></i>
-        </button>
-        <button
-          type="button"
-          class="ap-icon-button stroked"
-          aria-label="Save as draft"
-          data-post-save-draft="${post.id}"
-          ${regenerating ? "disabled" : ""}
-        >
-          <i class="ap-icon-bookmark"></i>
-        </button>
-        <button
-          type="button"
-          class="ap-icon-button stroked"
-          aria-label="Schedule post"
+          class="ap-button primary blue"
           data-post-schedule="${post.id}"
           ${regenerating ? "disabled" : ""}
         >
           <i class="ap-icon-calendar"></i>
+          <span>Schedule</span>
         </button>
-        <button
-          type="button"
-          class="ap-icon-button stroked posts__row-action--danger"
-          aria-label="Delete post"
-          data-post-delete="${post.id}"
-          ${regenerating ? "disabled" : ""}
-        >
-          <i class="ap-icon-trash"></i>
-        </button>
+        <div class="posts__more">
+          <button
+            type="button"
+            class="ap-icon-button transparent"
+            aria-label="More actions"
+            aria-haspopup="menu"
+            aria-expanded="false"
+            aria-controls="post-more-${post.id}"
+            data-post-more
+            ${regenerating ? "disabled" : ""}
+          >
+            <i class="ap-icon-more"></i>
+          </button>
+          <div class="ap-action-dropdown posts__more-menu" id="post-more-${post.id}" role="menu" hidden>
+            ${raw(moreItem(`data-post-mention="${post.id}"`, "ap-icon-at", "Reference in chat"))}
+            ${raw(inlineEdit ? moreItem(`data-post-edit="${post.id}"`, "ap-icon-pen", "Edit post") : "")}
+            ${raw(moreItem(`data-post-studio="${post.id}"`, "ap-icon-image", "Open the Image Studio"))}
+            ${raw(moreItem(`data-post-image-upload="${post.id}"`, "ap-icon-upload", "Upload an image"))}
+            ${raw(moreItem(`data-post-save-draft="${post.id}"`, "ap-icon-bookmark", "Save as draft"))}
+            <div class="ap-action-dropdown-divider" role="separator"></div>
+            ${raw(moreItem(`data-post-delete="${post.id}"`, "ap-icon-trash", "Delete post", true))}
+          </div>
+        </div>
       </div>
     </article>
   `;

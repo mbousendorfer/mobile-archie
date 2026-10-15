@@ -1,8 +1,8 @@
-import { html, raw, escapeHtml, escapeAttr } from "../utils.js?v=1912";
-import { getPath, navigate } from "../router.js?v=1912";
-import { parseHashParams } from "../url-state.js?v=1912";
-import { setDrawerOpen } from "./sidebar.js?v=1912";
-import { installMoreMenu } from "./more-menu.js?v=1912";
+import { html, raw, escapeHtml, escapeAttr } from "../utils.js?v=1924";
+import { getPath, navigate } from "../router.js?v=1924";
+import { parseHashParams } from "../url-state.js?v=1924";
+import { setDrawerOpen } from "./sidebar.js?v=1924";
+import { installMoreMenu } from "./more-menu.js?v=1924";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
@@ -11,37 +11,37 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=1912";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=1912";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=1912";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=1912";
-import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=1912";
+} from "./right-panel.js?v=1924";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=1924";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=1924";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=1924";
+import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=1924";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=1912";
-import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=1912";
-import { open as openRenameModal } from "./rename-modal.js?v=1912";
+} from "./conversation-status-card.js?v=1924";
+import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=1924";
+import { open as openRenameModal } from "./rename-modal.js?v=1924";
 import {
   subscribe as subscribeContexts,
   getContextById,
   getDefaultContext,
   getContexts,
-} from "../contexts-store.js?v=1912";
-import { isFlagOn } from "../feature-flags.js?v=1912";
-import { getActivePlaybook, isWorkspaceMode, isAccountScope, catalogueRoute } from "../active-playbook.js?v=1912";
-import { getFeedForPlaybook } from "../topic-feeds-store.js?v=1912";
-import { findCadence } from "../topics-catalog.js?v=1912";
+} from "../contexts-store.js?v=1924";
+import { isFlagOn } from "../feature-flags.js?v=1924";
+import { getActivePlaybook, isWorkspaceMode, isAccountScope, catalogueRoute } from "../active-playbook.js?v=1924";
+import { getFeedForPlaybook } from "../topic-feeds-store.js?v=1924";
+import { findCadence } from "../topics-catalog.js?v=1924";
 import {
   getPickerState as getTopPostsState,
   subscribePicker as subscribeTopPosts,
   backToProfiles as topPostsBackToProfiles,
-} from "../top-posts-flow.js?v=1912";
+} from "../top-posts-flow.js?v=1924";
 // The Insights view switch. Imported from views.js, NOT from the screen's
 // shell: the shell imports this module, so taking it from there would close a
 // cycle. views.js imports neither.
-import { readLayoutId, viewSwitch } from "../screens/insights/views.js?v=1912";
+import { readLayoutId, viewSwitch } from "../screens/insights/views.js?v=1924";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static
@@ -113,11 +113,14 @@ export function renderTopbar(_options = {}) {
       : isTopPostsBoard()
         ? renderTopPostsBack()
         : renderTitle(onSession);
-  // ☰ everywhere the drawer exists. Account scope has no rail by decision (a
-  // page about every brand isn't framed by one) — its back leads in instead.
-  const menu = isAccountScope(getPath())
-    ? ""
-    : `<button type="button" class="ap-icon-button transparent" data-topbar-menu aria-label="Open menu"><i class="ap-icon-view-list"></i></button>`;
+  // ☰ on the top-level screens only. A sub-page leads with its back, and ☰ beside
+  // it read as two competing ways out (the drawer is one Back away). Account
+  // scope has no rail by decision — its back leads in instead.
+  const leadsWithBack = !!(ownLeft || back || isTopPostsBoard());
+  const menu =
+    isAccountScope(getPath()) || leadsWithBack
+      ? ""
+      : `<button type="button" class="ap-icon-button transparent" data-topbar-menu aria-label="Open menu"><i class="ap-icon-view-list"></i></button>`;
   el.innerHTML = html`
     <div class="app-topbar__left">${raw(menu)}${raw(left)}</div>
     <div class="app-topbar__right">${raw(rightSide)}</div>
@@ -322,7 +325,7 @@ export function initTopbar() {
     // renderWelcomeAltExit() above. The wizard chrome no longer carries
     // its own Exit affordance; this is the only entry.
     if (event.target.closest("[data-topbar-welcome-alt-exit]")) {
-      import("./confirm-modal.js?v=1912").then(({ open }) => {
+      import("./confirm-modal.js?v=1924").then(({ open }) => {
         open({
           title: "Exit onboarding?",
           body: "Your progress so far will be discarded. You can start over anytime from the dashboard.",
@@ -417,9 +420,23 @@ export function initTopbar() {
 // The one panel button on a chat — "Drafts" and its count, the thing a chat
 // produces. It opens the bottom sheet; Ideas and Sources are the sheet's other
 // tabs. Disabled while the chat has nothing for any of the three.
+// It names what it opens: Drafts while the chat has drafts, else Ideas, else
+// Sources — a "Drafts" button that opened the Ideas tab read as a broken promise.
 function renderPanelButton(rpMode, draftCount, ideaCount) {
-  const disabled = !rpMode && draftCount === 0 && ideaCount === 0 && sessionSourceCount() === 0;
-  const badge = draftCount > 0 ? `<span class="ap-counter normal orange">${draftCount}</span>` : "";
+  const sourceCount = sessionSourceCount();
+  const target =
+    draftCount > 0
+      ? { label: "Drafts", icon: "ap-icon-pen", count: draftCount, tone: "orange" }
+      : ideaCount > 0
+        ? { label: "Ideas", icon: "ap-icon-sparkles", count: ideaCount, tone: "blue" }
+        : {
+            label: sourceCount > 0 ? "Sources" : "Drafts",
+            icon: sourceCount > 0 ? "ap-icon-file" : "ap-icon-pen",
+            count: sourceCount,
+            tone: "blue",
+          };
+  const disabled = !rpMode && target.count === 0;
+  const badge = target.count > 0 ? `<span class="ap-counter normal ${target.tone}">${target.count}</span>` : "";
   return `
     <button
       type="button"
@@ -427,10 +444,10 @@ function renderPanelButton(rpMode, draftCount, ideaCount) {
       data-topbar-panel
       ${disabled ? "disabled" : ""}
       aria-pressed="${!!rpMode}"
-      aria-label="Drafts, ideas and sources"
+      aria-label="${target.label} — open the chat's drafts, ideas and sources"
     >
-      <i class="ap-icon-pen"></i>
-      <span>Drafts</span>
+      <i class="${target.icon}"></i>
+      <span>${target.label}</span>
       ${badge}
     </button>
   `;

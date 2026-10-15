@@ -30,21 +30,39 @@
 }
 
 .app-right-panel__head {
+  position: relative;
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: var(--ref-spacing-xxs) var(--ref-spacing-xs) 0;
   border-bottom: 1px solid var(--app-border);
+  /* The head is the drag handle (right-panel.js bindSheetDrag): the finger's
+     vertical move is ours, not a scroll. */
+  touch-action: none;
+  cursor: grab;
 }
 
-/* The grab handle — a cue that the surface is a sheet. */
+/* The close shares the grip's line, top-right — the tab row keeps the width. */
+.app-right-panel__close {
+  position: absolute;
+  top: var(--ref-spacing-xxxs);
+  right: var(--ref-spacing-xs);
+}
+
+/* The grab handle — drag the head down to dismiss. Its line is as tall as the
+   close button beside it, so the grip and the close sit on one axis. */
 .app-right-panel__grip {
   width: 36px;
   height: 4px;
   border-radius: var(--app-radius-pill);
   background: var(--ref-color-grey-20);
-  margin-bottom: var(--ref-spacing-xxs);
+  margin: 14px 0 18px;
+}
+
+.app-right-panel__tabs .ap-tabs-tab {
+  padding-left: var(--ref-spacing-xxs);
+  padding-right: var(--ref-spacing-xxs);
 }
 
 .app-right-panel__tabs {
@@ -411,6 +429,7 @@
    footer flush with the content for a quieter card silhouette. */
 .rpanel-ideas__card-actions {
   display: flex;
+  flex-wrap: wrap; /* mobile fork: a clip card (beside its checkbox) is narrower */
   align-items: center;
   justify-content: space-between;
   gap: var(--ref-spacing-xs);
@@ -430,6 +449,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
+  margin-left: auto; /* wrapped under the thumbs, it stays on the right */
 }
 
 /* Individual thumb button — DS .ap-icon-button.transparent.sm
@@ -483,9 +503,8 @@
    active-tab underline lands on that shared line. */
 .rpanel-drafts__filters {
   display: flex;
-  flex-wrap: wrap; /* mobile fork: the network select wraps under the tabs */
   align-items: center;
-  gap: 0 var(--ref-spacing-sm);
+  gap: var(--ref-spacing-xs);
   /* Flush header, matching the Ideas tabs row's horizontal inset. */
   padding: 0 var(--ref-spacing-sm);
   border-bottom: 1px solid var(--app-border);
@@ -494,15 +513,10 @@
 /* DS .ap-tabs (and its nav) are width:100% by default; shrink-wrap them
    to the tabs' content width so the network select keeps its slot on the
    trailing edge of the same row. */
-.rpanel-drafts__statustabs {
-  flex: 0 1 auto;
-  width: max-content;
-  max-width: 100%;
-}
-
-.rpanel-drafts__statustabs .ap-tabs-nav {
-  width: auto;
-  border-bottom: 0;
+.rpanel-drafts__statuschips {
+  display: flex;
+  gap: var(--ref-spacing-xxs);
+  flex: 0 0 auto;
 }
 
 /* Keep the network select compact and pushed to the trailing edge (the
@@ -510,10 +524,10 @@
    default — override to intrinsic width so it doesn't eat the whole row
    and collapse the tabs. */
 .rpanel-drafts__network {
-  flex: 1 1 160px;
+  flex: 1 1 auto;
   width: auto;
   min-width: 0;
-  margin: var(--ref-spacing-xxs) 0 var(--ref-spacing-xs);
+  margin: var(--ref-spacing-xs) 0;
 }
 
 .rpanel-drafts__network .ap-select-inline-icon {
@@ -657,37 +671,11 @@
 
   .rpanel-drafts__feed .posts__row-actions {
     flex-direction: row;
-    flex-wrap: wrap;
     padding-top: 0;
   }
 }
 
 /* ── Outputs sub-view: Ideas | Clips tabs + Clips list + footer ─────── */
-
-.rpanel-outputs__tabs {
-  display: flex;
-  /* .ap-tabs defaults to flex-direction: column (nav over panels); force a
-     row so the inline close sits beside the nav, not below it. */
-  flex-direction: row;
-  align-items: center;
-  padding: 0 var(--ref-spacing-sm);
-  border-bottom: 1px solid var(--app-border);
-  background: var(--ref-color-white);
-}
-
-.rpanel-outputs__tabs .ap-tabs-nav {
-  flex: 1 1 auto;
-}
-
-.rpanel-outputs__tabs .ap-tabs-nav {
-  padding: 0;
-}
-
-.rpanel-outputs__tabs .ap-tabs-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-}
 
 /* Clips grid inside the panel body — vertical stack on narrow widths,
    2-col only when the panel widens past ~640px. */
@@ -1081,4 +1069,19 @@
 .rpanel-sources__row.is-focused {
   animation: app-focus-pulse 1.6s ease;
   border-color: var(--ref-color-electric-blue-100);
+}
+
+/* Mobile fork: a source card's head folds — the icon and the name take the
+   first line's whole width, Reference and ⋯ go under it on the right. Beside
+   them the name kept 12 characters ("q2-strategy-…"). */
+.rpanel-sources__card-head {
+  flex-wrap: wrap;
+}
+
+.rpanel-sources__row-text {
+  flex: 1 1 calc(100% - 40px);
+}
+
+.rpanel-sources__row-mention {
+  margin-left: auto;
 }

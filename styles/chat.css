@@ -841,10 +841,6 @@ span.chat-bubble-choice-chip {
   text-decoration: underline dotted;
   text-underline-offset: 3px;
   cursor: pointer;
-  /* A <button> stays an atomic box even at display: inline, so a label longer
-     than the line wraps INSIDE it — centred by the UA unless told otherwise.
-     At a phone's width that is most labels. */
-  text-align: start;
 }
 
 .chat-ref:hover {

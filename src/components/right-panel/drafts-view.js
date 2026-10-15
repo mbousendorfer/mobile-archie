@@ -4,22 +4,22 @@
 // shell's delegated clicks write it through setDraftsFilter / setDraftsNetwork.
 // Moved out of right-panel.js, unchanged.
 
-import { networkMeta } from "../../social-profiles.js?v=1912";
-import { getPosts, removePost, insertPost, updatePostContent, attachImageToDraft } from "../../posts-store.js?v=1912";
-import { noticeDraftEdit } from "../../voice-coach.js?v=1912";
-import { getContextById, getBrandKitGaps } from "../../contexts-store.js?v=1912";
-import { getSessionById } from "../../sessions-store.js?v=1912";
-import { renderPostCard } from "../post-card.js?v=1912";
-import { html, raw } from "../../utils.js?v=1912";
-import { isFlagOn } from "../../feature-flags.js?v=1912";
-import { open as openNewScheduleModal } from "../schedule-modal.js?v=1912";
-import { open as openLegacyScheduleModal } from "../schedule-modal-legacy.js?v=1912";
-import { open as openConfirmModal } from "../confirm-modal.js?v=1912";
-import { showToast } from "../toast.js?v=1912";
-import { addMention as addComposerMention } from "../../composer-mentions.js?v=1912";
-import { startDraftImageFlow } from "../../draft-image-flow.js?v=1912";
-import { openDraftStudio, quickImagePreset } from "../../modules/image-studio/index.js?v=1912";
-import { activeSessionId, canDraftInlineEdit, renderPanel } from "../right-panel.js?v=1912";
+import { networkMeta } from "../../social-profiles.js?v=1924";
+import { getPosts, removePost, insertPost, updatePostContent, attachImageToDraft } from "../../posts-store.js?v=1924";
+import { noticeDraftEdit } from "../../voice-coach.js?v=1924";
+import { getContextById, getBrandKitGaps } from "../../contexts-store.js?v=1924";
+import { getSessionById } from "../../sessions-store.js?v=1924";
+import { renderPostCard } from "../post-card.js?v=1924";
+import { html, raw } from "../../utils.js?v=1924";
+import { isFlagOn } from "../../feature-flags.js?v=1924";
+import { open as openNewScheduleModal } from "../schedule-modal.js?v=1924";
+import { open as openLegacyScheduleModal } from "../schedule-modal-legacy.js?v=1924";
+import { open as openConfirmModal } from "../confirm-modal.js?v=1924";
+import { showToast } from "../toast.js?v=1924";
+import { addMention as addComposerMention } from "../../composer-mentions.js?v=1924";
+import { startDraftImageFlow } from "../../draft-image-flow.js?v=1924";
+import { openDraftStudio, quickImagePreset } from "../../modules/image-studio/index.js?v=1924";
+import { activeSessionId, canDraftInlineEdit, renderPanel } from "../right-panel.js?v=1924";
 
 // Drafts-mode local UI state — Lot 21 rich-card view. Filter strip at the
 // top of the panel head drives both axes : status (all / needs_fixes /
@@ -108,27 +108,16 @@ export function renderDraftsView() {
     return true;
   });
 
-  // Filter header — status is the primary axis (which view of the list
-  // you're looking at) so it uses the DS .ap-tabs component with
-  // .ap-counter badges, matching the Outputs Ideas|Clips tabs. Network
-  // is a secondary refinement, so it sits on the trailing edge as a
-  // single DS .ap-select (details/summary). Both are first-class DS
-  // controls — no native <select> form input, no ad-hoc filter buttons.
-  const statusTab = (id, label, count) => {
-    const active = draftsFilter === id;
-    return `
-      <button
-        type="button"
-        class="ap-tabs-tab ${active ? "active" : ""}"
-        data-rpanel-drafts-filter="${id}"
-        role="tab"
-        aria-selected="${active}"
-      >
+  // Filter header. Mobile fork: status is a pair of DS filter chips (the
+  // Ideas tab's .ap-filter-chip), not a second row of tabs under the sheet's
+  // own Drafts · Ideas · Sources tabs — tabs inside tabs read as two levels of
+  // navigation for what is one filter. Network stays a DS .ap-select beside it.
+  const statusTab = (id, label, count) => `
+      <button type="button" class="ap-filter-chip" data-rpanel-drafts-filter="${id}" aria-pressed="${draftsFilter === id}">
         <span>${label}</span>
-        <span class="ap-counter normal ${active ? "blue" : "grey"}">${count}</span>
+        <span class="ap-filter-chip-count">${count}</span>
       </button>
     `;
-  };
 
   // Network dropdown options are dynamic — only networks actually present
   // in the current drafts, ordered by NETWORK_ORDER.
@@ -154,11 +143,9 @@ export function renderDraftsView() {
 
   const filtersBar = `
     <div class="rpanel-drafts__filters">
-      <div class="ap-tabs rpanel-drafts__statustabs">
-        <div class="ap-tabs-nav" role="tablist" aria-label="Filter drafts by status">
-          ${statusTab("all", "All drafts", filterCounts.all)}
-          ${statusTab("needs_fixes", "Needs fixes", filterCounts.needs_fixes)}
-        </div>
+      <div class="rpanel-drafts__statuschips" role="group" aria-label="Filter drafts by status">
+        ${statusTab("all", "All", filterCounts.all)}
+        ${statusTab("needs_fixes", "Needs fixes", filterCounts.needs_fixes)}
       </div>
       <details class="ap-select rpanel-drafts__network">
         <summary class="ap-select-trigger" aria-label="Filter drafts by network">
@@ -312,7 +299,7 @@ export function onPostRewrite(postId, intent = "fresh") {
   // streaming → commit. Loaded lazily so the rewrite code is only
   // pulled in when the user actually triggers a regen. `intent` biases
   // the rewrite (shorter / longer / warmer / formal / fresh).
-  import("../../draft-rewrite.js?v=1912").then(({ startRewrite }) => {
+  import("../../draft-rewrite.js?v=1924").then(({ startRewrite }) => {
     startRewrite(sid, postId, intent);
   });
 }
@@ -481,7 +468,7 @@ export function onSectionSave(network) {
   if (snapshot.length === 0) return;
   const count = snapshot.length;
   const draftWord = count === 1 ? "draft" : "drafts";
-  Promise.all([import("../save-folder-modal.js?v=1912"), import("../../folders-store.js?v=1912")]).then(
+  Promise.all([import("../save-folder-modal.js?v=1924"), import("../../folders-store.js?v=1924")]).then(
     ([{ open: openSaveModal }, { addDraftsToFolder }]) => {
       openSaveModal({
         count,

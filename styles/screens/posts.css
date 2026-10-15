@@ -39,16 +39,6 @@
   padding-top: var(--ref-spacing-xxs);
 }
 
-.posts__row-action--danger {
-  color: var(--ref-color-red-100, #e0474d);
-}
-
-.posts__row-action--danger:hover,
-.posts__row-action--danger:focus-visible {
-  border-color: var(--ref-color-red-100, #e0474d);
-  color: var(--ref-color-red-150, #a8282e);
-}
-
 /* ---------- Post card ---------- */
 
 /* Wrapper that holds the per-post error infobox + the card itself in a column.
@@ -954,4 +944,45 @@
 .posts__card-action {
   padding-left: var(--ref-spacing-xxxs);
   padding-right: var(--ref-spacing-xxxs);
+}
+
+/* ── A draft's actions — one labelled row under the card (mobile fork) ─────
+   The select checkbox on the left (aria-label "Select draft"); Rewrite (its menu), Schedule (the CTA) and ⋯ on the
+   right. Both menus open UPWARD from the row, inside the screen. */
+.posts__row {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.posts__row-actions {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding-top: 0;
+}
+
+.posts__row-actions > .posts__row-check {
+  width: auto;
+  padding-top: 0;
+  margin-right: auto;
+}
+
+.posts__rewrite-menu {
+  top: auto;
+  right: auto;
+  bottom: calc(100% + var(--ref-spacing-xxs));
+  left: 0;
+}
+
+.posts__more {
+  position: relative;
+}
+
+.posts__more-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--ref-spacing-xxs));
+  z-index: 20;
+  min-width: 220px;
 }
