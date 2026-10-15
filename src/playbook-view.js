@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1799";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1800";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -26,11 +26,11 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1799";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1799";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1799";
-import { isFlagOn } from "./feature-flags.js?v=1799";
-import { parseHashParams } from "./url-state.js?v=1799";
+} from "./playbook-brand-kit.js?v=1800";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1800";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1800";
+import { isFlagOn } from "./feature-flags.js?v=1800";
+import { parseHashParams } from "./url-state.js?v=1800";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -47,16 +47,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1799";
+} from "./network-voice.js?v=1800";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1799";
-import { showToast } from "./components/toast.js?v=1799";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1799";
-import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1799";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1799";
+} from "./voice-coach-store.js?v=1800";
+import { showToast } from "./components/toast.js?v=1800";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1800";
+import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1800";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1800";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2434,35 +2434,31 @@ function memoryNote(text) {
   </li>`;
 }
 
-// What Archie wants to remember for one network — one memory card each.
-// A Remember moves the rule into "What I've learned" below, so the tray only
-// ever shows the pending ones.
-function nvSuggestionsBlock(data, net, index) {
-  const list = canEditView() ? getSuggestions(data.id, { network: net }) : [];
-  if (!list.length) return "";
-  return pb2Block(
-    "Archie wants to remember",
-    `<div class="memory-cards">${list.map((sg) => memoryCardHtml(sg, { attr: "nv", value: sg.id })).join("")}</div>`,
-    { wide: true, index, icon: MEMORY_MARK, caption: "Nothing is kept without your OK" },
-  );
-}
-
+// What Archie knows about one network, in ONE block (2026-10-15: the
+// proposals tray and "What I've learned" had the same purpose). On top, what
+// he wants to remember — one memory card each, Remember / Not now; under them,
+// the rules already kept. A Remember moves the rule from the cards to the list
+// inside the same block. The butter is the header band only.
 function nvRulesBlock(data, net, index) {
   const rules = networkEntry(data, net)?.rules || [];
+  const pending = canEditView() ? getSuggestions(data.id, { network: net }) : [];
+  const cards = pending.length
+    ? `<div class="memory-cards">${pending.map((sg) => memoryCardHtml(sg, { attr: "nv", value: sg.id })).join("")}</div>`
+    : "";
+  const kept = rules.length ? `<ul class="memory-notes">${rules.map((r) => memoryNote(r)).join("")}</ul>` : "";
   return pb2Block(
     "What I've learned",
-    rules.length
-      ? `<ul class="memory-notes">${rules.map((r) => memoryNote(r)).join("")}</ul>`
-      : pb2Empty(
-          `Nothing yet. Rework one of your ${networkLabel(net)} drafts or tell me what was off, and I'll suggest what to remember here.`,
-        ),
-    { wide: true, index, icon: MEMORY_MARK, caption: `${networkLabel(net)} only`, className: "pb2-block--memory" },
+    cards + kept ||
+      pb2Empty(
+        `Nothing yet. Rework one of your ${networkLabel(net)} drafts or tell me what was off, and I'll suggest what to remember here.`,
+      ),
+    { wide: true, index, caption: `${networkLabel(net)} only`, className: "pb2-block--memory" },
   );
 }
 
 // One order on every network voice, in read and in edit: who it is, what
-// Archie has learned and wants to remember (side by side, so a Remember moves
-// a rule one block down, in view), then its parts, then the words to avoid.
+// Archie has learned and wants to remember (one block: a Remember moves the
+// rule from the cards to the list, in view), then its parts, then the words to avoid.
 
 // The base network: the voice as it always read, plus its proposals and rules.
 function nvBaseBlocks(data, ve) {
@@ -2474,7 +2470,6 @@ function nvBaseBlocks(data, ve) {
       icon: "ap-icon-quote",
       caption: `${maturity(data, net).detail} Other networks start from it.`,
     }),
-    nvSuggestionsBlock(data, net, 1),
     nvRulesBlock(data, net, 2),
     ...pb2VoiceFieldBlocks(data, ve, 3),
     pb2AvoidBlock(data, 7, "Every network"),
@@ -2610,7 +2605,6 @@ function nvNetworkReadBlocks(data, net) {
   });
   return [
     nvIdentityBlock(data, net),
-    nvSuggestionsBlock(data, net, 1),
     nvRulesBlock(data, net, 2),
     ...parts,
     pb2AvoidBlock(data, 7, "Every network"),

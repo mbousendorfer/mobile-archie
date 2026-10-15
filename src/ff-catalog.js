@@ -163,7 +163,7 @@ export const FLAGS = Object.freeze([
       "rework a draft (needs draftInlineEdit), when you thumbs-down one with a " +
       "reason, or by asking a question after drafting for a network whose " +
       "voice is thin, it PROPOSES a rule — a card in the chat, and the " +
-      '"Archie wants to remember" tray on the Voice tab, drawn as memory notes in Archie\'s butter. Nothing enters the ' +
+      "\"What I've learned\" block on the Voice tab, under Archie's butter header. Nothing enters the " +
       "Playbook without a click. Each network voice says how far along it is. " +
       "The per-network view lives on the Playbook 2.0 page (flag playbook2).",
   },
