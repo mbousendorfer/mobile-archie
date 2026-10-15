@@ -17,9 +17,10 @@
 // `loader` cfg, run the (mock) analysis on a timer, then `updateContext` with
 // the section patch — the loader flips to ready and paints the fresh data.
 
-import { navigate, getPath } from "../router.js?v=1756";
-import { escapeHtml as esc } from "../utils.js?v=1756";
-import { renderTopbar, setTopbarActions, renderIconBack } from "../components/topbar.js?v=1756";
+import { navigate, getPath } from "../router.js?v=1758";
+import { parseHashParams } from "../url-state.js?v=1758";
+import { escapeHtml as esc } from "../utils.js?v=1758";
+import { renderTopbar, setTopbarActions, renderIconBack } from "../components/topbar.js?v=1758";
 import {
   getContextById,
   getContexts,
@@ -27,15 +28,27 @@ import {
   deleteContext,
   duplicateContext,
   appendHistory,
-} from "../contexts-store.js?v=1756";
-import { isWorkspaceMode, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=1756";
-import { mount, snapshotEditable } from "../playbook-view.js?v=1756";
-import { open as openRenameModal } from "../components/rename-modal.js?v=1756";
-import { open as openConfirmModal } from "../components/confirm-modal.js?v=1756";
-import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=1756";
-import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=1756";
-import { analyzeWebsite, analyzeDocument, analyzeSocialProfiles } from "../context-mock-analysis.js?v=1756";
-import { sectionPatchFromAnalysis } from "../context-builder.js?v=1756";
+} from "../contexts-store.js?v=1758";
+import { isWorkspaceMode, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=1758";
+import { mount, snapshotEditable } from "../playbook-view.js?v=1758";
+import { open as openRenameModal } from "../components/rename-modal.js?v=1758";
+import { open as openConfirmModal } from "../components/confirm-modal.js?v=1758";
+import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=1758";
+import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=1758";
+import {
+  analyzeWebsite,
+  analyzeDocument,
+  analyzeSocialProfiles,
+  analyzeNetworkVoices,
+} from "../context-mock-analysis.js?v=1758";
+import {
+  networkVoicesOn,
+  baseNetwork,
+  voiceNetworks,
+  networkLabel,
+  cloneVoiceByNetwork,
+} from "../network-voice.js?v=1758";
+import { sectionPatchFromAnalysis } from "../context-builder.js?v=1758";
 import {
   canView,
   canEdit,
@@ -47,9 +60,9 @@ import {
   isMine,
   ownerOf,
   ownerName,
-} from "../playbook-access.js?v=1756";
-import { open as openShareModal } from "../components/share-playbook-modal.js?v=1756";
-import { showToast } from "../components/toast.js?v=1756";
+} from "../playbook-access.js?v=1758";
+import { open as openShareModal } from "../components/share-playbook-modal.js?v=1758";
+import { showToast } from "../components/toast.js?v=1758";
 
 const AUTOFILL_MS = 1500;
 
@@ -256,6 +269,28 @@ export function renderPlaybook(params, target) {
     };
   }
   function onAnalyzeVoice() {
+    // Voice per network: on another network's tab, its posts rebuild THAT
+    // network's adaptation. The rules it learned stay — they came from you,
+    // not from the posts.
+    const net = parseHashParams().get("net");
+    const ctx = getContextById(id);
+    if (networkVoicesOn() && net && net !== baseNetwork(ctx) && voiceNetworks(ctx).includes(net)) {
+      openAnalyzeProfilesModal({
+        network: net,
+        onConfirm: () =>
+          runAutofill(
+            STAGES.social,
+            () => {
+              const cur = getContextById(id);
+              const all = cloneVoiceByNetwork(cur.voiceByNetwork);
+              all[net] = { ...analyzeNetworkVoices([net], baseNetwork(cur))[net], rules: all[net]?.rules || [] };
+              return { voiceByNetwork: all };
+            },
+            `${networkLabel(net)} voice updated from your posts.`,
+          ),
+      });
+      return;
+    }
     openAnalyzeProfilesModal({
       onConfirm: (ids) =>
         runAutofill(STAGES.social, () => voicePatchFromAnalysis(analyzeSocialProfiles(ids)), "Voice & style updated."),

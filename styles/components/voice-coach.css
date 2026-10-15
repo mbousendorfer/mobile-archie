@@ -118,6 +118,12 @@ i.memory-mark {
   container-type: inline-size;
 }
 
+/* In the Playbook's tray the card fills its block: at the chat's width its
+   question wrapped on three lines inside a full-width block. */
+.memory-cards > .memory-card {
+  width: 100%;
+}
+
 /* In the thread: the turn stretches to the thread's width, the card doesn't. */
 .memory-turn {
   display: flex;

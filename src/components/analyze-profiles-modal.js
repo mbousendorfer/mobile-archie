@@ -4,7 +4,9 @@
 //
 // Public API:
 //   init()                       — inject markup + bind once on app boot
-//   open({ onConfirm })          — onConfirm(selectedProfileIds: string[])
+//   open({ onConfirm, network }) — onConfirm(selectedProfileIds: string[]);
+//                                  `network` (voice per network) lists only that
+//                                  network's profiles and rebuilds its adaptation
 //
 // Behaviour:
 //   - Lists getConnectedProfiles() as a checkable list; profiles with no
@@ -13,20 +15,24 @@
 //     it fires onConfirm(ids) then closes. A warning notes the overwrite.
 //   - Cancel / Esc / backdrop / close-X dismiss without firing.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1756";
-import { escapeHtml as esc } from "../utils.js?v=1756";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1758";
+import { escapeHtml as esc } from "../utils.js?v=1758";
 import {
   getConnectedProfiles,
+  normalizeNetwork,
+  networkMeta,
   NETWORK_ICON_BY_PLATFORM,
   BRAND_INITIALS,
   PROFILE_SEARCH_THRESHOLD,
-} from "../social-profiles.js?v=1756";
+} from "../social-profiles.js?v=1758";
 
 const MODAL_ID = "analyze-profiles";
 
 let backdrop, modal, listEl, confirmBtn, cancelBtn, closeBtn, searchGroup, searchInput, noMatchEl;
 let initialized = false;
 let pendingOnConfirm = null;
+let onlyNetwork = null; // voice per network: the network whose voice is rebuilt
+let leadEl, warnEl;
 
 const HTML = `
 <div class="app-modal-backdrop analyze-profiles-modal__backdrop" id="analyzeProfilesBackdrop" hidden></div>
@@ -45,8 +51,8 @@ const HTML = `
     <i class="ap-icon-close"></i>
   </button>
   <div class="ap-dialog-content">
-    <p class="analyze-profiles-modal__lead">
-      Pick the profiles to learn from — Archie reads their recent posts and rebuilds your Voice &amp; style.
+    <p class="analyze-profiles-modal__lead" id="analyzeProfilesLead">
+      Pick the profiles to learn from — I read their recent posts and rebuild your Voice &amp; style.
     </p>
     <div class="ap-input-group analyze-profiles-modal__search" id="analyzeProfilesSearchGroup" hidden>
       <i class="ap-icon-search" aria-hidden="true"></i>
@@ -64,7 +70,7 @@ const HTML = `
       <i class="ap-icon-info_fill" aria-hidden="true"></i>
       <div class="ap-infobox-content">
         <div class="ap-infobox-texts">
-          <span class="ap-infobox-message">This replaces your Voice &amp; style section.</span>
+          <span class="ap-infobox-message" id="analyzeProfilesWarn">This replaces your Voice &amp; style section.</span>
         </div>
       </div>
     </div>
@@ -79,10 +85,16 @@ const HTML = `
   </div>
 </aside>`;
 
+function profilesShown() {
+  const all = getConnectedProfiles();
+  return onlyNetwork ? all.filter((p) => normalizeNetwork(p.platform) === onlyNetwork) : all;
+}
+
 function renderList() {
-  const profiles = getConnectedProfiles();
+  const profiles = profilesShown();
   if (!profiles.length) {
-    listEl.innerHTML = `<p class="analyze-profiles-modal__empty">No connected profiles yet. Connect one from a chat when you draft a post, and I can learn from it here.</p>`;
+    const label = onlyNetwork ? `${networkMeta(onlyNetwork)?.label || onlyNetwork} ` : "";
+    listEl.innerHTML = `<p class="analyze-profiles-modal__empty">No connected ${esc(label)}profiles yet. Connect one from a chat when you draft a post, and I can learn from it here.</p>`;
     return;
   }
   // Row HTML is built from esc()'d values; assign directly (no escaping wrapper).
@@ -146,6 +158,8 @@ function injectOnce() {
   searchGroup = document.getElementById("analyzeProfilesSearchGroup");
   searchInput = document.getElementById("analyzeProfilesSearch");
   noMatchEl = document.getElementById("analyzeProfilesNoMatch");
+  leadEl = document.getElementById("analyzeProfilesLead");
+  warnEl = document.getElementById("analyzeProfilesWarn");
 
   cancelBtn.addEventListener("click", close);
   closeBtn.addEventListener("click", close);
@@ -180,16 +194,24 @@ export function init() {
   injectOnce();
 }
 
-export function open({ onConfirm = null } = {}) {
+export function open({ onConfirm = null, network = null } = {}) {
   injectOnce();
   requestOpen(MODAL_ID, close);
 
   pendingOnConfirm = onConfirm;
+  onlyNetwork = network ? normalizeNetwork(network) : null;
+  const label = onlyNetwork ? networkMeta(onlyNetwork)?.label || onlyNetwork : "";
+  leadEl.textContent = onlyNetwork
+    ? `Pick the profiles to learn from — I read their recent posts and rebuild how your voice adapts on ${label}.`
+    : "Pick the profiles to learn from — I read their recent posts and rebuild your Voice & style.";
+  warnEl.textContent = onlyNetwork
+    ? `This replaces what's adapted for ${label}. What I've learned stays.`
+    : "This replaces your Voice & style section.";
   renderList();
   syncConfirm();
   // Reset + reveal the search box only when the list is long enough to warrant it.
   searchInput.value = "";
-  searchGroup.hidden = getConnectedProfiles().length <= PROFILE_SEARCH_THRESHOLD;
+  searchGroup.hidden = profilesShown().length <= PROFILE_SEARCH_THRESHOLD;
   noMatchEl.hidden = true;
 
   backdrop.hidden = false;

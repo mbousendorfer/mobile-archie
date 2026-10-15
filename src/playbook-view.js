@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1756";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1758";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -27,16 +27,16 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1756";
+} from "./playbook-brand-kit.js?v=1758";
 import {
   analyzeWebsite,
   discoverCompetitors,
   competitorKey,
   analyzeNetworkVoices,
-} from "./context-mock-analysis.js?v=1756";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1756";
-import { isFlagOn } from "./feature-flags.js?v=1756";
-import { parseHashParams } from "./url-state.js?v=1756";
+} from "./context-mock-analysis.js?v=1758";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1758";
+import { isFlagOn } from "./feature-flags.js?v=1758";
+import { parseHashParams } from "./url-state.js?v=1758";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -47,16 +47,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1756";
+} from "./network-voice.js?v=1758";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1756";
-import { NETWORKS } from "./social-profiles.js?v=1756";
-import { showToast } from "./components/toast.js?v=1756";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1756";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1756";
+} from "./voice-coach-store.js?v=1758";
+import { NETWORKS } from "./social-profiles.js?v=1758";
+import { showToast } from "./components/toast.js?v=1758";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1758";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1758";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2278,15 +2278,18 @@ function pb2Block(title, body, { wide = false, caption = "", index = 0, icon = "
 }
 
 // `editing`: Cancel / Save take Edit's place — same bar, same spot, sticky.
-function pb2TabHead(scope, extra = "", { editing = false, noEdit = false } = {}) {
+// `below` rides in the same sticky bar, under the lead — the Voice tab's
+// network tabs, so the network you're reading stays named as you scroll.
+function pb2TabHead(scope, extra = "", { editing = false, noEdit = false, below = "" } = {}) {
   const edit =
     canEditView() && !noEdit
       ? `<button type="button" class="ap-button stroked blue" data-recap-edit-card="${scope}"><i class="ap-icon-pen" aria-hidden="true"></i><span>Edit</span></button>`
       : "";
   return `
-    <header class="pb2-tabhead">
+    <header class="pb2-tabhead${below ? " pb2-tabhead--stacked" : ""}">
       <p class="pb2-tabhead__lead">${esc(SECTION_LEADS[scope] || "")}</p>
       <div class="pb2-tabhead__actions">${editing ? editActionButtons() : `${extra}${edit}`}</div>
+      ${below}
     </header>
   `;
 }
@@ -2301,8 +2304,8 @@ function pb2TabHead(scope, extra = "", { editing = false, noEdit = false } = {})
 // A field's guidance, minus its question: the block title already asks it.
 const pb2Hint = (hint) => (hint?.a ? `<p class="pb2-hint">${esc(hint.a)}</p>` : "");
 
-function pb2EditGrid(scope, blocks, before = "") {
-  return `${pb2TabHead(scope, "", { editing: true })}${before}<div class="pb2-grid" data-recap-editing-card>${blocks
+function pb2EditGrid(scope, blocks, before = "", below = "") {
+  return `${pb2TabHead(scope, "", { editing: true, below })}${before}<div class="pb2-grid" data-recap-editing-card>${blocks
     .filter(Boolean)
     .join("")}</div>`;
 }
@@ -2343,7 +2346,12 @@ function renderVoiceEdit2(data) {
     { wide: true, index: 0, icon: "ap-icon-quote" },
   );
   if (nvOn() && data.voiceMode !== "manual" && activeNetworkFor(data) !== baseNetwork(data))
-    return pb2EditGrid("voice", nvNetworkEditBlocks(data, activeNetworkFor(data)), renderNetworkSwitcher(data));
+    return pb2EditGrid(
+      "voice",
+      nvNetworkEditBlocks(data, activeNetworkFor(data)),
+      renderVoiceLangSwitcher(data),
+      renderNetworkSwitcher(data),
+    );
   if (data.voiceMode === "manual")
     return pb2EditGrid("voice", [
       voice,
@@ -2359,6 +2367,14 @@ function renderVoiceEdit2(data) {
     "voice",
     [
       voice,
+      // The base network's learned rules, editable like the rest of its voice.
+      nvOn()
+        ? pb2Block(
+            "What I've learned",
+            renderLineEditor("rules", networkEntry(data, baseNetwork(data))?.rules || [], "A rule for this network…"),
+            { wide: true, index: 1, icon: MEMORY_MARK, caption: `${networkLabel(baseNetwork(data))} only` },
+          )
+        : "",
       pb2Block("Opens with", renderLineEditor("signatureHooks", ve.signatureHooks, line("signatureHooks")), {
         index: 1,
         caption: "Signature hooks",
@@ -2385,17 +2401,11 @@ function renderVoiceEdit2(data) {
         wide: true,
         index: 5,
         icon: "ap-icon-ban",
+        caption: nvOn() ? "Every network" : "",
       }),
-      // The base network's learned rules, editable like the rest of its voice.
-      nvOn()
-        ? pb2Block(
-            "What I've learned",
-            renderLineEditor("rules", networkEntry(data, baseNetwork(data))?.rules || [], "A rule for this network…"),
-            { wide: true, index: 6, icon: MEMORY_MARK, caption: `${networkLabel(baseNetwork(data))} only` },
-          )
-        : "",
     ],
-    (nvOn() ? renderNetworkSwitcher(data) : "") + renderVoiceLangSwitcher(data),
+    renderVoiceLangSwitcher(data),
+    nvOn() ? renderNetworkSwitcher(data) : "",
   );
 }
 
@@ -2509,39 +2519,48 @@ function pb2VoiceHeadline(data) {
   }`;
 }
 
+// The words this brand never says — one list, true on every network.
+function pb2AvoidBlock(data, index, caption = "") {
+  return pb2Block(
+    "Words to avoid",
+    (data.voiceAvoid || []).length
+      ? `<span class="pb2-tags">${data.voiceAvoid
+          .map(
+            (w) =>
+              `<span class="ap-tag grey pb2-avoid"><i class="ap-icon-ban" aria-hidden="true"></i><span>${esc(w)}</span></span>`,
+          )
+          .join("")}</span>`
+      : pb2Empty("None yet — add the words this brand never says."),
+    { wide: true, index, icon: "ap-icon-ban", caption },
+  );
+}
+
+// The four parts of a voice, read — from `index` on.
+function pb2VoiceFieldBlocks(data, ve, index) {
+  return [
+    pb2Block("Opens with", pb2Lines(ve.signatureHooks), { index, caption: "Signature hooks" }),
+    pb2Block("Closes with", pb2Lines(ve.closingPatterns), { index: index + 1, caption: "Closing patterns" }),
+    pb2Block("Formatting", pb2Text(data.formattingStyle), { index: index + 2 }),
+    pb2Block("Emoji & casing", pb2Text(data.visualStyle), { index: index + 3 }),
+  ];
+}
+
 function renderVoiceRead2(data, learnMenu) {
   const ve = voiceEntry(data);
-  const blocks = [];
   if (data.voiceMode === "manual") {
-    blocks.push(pb2Block("In your own words", pb2Text(data.voiceManual), { wide: true, icon: "ap-icon-quote" }));
-  } else {
-    blocks.push(
-      pb2Block("The voice", pb2VoiceHeadline(data), { wide: true, index: 0, icon: "ap-icon-quote" }),
-      pb2Block("Opens with", pb2Lines(ve.signatureHooks), { index: 1, caption: "Signature hooks" }),
-      pb2Block("Closes with", pb2Lines(ve.closingPatterns), { index: 2, caption: "Closing patterns" }),
-      pb2Block("Formatting", pb2Text(data.formattingStyle), { index: 3 }),
-      pb2Block("Emoji & casing", pb2Text(data.visualStyle), { index: 4 }),
-    );
-    blocks.push(
-      pb2Block(
-        "Words to avoid",
-        (data.voiceAvoid || []).length
-          ? `<span class="pb2-tags">${data.voiceAvoid
-              .map(
-                (w) =>
-                  `<span class="ap-tag grey pb2-avoid"><i class="ap-icon-ban" aria-hidden="true"></i><span>${esc(w)}</span></span>`,
-              )
-              .join("")}</span>`
-          : pb2Empty("None yet — add the words this brand never says."),
-        { wide: true, index: 5, icon: "ap-icon-ban" },
-      ),
-    );
+    const own = pb2Block("In your own words", pb2Text(data.voiceManual), { wide: true, icon: "ap-icon-quote" });
+    return `${pb2TabHead("voice", learnMenu)}${renderVoiceLangSwitcher(data)}<div class="pb2-grid">${own}</div>`;
   }
-  if (nvOn() && data.voiceMode !== "manual") {
+  if (nvOn()) {
     const net = activeNetworkFor(data);
-    const grid = net === baseNetwork(data) ? nvBaseBlocks(data, blocks) : nvNetworkReadBlocks(data, net, ve);
-    return `${pb2TabHead("voice", learnMenu)}${renderNetworkSwitcher(data)}${renderVoiceLangSwitcher(data)}<div class="pb2-grid">${grid.join("")}</div>`;
+    const grid = net === baseNetwork(data) ? nvBaseBlocks(data, ve) : nvNetworkReadBlocks(data, net);
+    return `${pb2TabHead("voice", learnMenu, { below: renderNetworkSwitcher(data) })}${renderVoiceLangSwitcher(data)}<div class="pb2-grid">${grid.join("")}</div>`;
   }
+  const blocks = [
+    pb2Block("The voice", pb2VoiceHeadline(data), { wide: true, index: 0, icon: "ap-icon-quote" }),
+    ...pb2VoiceFieldBlocks(data, ve, 1),
+    pb2AvoidBlock(data, 5),
+  ];
   return `${pb2TabHead("voice", learnMenu)}${renderVoiceLangSwitcher(data)}<div class="pb2-grid">${blocks.join("")}</div>`;
 }
 
@@ -2661,50 +2680,92 @@ function nvRulesBlock(data, net, index) {
   );
 }
 
+// One order on every network voice, in read and in edit: who it is, what
+// Archie has learned and wants to remember (side by side, so a Remember moves
+// a rule one block down, in view), then its parts, then the words to avoid.
+
 // The base network: the voice as it always read, plus its proposals and rules.
-function nvBaseBlocks(data, blocks) {
+function nvBaseBlocks(data, ve) {
   const net = baseNetwork(data);
-  const [voice, ...rest] = blocks;
-  const m = maturity(data, net);
-  const head = voice.replace(
-    '<h3 class="pb2-block__title">The voice</h3>',
-    `<h3 class="pb2-block__title">The voice</h3><span class="pb2-block__caption">${esc(m.detail)} Other networks start from it.</span>`,
-  );
-  return [nvSuggestionsBlock(data, net, 0), head, ...rest, nvRulesBlock(data, net, rest.length + 1)].filter(Boolean);
+  return [
+    pb2Block("The voice", pb2VoiceHeadline(data), {
+      wide: true,
+      index: 0,
+      icon: "ap-icon-quote",
+      caption: `${maturity(data, net).detail} Other networks start from it.`,
+    }),
+    nvSuggestionsBlock(data, net, 1),
+    nvRulesBlock(data, net, 2),
+    ...pb2VoiceFieldBlocks(data, ve, 3),
+    pb2AvoidBlock(data, 7, "Every network"),
+  ].filter(Boolean);
 }
 
 const NV_CAPTION = (data, net, field) =>
   isOverridden(data, net, field) ? `Adapted for ${networkLabel(net)}` : `Same as ${networkLabel(baseNetwork(data))}`;
 
-function nvNetworkReadBlocks(data, net, ve) {
+function nvIdentityBlock(data, net) {
   const m = maturity(data, net);
-  const e = networkEntry(data, net) || {};
-  const val = (field, baseValue) => (e[field] !== undefined ? e[field] : baseValue);
+  return pb2Block(
+    `Your ${networkLabel(net)} voice`,
+    `<p class="pb2-nv-level"><strong>${esc(m.label)}</strong> · ${esc(m.detail)}</p>
+     <p class="pb2-prose">It speaks like your ${esc(networkLabel(baseNetwork(data)))} voice, except for what's adapted below.</p>`,
+    { wide: true, index: 0, icon: networkIcon(net) },
+  );
+}
+
+// A part this network inherits, in one line: what the base says, shortened.
+function nvInheritedPreview(data, field) {
+  const v = nvFieldValue(data, baseNetwork(data), field);
+  if (Array.isArray(v)) {
+    const list = v.filter(Boolean);
+    if (!list.length) return "Not set yet";
+    return `“${list[0]}”${list.length > 1 ? ` and ${list.length - 1} more` : ""}`;
+  }
+  return v || "Not set yet";
+}
+
+// Another network: the difference is the content. What it adapted reads in
+// full; what it inherits folds into one block that names it and points at the
+// base — repeating the base word for word made every network look the same.
+function nvNetworkReadBlocks(data, net) {
+  const adapted = NV_FIELDS.filter(([f]) => isOverridden(data, net, f));
+  const inherited = NV_FIELDS.filter(([f]) => !isOverridden(data, net, f));
+  const base = networkLabel(baseNetwork(data));
+  let i = 3;
   return [
-    pb2Block(
-      `Your ${networkLabel(net)} voice`,
-      `<p class="pb2-nv-level"><strong>${esc(m.label)}</strong> · ${esc(m.detail)}</p>
-       <p class="pb2-prose">It speaks like your ${esc(networkLabel(baseNetwork(data)))} voice, except for what's adapted below.</p>`,
-      { wide: true, index: 0, icon: networkIcon(net) },
-    ),
+    nvIdentityBlock(data, net),
     nvSuggestionsBlock(data, net, 1),
     nvRulesBlock(data, net, 2),
-    pb2Block("Opens with", pb2Lines(val("signatureHooks", ve.signatureHooks)), {
-      index: 3,
-      caption: NV_CAPTION(data, net, "signatureHooks"),
-    }),
-    pb2Block("Closes with", pb2Lines(val("closingPatterns", ve.closingPatterns)), {
-      index: 4,
-      caption: NV_CAPTION(data, net, "closingPatterns"),
-    }),
-    pb2Block("Formatting", pb2Text(val("formattingStyle", data.formattingStyle)), {
-      index: 5,
-      caption: NV_CAPTION(data, net, "formattingStyle"),
-    }),
-    pb2Block("Emoji & casing", pb2Text(val("visualStyle", data.visualStyle)), {
-      index: 6,
-      caption: NV_CAPTION(data, net, "visualStyle"),
-    }),
+    ...adapted.map(([field, title], n) =>
+      pb2Block(
+        title,
+        field === "signatureHooks" || field === "closingPatterns"
+          ? pb2Lines(nvFieldValue(data, net, field))
+          : pb2Text(nvFieldValue(data, net, field)),
+        // An odd last block spans the row rather than leave half of it empty.
+        {
+          index: i++,
+          caption: `Adapted for ${networkLabel(net)}`,
+          wide: n === adapted.length - 1 && adapted.length % 2 === 1,
+        },
+      ),
+    ),
+    inherited.length
+      ? pb2Block(
+          `Same as your ${base} voice`,
+          `<ul class="pb2-nv-inherited">${inherited
+            .map(
+              ([field, title]) => `<li class="pb2-nv-inherited__row">
+                <span class="pb2-nv-inherited__label">${esc(title)}</span>
+                <span class="pb2-nv-inherited__value">${esc(nvInheritedPreview(data, field))}</span>
+              </li>`,
+            )
+            .join("")}</ul>`,
+          { wide: true, index: i++, icon: networkIcon(baseNetwork(data)), caption: "Adapt any of them in Edit" },
+        )
+      : "",
+    pb2AvoidBlock(data, i, "Every network"),
   ].filter(Boolean);
 }
 
@@ -2741,19 +2802,23 @@ function nvFieldValue(data, net, field) {
   return field === "signatureHooks" || field === "closingPatterns" ? voiceEntry(data)[field] : data[field];
 }
 
+// Edit keeps the four parts in a fixed order (a part must not jump when you
+// adapt it); the words to avoid read here and are edited on the base.
 function nvNetworkEditBlocks(data, net) {
   const e = networkEntry(data, net) || {};
   const label = networkLabel(net);
   return [
+    nvIdentityBlock(data, net),
     pb2Block("What I've learned", renderLineEditor("rules", e.rules || [], `A rule for ${label}…`), {
       wide: true,
-      index: 0,
+      index: 1,
       icon: MEMORY_MARK,
       caption: `${label} only`,
     }),
     ...NV_FIELDS.map(([field, title], i) =>
-      pb2Block(title, nvFieldEdit(data, net, field), { index: i + 1, caption: NV_CAPTION(data, net, field) }),
+      pb2Block(title, nvFieldEdit(data, net, field), { index: i + 2, caption: NV_CAPTION(data, net, field) }),
     ),
+    pb2AvoidBlock(data, 6, `Edit it on the ${networkLabel(baseNetwork(data))} tab`),
   ];
 }
 
