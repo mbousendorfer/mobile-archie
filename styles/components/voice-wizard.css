@@ -128,14 +128,6 @@
   list-style: none;
 }
 
-/* Archie's picks wear his olive mark — what he chose, not a decoration. */
-.vw-option__archie {
-  display: inline-flex;
-  flex-shrink: 0;
-  margin-left: var(--ref-spacing-xxs);
-  color: var(--app-butter-accent);
-}
-
 /* ── Lines ───────────────────────────────────────────────────────────────
    Distinct elements on one width and one rhythm. Your lines: white cards
    (grey-20 edge, radius md, 48px), grip · rank badge · text · remove. Every
@@ -252,21 +244,26 @@
   padding: var(--ref-spacing-sm) var(--ref-spacing-md);
 }
 
-.vw-radio__body {
+/* A suggestion card: its text, and — on the one Archie recommends — his
+   status at the right, on the text's first line. */
+/* Two classes: the DS lays .ap-radio-card > div out as a column. */
+.vw-radio > .vw-radio__body {
   display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--ref-spacing-sm);
   min-width: 0;
 }
 
-.vw-radio__body > .ap-radio-card-title {
-  display: inline-flex;
-  align-items: center;
+.vw-radio__option {
+  flex: 1;
+  min-width: 0;
+  color: var(--ref-color-grey-100);
+  line-height: var(--ref-font-line-height-sm);
 }
 
-.vw-radio__text {
-  color: var(--ref-color-grey-80);
-  font-size: var(--ref-font-size-sm);
+.vw-radio__pick {
+  flex-shrink: 0;
 }
 
 .vw-own textarea {

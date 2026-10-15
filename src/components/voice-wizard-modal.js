@@ -30,10 +30,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1839";
-import { bindReorder } from "../drag-reorder.js?v=1839";
-import { escapeHtml as esc } from "../utils.js?v=1839";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1839";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1841";
+import { bindReorder } from "../drag-reorder.js?v=1841";
+import { escapeHtml as esc } from "../utils.js?v=1841";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1841";
 import {
   networkFields,
   isNewPart,
@@ -43,7 +43,7 @@ import {
   networkEntry,
   resolvedVoice,
   progressRingHtml,
-} from "../network-voice.js?v=1839";
+} from "../network-voice.js?v=1841";
 
 const MODAL_ID = "voiceWizard";
 
@@ -330,8 +330,6 @@ function baseValue(field) {
   return w.data[field] || "";
 }
 
-const ARCHIE_MARK = `<span class="vw-option__archie" title="Archie's pick"><i class="ap-icon-sparkles" aria-hidden="true"></i></span>`;
-
 // What the network itself recommends for this part — the reason behind
 // Archie's picks, in the right column beside the choices.
 function renderGuidance(field) {
@@ -420,20 +418,28 @@ function renderPart(field) {
           : ""
       }`;
   }
-  const radio = (value, title, text, archie = false) => `
+  // Every option is one of Archie's suggestions, so a card IS its text — no
+  // "Archie's pick" / "Another way" titles. The one he recommends wears his
+  // status (the butter .ap-status); "Write my own" is the one titled card.
+  const radio = (value, inner) => `
     <label class="ap-radio-card card vw-radio">
       <input type="radio" name="vw-choice" data-vw-choice="${value}" ${String(p.choice) === String(value) ? "checked" : ""} />
-      <div class="vw-radio__body">
-        <span class="ap-radio-card-title">${esc(title)}${archie ? ARCHIE_MARK : ""}</span>
-        ${text ? `<span class="vw-radio__text" title="${esc(text)}">${esc(text)}</span>` : ""}
-      </div>
+      <div class="vw-radio__body">${inner}</div>
     </label>`;
+  const option = (i) =>
+    radio(
+      i,
+      `<span class="vw-radio__option">${esc(w.opts[field][i])}</span>${
+        i === 0 ? `<span class="ap-status mermaid vw-radio__pick">Archie's pick</span>` : ""
+      }`,
+    );
   return `${head}
     <section class="vw-section">
+    <div class="vw-list-head"><span class="vw-list-head__title">My suggestions</span></div>
     <div class="vw-options">
-      ${radio(0, "Archie's pick", w.opts[field][0], true)}
-      ${radio(1, "Another way", w.opts[field][1])}
-      ${radio("own", "Write my own", "")}
+      ${option(0)}
+      ${option(1)}
+      ${radio("own", `<span class="ap-radio-card-title">Write my own</span>`)}
       ${
         p.choice === "own"
           ? `<div class="ap-textarea-field resizable vw-own"><textarea data-vw-own rows="3" placeholder="${esc(P.add)}" aria-label="${esc(P.add)}">${esc(p.own)}</textarea></div>`
