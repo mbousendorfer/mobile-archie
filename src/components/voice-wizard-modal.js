@@ -21,10 +21,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1808";
-import { bindReorder } from "../drag-reorder.js?v=1808";
-import { escapeHtml as esc } from "../utils.js?v=1808";
-import { networkVoiceOptions, networkGuidance } from "../context-mock-analysis.js?v=1808";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1809";
+import { bindReorder } from "../drag-reorder.js?v=1809";
+import { escapeHtml as esc } from "../utils.js?v=1809";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1809";
 import {
   networkFields,
   isNewPart,
@@ -34,7 +34,7 @@ import {
   networkEntry,
   resolvedVoice,
   progressRingHtml,
-} from "../network-voice.js?v=1808";
+} from "../network-voice.js?v=1809";
 
 const MODAL_ID = "voiceWizard";
 
@@ -312,9 +312,16 @@ const ARCHIE_MARK = `<span class="vw-option__archie" title="Archie's pick"><i cl
 function renderGuidance(field) {
   const lines = networkGuidance(w.net, field);
   if (!lines.length) return "";
+  // The source, one click away — a new tab, the draft stays open here.
+  const url = networkGuidanceUrl(w.net);
   return `<aside class="vw__aside" aria-label="What ${esc(networkLabel(w.net))} says">
       <p class="vw__aside-title"><i class="${networkIcon(w.net)}" aria-hidden="true"></i>What ${esc(networkLabel(w.net))} says</p>
       <ul class="vw-guide">${lines.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>
+      ${
+        url
+          ? `<a class="ap-link standalone small vw-guide__link" href="${esc(url)}" target="_blank" rel="noopener noreferrer"><span>Read ${esc(networkLabel(w.net))}'s guidelines</span><i class="ap-icon-external-link" aria-hidden="true"></i></a>`
+          : ""
+      }
     </aside>`;
 }
 

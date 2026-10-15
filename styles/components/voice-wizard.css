@@ -242,6 +242,11 @@
   list-style: none;
 }
 
+/* The network's own page, under its recommendations — hugs its text. */
+.vw-guide__link {
+  align-self: flex-start;
+}
+
 .vw__content--single {
   grid-template-columns: minmax(0, 1fr);
 }

@@ -572,6 +572,22 @@ const NETWORK_GUIDANCE = {
   },
 };
 
+// Where each network publishes its own creator / business guidance — the link
+// under "What X says", so the source is one click away.
+const NETWORK_GUIDANCE_URL = {
+  linkedin: "https://business.linkedin.com/marketing-solutions",
+  instagram: "https://creators.instagram.com/",
+  x: "https://business.x.com/",
+  facebook: "https://www.facebook.com/business/learn",
+  tiktok: "https://www.tiktok.com/creators/creator-portal/",
+  youtube: "https://www.youtube.com/creators/",
+};
+
+/** The network's own guidance page, or "" when there's none. */
+export function networkGuidanceUrl(network) {
+  return NETWORK_GUIDANCE_URL[network] || "";
+}
+
 /** What the network itself says about one part of a voice (1–2 sentences). */
 export function networkGuidance(network, field) {
   return NETWORK_GUIDANCE[network]?.[field] || [];
