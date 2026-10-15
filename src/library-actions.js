@@ -30,11 +30,11 @@
 // underlying state stays in one place. The user-facing toast is fired here
 // (a single shared place for the wording).
 
-import { appendExtractedIdeas, removeIdeasForSources, removeIdeas, getIdeas } from "./library.js?v=1784";
-import { removeSources as streamRemoveSources, getSources as streamGetSources } from "./sources-stream.js?v=1784";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1784";
-import { showToast } from "./components/toast.js?v=1784";
-import { addMention } from "./composer-mentions.js?v=1784";
+import { appendExtractedIdeas, removeIdeasForSources, removeIdeas, getIdeas } from "./library.js?v=1786";
+import { removeSources as streamRemoveSources, getSources as streamGetSources } from "./sources-stream.js?v=1786";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1786";
+import { showToast } from "./components/toast.js?v=1786";
+import { addMention } from "./composer-mentions.js?v=1786";
 
 // ── Bulk-bar HTML renderers ──────────────────────────────────────────────
 

@@ -853,13 +853,13 @@
   justify-content: flex-end;
 }
 
-/* A network's head, one band: ring + where it stands on the left, the four
-   parts side by side on the right (one cell each, hairlines between). */
+/* A network's head: ring + where it stands, then the four parts side by side
+   across the full width (one cell each, hairlines between) — room for a name
+   and its "Optimize" on one line. */
 .pb2-nv-overview {
-  display: grid;
-  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: var(--ref-spacing-md);
-  align-items: center;
 }
 
 .pb2-nv-summary {
@@ -906,34 +906,59 @@
 }
 
 .pb2-nv-part {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--ref-spacing-xxs);
   min-width: 0;
-  padding: var(--ref-spacing-sm);
 }
 
 .pb2-nv-part + .pb2-nv-part {
   border-left: 1px solid var(--ref-color-grey-20);
 }
 
+/* The cell IS the button: name, then its state, left-aligned. Hover and focus
+   draw the blue border inside the cell (house rule for clickable cards). */
+.pb2-nv-part__hit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  height: 100%;
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+button.pb2-nv-part__hit {
+  cursor: pointer;
+}
+
+button.pb2-nv-part__hit:hover,
+button.pb2-nv-part__hit:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--ref-color-electric-blue-100);
+}
+
+.pb2-nv-part__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+}
+
 .pb2-nv-part__name {
   color: var(--ref-color-grey-100);
   font-weight: var(--sys-text-style-body-bold-weight);
+  white-space: nowrap;
 }
 
-.pb2-nv-part__go {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
+.pb2-nv-part__cta {
+  flex-shrink: 0;
+  color: var(--ref-color-electric-blue-100);
   font-size: var(--ref-font-size-sm);
-}
-
-@media (max-width: 1100px) {
-  .pb2-nv-overview {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  font-weight: var(--sys-text-style-body-bold-weight);
 }
 
 @media (max-width: 640px) {

@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1784";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1786";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -26,11 +26,11 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1784";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1784";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1784";
-import { isFlagOn } from "./feature-flags.js?v=1784";
-import { parseHashParams } from "./url-state.js?v=1784";
+} from "./playbook-brand-kit.js?v=1786";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1786";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1786";
+import { isFlagOn } from "./feature-flags.js?v=1786";
+import { parseHashParams } from "./url-state.js?v=1786";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -44,16 +44,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1784";
+} from "./network-voice.js?v=1786";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1784";
-import { showToast } from "./components/toast.js?v=1784";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1784";
-import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1784";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1784";
+} from "./voice-coach-store.js?v=1786";
+import { showToast } from "./components/toast.js?v=1786";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1786";
+import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1786";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1786";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2473,25 +2473,29 @@ function nvOptimizedCount(data, net) {
 // The part's name opens its editor, to do it yourself.
 function nvChecklist(data, net) {
   const label = networkLabel(net);
+  const base = networkLabel(baseNetwork(data));
   const live = canEditView() && !editScope;
-  const rows = NV_FIELDS.map(([field, title]) => {
+  // One cell per part, side by side, and the whole cell is ONE button: it
+  // opens the Optimize wizard on that part (done ones too — to revise them).
+  // The name says what, the pill says where it stands; "Optimize" only where
+  // there's something left to do.
+  const cells = NV_FIELDS.map(([field, title]) => {
     const own = isOverridden(data, net, field);
-    const name = live
-      ? `<button type="button" class="ap-link standalone pb2-nv-part__name" data-nv-fit-adapt="${field}" title="Edit ${esc(title.toLowerCase())} for ${esc(label)}">${esc(title)}</button>`
-      : `<span class="pb2-nv-part__name">${esc(title)}</span>`;
-    const action =
-      !own && live
-        ? `<button type="button" class="ap-link standalone pb2-nv-part__go" data-nv-optimize-part="${field}" aria-label="Optimize ${esc(title.toLowerCase())} for ${esc(label)}"><i class="ap-icon-sparkles" aria-hidden="true"></i>Optimize</button>`
-        : "";
-    // One compact cell per part, side by side — four short states don't need
-    // four full-width rows.
-    return `<li class="pb2-nv-part">
-        ${name}
-        ${nvSourceBadge(data, net, field)}
-        ${action}
-      </li>`;
+    const status = own
+      ? `<span class="ap-status green">Optimized</span>`
+      : `<span class="ap-status grey">Same as ${esc(base)}</span>`;
+    const inner = `<span class="pb2-nv-part__top">
+          <span class="pb2-nv-part__name">${esc(title)}</span>
+          ${!own && live ? `<span class="pb2-nv-part__cta">Optimize</span>` : ""}
+        </span>
+        ${status}`;
+    return `<li class="pb2-nv-part">${
+      live
+        ? `<button type="button" class="pb2-nv-part__hit" data-nv-optimize-part="${field}" aria-label="${esc(`${own ? "Revise" : "Optimize"} ${title.toLowerCase()} for ${label}`)}">${inner}</button>`
+        : `<div class="pb2-nv-part__hit">${inner}</div>`
+    }</li>`;
   });
-  return `<ul class="pb2-nv-parts" aria-label="What's optimized for ${esc(label)}">${rows.join("")}</ul>`;
+  return `<ul class="pb2-nv-parts" aria-label="What's optimized for ${esc(label)}">${cells.join("")}</ul>`;
 }
 
 // The arcs a wizard save just completed — set for one repaint, so they fill once.
@@ -2508,8 +2512,8 @@ function nvProgressText(data, net, { short = false } = {}) {
   return done ? `${done} of ${NV_FIELDS.length} parts optimized` : "Not optimized yet";
 }
 
-// A network's head, in one band: its ring and where it stands on the left, its
-// four parts side by side on the right; the offer sits in the block's head.
+// A network's head: its ring and where it stands, then its four parts side by
+// side; the offer sits in the block's head.
 function nvIdentityBlock(data, net) {
   const label = networkLabel(net);
   const done = nvOptimizedCount(data, net);
@@ -2740,17 +2744,6 @@ function onNetworkVoiceClick(event) {
   if (no) {
     dismissVoiceSuggestion(data.id, no.dataset.nvDismiss);
     repaint();
-    return true;
-  }
-  const fitAdapt = event.target.closest("[data-nv-fit-adapt]");
-  if (fitAdapt) {
-    const field = fitAdapt.dataset.nvFitAdapt;
-    openEdit(data, "voice");
-    if (!isOverridden(data, activeNetworkFor(data), field)) nvAdaptField(data, field);
-    repaint();
-    const target = mountTarget?.querySelector(`[data-recap-line-list="${field}"], [data-nv-text="${field}"]`);
-    target?.scrollIntoView({ block: "center", behavior: "smooth" });
-    target?.focus({ preventScroll: true });
     return true;
   }
   const adapt = event.target.closest("[data-nv-adapt]");
@@ -3118,7 +3111,6 @@ const WRITE_HOOKS = [
   "[data-nv-accept]",
   "[data-nv-dismiss]",
   "[data-nv-adapt]",
-  "[data-nv-fit-adapt]",
   "[data-nv-optimize-part]",
   "[data-nv-reset]",
 ].join(",");

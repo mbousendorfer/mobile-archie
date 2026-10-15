@@ -2,9 +2,9 @@
 // as a creation straight away (that IS the history); opening a variation in the
 // editor gives it its layers.
 
-import { storageService as storage } from "../services/index.js?v=1784";
-import { createCreation, historyEntry } from "../model/schema.js?v=1784";
-import { uid } from "../lib/id.js?v=1784";
+import { storageService as storage } from "../services/index.js?v=1786";
+import { createCreation, historyEntry } from "../model/schema.js?v=1786";
+import { uid } from "../lib/id.js?v=1786";
 
 function get(id) {
   return storage.get("creations", id);
