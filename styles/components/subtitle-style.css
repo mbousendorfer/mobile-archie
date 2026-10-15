@@ -252,3 +252,9 @@
 .sub-preview--simple .sub-preview__line em {
   color: #ffffff;
 }
+
+/* Mobile fork: two columns at most, whatever --card-cols asks for — four
+   network tiles across a phone left each one 57px wide. */
+.analyse__options--cards .analyse__cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}

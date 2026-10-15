@@ -483,8 +483,9 @@
    active-tab underline lands on that shared line. */
 .rpanel-drafts__filters {
   display: flex;
+  flex-wrap: wrap; /* mobile fork: the network select wraps under the tabs */
   align-items: center;
-  gap: var(--ref-spacing-sm);
+  gap: 0 var(--ref-spacing-sm);
   /* Flush header, matching the Ideas tabs row's horizontal inset. */
   padding: 0 var(--ref-spacing-sm);
   border-bottom: 1px solid var(--app-border);
@@ -509,10 +510,10 @@
    default — override to intrinsic width so it doesn't eat the whole row
    and collapse the tabs. */
 .rpanel-drafts__network {
-  flex: 0 0 auto;
+  flex: 1 1 160px;
   width: auto;
-  min-width: 160px;
-  margin-left: auto;
+  min-width: 0;
+  margin: var(--ref-spacing-xxs) 0 var(--ref-spacing-xs);
 }
 
 .rpanel-drafts__network .ap-select-inline-icon {
@@ -646,8 +647,8 @@
 /* ── Narrow container — actions below the card ──────────────────────
    When the panel is narrower than the card (500px) + action stack, the
    row reflows to column so the action buttons stay flush with the left
-   edge of the panel and remain fully reachable. The card itself keeps
-   its 500px width and overflows horizontally (intentional per spec). */
+   edge of the panel and remain fully reachable. The card takes the width
+   (posts.css — the mobile fork dropped its fixed 500px). */
 @container (max-width: 580px) {
   .rpanel-drafts__feed .posts__row {
     flex-direction: column;

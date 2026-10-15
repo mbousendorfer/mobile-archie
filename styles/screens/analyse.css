@@ -29,7 +29,7 @@
    with the conversation column. */
 
 .analyse__sticky-bar {
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md) calc(var(--ref-spacing-sm) + var(--app-safe-bottom));
 }
 
 .analyse__sticky-bar-inner {

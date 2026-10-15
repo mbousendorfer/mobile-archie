@@ -14,6 +14,9 @@
 
 .session__assistant {
   display: grid;
+  /* One column at the screen's width — an implicit `auto` column grew to the
+     thread's min-content and pushed the turns past a phone's edge. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto;
   background: var(--app-bg);
   border-right: 1px solid var(--app-border);
@@ -1312,48 +1315,21 @@ body.playbook-revoked .session__composer-card {
   position: relative;
 }
 
+/* Mobile fork: the Add menu is an ACTION SHEET — the full width of the screen,
+   from the bottom edge, above the home indicator. "Connected sources" is a
+   section of it, not a flyout (no hover on a phone, and ADS has no flyout). */
 .ap-action-dropdown.assistant-attach__menu {
-  position: absolute;
+  position: fixed;
   left: 0;
-  bottom: calc(100% + var(--ref-spacing-xxs));
-  min-width: 180px;
-  width: auto;
-  z-index: var(--app-z-overlay);
-  /* Let the "Connected sources" flyout escape — the DS .ap-action-dropdown
-     clips overflow, which would hide the nested submenu. */
-  overflow: visible;
-}
-
-/* ---------- "Connected sources" nested submenu (flyout) -------------- */
-
-.assistant-attach__submenu-wrap {
-  position: relative;
-}
-
-/* The trigger's trailing chevron is pushed to the far right. */
-.assistant-attach__submenu-trigger > .ap-icon-chevron-right {
-  margin-left: auto;
-}
-
-.ap-action-dropdown.assistant-attach__submenu {
-  position: absolute;
-  left: 100%;
-  /* "Connected sources" is the last menu item and the menu itself opens above
-     the composer (near the screen bottom), so grow the flyout UPWARD from the
-     trigger's bottom edge to avoid clipping below the viewport. */
+  right: 0;
   bottom: 0;
   top: auto;
   width: auto;
-  min-width: 200px;
-  max-height: 60vh;
+  max-height: 70dvh;
   overflow-y: auto;
-  display: none;
-  z-index: var(--app-z-overlay);
-}
-
-.assistant-attach__submenu-wrap:hover > .assistant-attach__submenu,
-.assistant-attach__submenu-wrap:focus-within > .assistant-attach__submenu {
-  display: block;
+  border-radius: var(--app-radius-modal) var(--app-radius-modal) 0 0;
+  padding-bottom: calc(var(--ref-spacing-xs) + var(--app-safe-bottom));
+  z-index: var(--app-z-modal);
 }
 
 /* Muted section heading above the connected-connectors list (Codex-style
@@ -1831,4 +1807,59 @@ body.playbook-revoked .session__composer-card {
   line-height: var(--sys-text-style-caption-bold-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--sys-text-color-default);
+}
+
+/* ── Mobile fork ────────────────────────────────────────────────────────────
+   The chat at a phone's width: 16px gutters, one column of starters and
+   topics, the composer's toolbar on one line (icon buttons + the Playbook
+   select, which truncates), the composer above the home indicator. */
+.session__assistant-thread {
+  padding-left: var(--ref-spacing-md);
+  padding-right: var(--ref-spacing-md);
+}
+
+.starter-grid,
+.empty-chat__topics-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.session__composer {
+  padding-bottom: calc(var(--ref-spacing-sm) + var(--app-safe-bottom));
+}
+
+.session__composer-toolbar .composer-playbook {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.session__composer-toolbar .composer-playbook__trigger {
+  width: 100%;
+  min-width: 0;
+}
+
+/* The select now fills the rest of the toolbar: its menu takes the select's
+   width instead of a min-width that ran past the screen's edge. */
+.session__composer-toolbar .composer-playbook__dropdown {
+  right: 0;
+  min-width: 0;
+  width: auto;
+  max-width: none;
+}
+
+.chat-gallery__menu {
+  width: min(300px, calc(100vw - 2 * var(--ref-spacing-md)));
+}
+
+/* The hero's 640px glow (::before) is wider than a phone: clipped, not
+   scrolled to. `clip` rather than `hidden` — no scroll container is created. */
+.empty-chat {
+  overflow-x: clip;
+}
+
+/* Three gutters stacked (thread · hero · composer) left the hero's composer
+   270px wide: the thread's 16px is the only one a phone keeps. */
+.empty-chat,
+.empty-chat .session__composer {
+  padding-left: 0;
+  padding-right: 0;
 }

@@ -4,20 +4,20 @@
 // session.js, unchanged; the mention picker stays there, since bindSession
 // writes its highlight state.
 
-import { isFlagOn } from "../../feature-flags.js?v=1856";
-import { getConnectedConnectors, findConnector } from "../../connectors-store.js?v=1856";
-import { escapeHtml, html, raw, escapeAttr as escapeHtmlAttr } from "../../utils.js?v=1856";
-import { renderConnectorLogo } from "../../connectors-view.js?v=1856";
-import { getSources, getIdeas } from "../../library.js?v=1856";
-import * as clipStudio from "../../clip-studio.js?v=1856";
-import { getThread } from "../../assistant.js?v=1856";
-import { revokedContextFor } from "../../playbook-access.js?v=1856";
-import { getSessionById } from "../../sessions-store.js?v=1856";
-import { catalogueRoute } from "../../active-playbook.js?v=1856";
-import { getActiveConnector } from "../../composer-connector.js?v=1856";
-import { COMPOSER_DEFAULT_PLACEHOLDER, renderPlaybookControl } from "../session.js?v=1856";
-import { renderTopicPickerRow } from "./empty-hero.js?v=1856";
-import { renderChatGallery } from "./chat-gallery.js?v=1856";
+import { isFlagOn } from "../../feature-flags.js?v=1868";
+import { getConnectedConnectors, findConnector } from "../../connectors-store.js?v=1868";
+import { escapeHtml, html, raw, escapeAttr as escapeHtmlAttr } from "../../utils.js?v=1868";
+import { renderConnectorLogo } from "../../connectors-view.js?v=1868";
+import { getSources, getIdeas } from "../../library.js?v=1868";
+import * as clipStudio from "../../clip-studio.js?v=1868";
+import { getThread } from "../../assistant.js?v=1868";
+import { revokedContextFor } from "../../playbook-access.js?v=1868";
+import { getSessionById } from "../../sessions-store.js?v=1868";
+import { catalogueRoute } from "../../active-playbook.js?v=1868";
+import { getActiveConnector } from "../../composer-connector.js?v=1868";
+import { COMPOSER_DEFAULT_PLACEHOLDER, renderPlaybookControl } from "../session.js?v=1868";
+import { renderTopicPickerRow } from "./empty-hero.js?v=1868";
+import { renderChatGallery } from "./chat-gallery.js?v=1868";
 
 function renderConnectorsSubmenu() {
   // Connectors are gated behind a feature flag (default OFF) — when off, the
@@ -43,34 +43,16 @@ function renderConnectorsSubmenu() {
     : `<div class="assistant-attach__menu-label">No sources connected yet</div>`;
   return `
     <div class="ap-action-dropdown-divider" role="separator"></div>
-    <div class="assistant-attach__submenu-wrap">
-      <button
-        type="button"
-        class="ap-action-dropdown-item assistant-attach__submenu-trigger"
-        aria-haspopup="menu"
-        role="menuitem"
-      >
-        <i class="ap-icon-stack"></i>
-        <div class="ap-action-dropdown-item-text">
-          <div class="ap-action-dropdown-item-label-container">
-            <span class="ap-action-dropdown-item-label">Connected sources</span>
-          </div>
+    <div class="assistant-attach__menu-label">Connected sources</div>
+    ${items}
+    <button type="button" class="ap-action-dropdown-item" data-open-connectors role="menuitem">
+      <i class="ap-icon-view-grid"></i>
+      <div class="ap-action-dropdown-item-text">
+        <div class="ap-action-dropdown-item-label-container">
+          <span class="ap-action-dropdown-item-label">Browse connectors</span>
         </div>
-        <i class="ap-icon-chevron-right" aria-hidden="true"></i>
-      </button>
-      <div class="ap-action-dropdown assistant-attach__submenu" role="menu">
-        ${items}
-        <div class="ap-action-dropdown-divider" role="separator"></div>
-        <button type="button" class="ap-action-dropdown-item" data-open-connectors role="menuitem">
-          <i class="ap-icon-view-grid"></i>
-          <div class="ap-action-dropdown-item-text">
-            <div class="ap-action-dropdown-item-label-container">
-              <span class="ap-action-dropdown-item-label">Browse connectors</span>
-            </div>
-          </div>
-        </button>
       </div>
-    </div>`;
+    </button>`;
 }
 
 // "Ready" status bars (DS .ap-status-card) glued to the top of the composer,
@@ -325,12 +307,11 @@ export function renderComposer(attachedContext, session, selectable) {
             <div class="assistant-attach">
               <button
                 type="button"
-                class="ap-button stroked grey assistant-attach__trigger"
+                class="ap-icon-button stroked assistant-attach__trigger"
                 aria-label="Add a source"
                 data-assistant-attach-toggle
               >
                 <i class="ap-icon-plus"></i>
-                <span>Add</span>
               </button>
               <div class="ap-action-dropdown assistant-attach__menu" data-assistant-attach-menu hidden role="menu">
                 <button type="button" class="ap-action-dropdown-item" data-add-source="pdf" role="menuitem">
@@ -380,7 +361,7 @@ export function renderComposer(attachedContext, session, selectable) {
             </div>
             <button
               type="button"
-              class="ap-button stroked grey composer-mention-trigger"
+              class="ap-icon-button stroked composer-mention-trigger"
               aria-label="Reference a source or idea"
               aria-haspopup="listbox"
               aria-expanded="false"
@@ -389,7 +370,6 @@ export function renderComposer(attachedContext, session, selectable) {
               ${hasMentionable ? "" : 'disabled title="Add a source or extract an idea first"'}
             >
               <i class="ap-icon-at"></i>
-              <span>Reference</span>
             </button>
             ${renderPlaybookControl(attachedContext, selectable)}
             <button

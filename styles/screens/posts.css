@@ -52,9 +52,8 @@
 /* ---------- Post card ---------- */
 
 /* Wrapper that holds the per-post error infobox + the card itself in a column.
-   Fixed 500px width — the preview should always render at the same size so
-   the layout stays predictable regardless of panel width or right-panel
-   resizes. Container clips/scrolls if it can't fit. */
+   Mobile fork: the width of the screen, up to the 500px it had on desktop
+   (where it was fixed, so the preview always rendered at one size). */
 .posts__card-wrap {
   display: flex;
   flex-direction: column;
@@ -62,8 +61,9 @@
      clearly belongs to it — the next draft sits a full feed gap (16px)
      below, so the feedback never reads as equidistant between two. */
   gap: var(--ref-spacing-xxs);
-  width: 500px;
-  flex-shrink: 0;
+  width: 100%;
+  max-width: 500px;
+  min-width: 0;
 }
 
 /* The strip's own top padding would re-add the space we just tightened —
@@ -378,11 +378,13 @@
   position: relative;
 }
 
+/* Mobile fork: always visible (no hover to reveal them), so they sit at the
+   image's foot rather than over its middle. */
 .posts__card-image-controls {
   position: absolute;
-  top: 50%;
+  bottom: var(--ref-spacing-xs);
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   display: flex;
   gap: var(--ref-spacing-xxxs);
   /* 4px, not 8: the ghost buttons already carry the DS button's own horizontal
@@ -392,13 +394,6 @@
   background: var(--ref-color-white);
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
-  opacity: 0;
-  transition: opacity var(--ref-animation-short) var(--app-ease-out);
-}
-
-.posts__card-image-wrap:hover .posts__card-image-controls,
-.posts__card-image-wrap:focus-within .posts__card-image-controls {
-  opacity: 1;
 }
 
 /* Carousel draft — poster slide + a count badge (top-left) + slide dots. */
@@ -947,4 +942,16 @@
 .posts__feed-preview .posts__rewrite,
 .posts__feed-preview .ap-infobox {
   display: none;
+}
+
+/* Mobile fork: the network preview's action bar (Like · Comment · Repost ·
+   Send) at a phone's width — tighter gaps and padding so the four fit the
+   card instead of running past it. */
+.posts__card-footer {
+  gap: 0;
+}
+
+.posts__card-action {
+  padding-left: var(--ref-spacing-xxxs);
+  padding-right: var(--ref-spacing-xxxs);
 }
