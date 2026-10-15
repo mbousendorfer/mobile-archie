@@ -951,11 +951,10 @@
   padding-top: var(--ref-spacing-sm);
 }
 
-/* A ghost button: pulled back by its own inset so its glyph lines up with the
-   block's text edge. */
-.pb2-nv-block-go > .ap-button {
-  margin-left: calc(-1 * var(--ref-spacing-sm));
-}
+/* The ghost button sits on the content edge, NOT pulled back: its hover
+   background then lines up with the line boxes above, and its glyph (16px in)
+   with their quote marks (16px in too). Pulled back, the hover surface stuck
+   out of the column. */
 
 /* A part's state in its block head, on the right where the caption sat. */
 .pb2-nv-status {
