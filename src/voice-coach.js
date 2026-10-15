@@ -13,16 +13,17 @@
 // ponytail: the edit heuristics are a mock reading of one before/after pair.
 // The real thing compares many drafts per network before proposing.
 
-import { getSessionById } from "./sessions-store.js?v=1778";
-import { getContextById } from "./contexts-store.js?v=1778";
-import { playbookForNewWork } from "./active-playbook.js?v=1778";
-import { getPosts } from "./posts-store.js?v=1778";
-import { postVoiceSuggestion, postSelectionEcho, postAssistantMessage } from "./assistant.js?v=1778";
-import { startRewrite } from "./draft-rewrite.js?v=1778";
-import { escapeHtml } from "./utils.js?v=1778";
-import { ask, isActive } from "./inline-question.js?v=1778";
-import { propose, accept } from "./voice-coach-store.js?v=1778";
-import { normalizeNetwork } from "./social-profiles.js?v=1778";
+import { getSessionById } from "./sessions-store.js?v=1784";
+import { getContextById } from "./contexts-store.js?v=1784";
+import { playbookForNewWork } from "./active-playbook.js?v=1784";
+import { getPosts } from "./posts-store.js?v=1784";
+import { postVoiceSuggestion, postSelectionEcho, postAssistantMessage } from "./assistant.js?v=1784";
+import { startRewrite } from "./draft-rewrite.js?v=1784";
+import { escapeHtml } from "./utils.js?v=1784";
+import { ask, isActive } from "./inline-question.js?v=1784";
+import { propose, accept } from "./voice-coach-store.js?v=1784";
+import { normalizeNetwork } from "./social-profiles.js?v=1784";
+import { networkVoiceOptions } from "./context-mock-analysis.js?v=1784";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -30,7 +31,7 @@ import {
   networkLabel,
   networkIcon,
   followRules,
-} from "./network-voice.js?v=1778";
+} from "./network-voice.js?v=1784";
 
 function sessionPlaybook(sessionId) {
   const session = getSessionById(sessionId);
@@ -141,15 +142,8 @@ export function noticeDraftFeedback(targetId, reasons = []) {
 }
 
 // Closings that read native on each network — the answers offered when a
-// network voice has none of its own yet.
-const CLOSINGS = {
-  linkedin: ["What's your take? Reply and tell me.", "Follow for more like this.", "Link in the comments."],
-  instagram: ["Save this for later.", "Tell me in the comments.", "Link in bio."],
-  x: ["Thoughts?", "More in the thread below.", "Agree or disagree?"],
-  facebook: ["Share this with someone who needs it.", "What would you add?", "Link in the comments."],
-  tiktok: ["Follow for part 2.", "Tell me in the comments.", "Save this one."],
-  youtube: ["Subscribe for the next one.", "Tell me in the comments.", "Full video linked below."],
-};
+// network voice has none of its own yet. One table with the Optimize wizard's.
+const closingsFor = (n) => networkVoiceOptions(n)?.closingPatterns || null;
 
 const asked = new Set(); // `${contextId}:${network}` — one question per network voice per visit
 
@@ -160,7 +154,9 @@ export function coachingTarget(sessionId, drafts = []) {
   const ctx = sessionPlaybook(sessionId);
   if (!ctx) return { reason: "Needs a Playbook on this chat" };
   const base = baseNetwork(ctx);
-  const others = [...new Set(drafts.map((d) => normalizeNetwork(d.network)))].filter((n) => n !== base && CLOSINGS[n]);
+  const others = [...new Set(drafts.map((d) => normalizeNetwork(d.network)))].filter(
+    (n) => n !== base && closingsFor(n),
+  );
   if (!others.length) return { reason: `Needs a draft on a network other than ${networkLabel(base)}` };
   const open = others.filter((n) => !isOverridden(ctx, n, "closingPatterns"));
   if (!open.length) return { reason: "Every network here already has its own closing" };
@@ -191,7 +187,7 @@ export function coachAfterDraft(sessionId, drafts = []) {
     intro: `Your ${label} voice still closes the way your ${networkLabel(base)} one does. Quick question so I get it right next time.`,
     title: `How do you usually end a post on ${label}?`,
     stepLabel: "Voice",
-    items: CLOSINGS[net].map((c) => ({ value: c, label: c })),
+    items: closingsFor(net).map((c) => ({ value: c, label: c })),
     customPlaceholder: "Or write your own closing…",
     onPick: commit,
     onCustom: (v) => v.trim() && commit(v.trim()),

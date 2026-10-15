@@ -289,7 +289,7 @@ DS `.ap-dialog` centré par `modals.css` sur `.open`. `.app-modal-backdrop` patc
 | 640     | feedback, add source              | formulaire + onglets                                                                                                                                                                                    |
 | **720** | **topic** (l'article + le picker) | **lecture longue** — de la prose ; au-delà, la mesure décroche. Même largeur dans les deux vues : une dialog qui se redimensionne entre choisir et lire fait passer les deux pour des écrans différents |
 | 920     | connectors                        | une gallery à parcourir                                                                                                                                                                                 |
-| 960     | schedule                          | deux colonnes                                                                                                                                                                                           |
+| 960     | schedule, voice-wizard            | deux colonnes                                                                                                                                                                                           |
 
 Les modals hauts plafonnent leur hauteur (`max-height: min(calc(100vh - 48px), 760px)`) et font défiler leur `.ap-dialog-content`, avec un footer d'actions collant : la décision doit rester atteignable quelle que soit la longueur du contenu.
 
@@ -460,3 +460,7 @@ Détail complet des formules de taille : [`SHELL-LAYOUT.md`](SHELL-LAYOUT.md).
 - [`FEATURES.md`](FEATURES.md) — où ces patterns sont utilisés (par feature)
 - [`SHELL-LAYOUT.md`](SHELL-LAYOUT.md) — formules de tailles sidebar / panel / status-card
 - [`../../CLAUDE.md`](../../CLAUDE.md) — résumé pour agents
+
+## L'anneau de progression (voix par réseau)
+
+`progressRingHtml` ([`network-voice.js`](../../src/network-voice.js), styles `.nv-ring` dans `voice-coach.css`) : quatre arcs autour du logo d'un réseau, un par partie de sa voix — `green-100` une fois optimisée, `grey-20` sinon, `grey-100` pour la base (la référence). Décoratif (`aria-hidden`) : l'état est **toujours** dit en mots à côté. `current` épaissit un arc (l'étape de l'assistant), `fresh` remplit une fois les arcs qu'une action vient de gagner (`prefers-reduced-motion` respecté). Le seul indicateur de progression de la voix : onglet réseau, All networks, assistant Optimize.

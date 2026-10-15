@@ -1,0 +1,326 @@
+/* Optimize wizard — "Optimize your Instagram voice" (voice-wizard-modal.js).
+   Two columns: the step on the left, a live post preview on the right. The
+   backdrop wraps and centres the dialog (the objective modal's pattern: no
+   transform, so nothing inside fights a containing block). */
+
+.vw__backdrop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ref-spacing-lg);
+}
+
+.vw {
+  display: flex;
+  flex-direction: column;
+  width: min(960px, 100%);
+  max-height: min(calc(100vh - 48px), 760px);
+  box-shadow: var(--app-shadow-popover-lg);
+}
+
+/* The head: the network's progress ring, the title, the step in words. */
+.vw__header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding-right: var(--ref-spacing-xxl);
+}
+
+.vw__titles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+}
+
+.vw__content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: var(--ref-spacing-lg);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.vw__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  min-width: 0;
+}
+
+.vw__ask {
+  margin: 0;
+  color: var(--ref-color-grey-100);
+  font-size: var(--ref-font-size-lg);
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.vw__hint {
+  margin: 0 0 var(--ref-spacing-xs);
+  color: var(--ref-color-grey-80);
+}
+
+/* ── The options ─────────────────────────────────────────────────────────
+   Lines (hooks, closings) are DS checkboxes on option cards; layouts and
+   conventions are DS radio cards. A picked card takes the blue border — the
+   colour of what you act on. */
+.vw-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.vw-option {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  background: var(--ref-color-white);
+  cursor: pointer;
+}
+
+.vw-option:has(input:checked) {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.vw-option.is-off {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Two classes: the DS checkbox container centres its label span. A list of
+   lines reads from the left. */
+.vw-option .vw-option__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+  color: var(--ref-color-grey-100);
+  text-align: left;
+}
+
+.vw-option__sub {
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
+}
+
+/* Archie's picks wear his olive mark — what he chose, not a decoration. */
+.vw-option__archie {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-left: var(--ref-spacing-xxs);
+  color: var(--app-butter-accent);
+}
+
+.vw-option--own {
+  cursor: default;
+}
+
+/* "Keep my LinkedIn openings" — set apart from Archie's options. */
+.vw-option--keep {
+  margin-top: var(--ref-spacing-xs);
+}
+
+.vw-add {
+  display: flex;
+  gap: var(--ref-spacing-xs);
+}
+
+.vw-add > .ap-input-group {
+  flex: 1;
+}
+
+.vw-radio {
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+}
+
+.vw-radio__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+}
+
+.vw-radio__body > .ap-radio-card-title {
+  display: inline-flex;
+  align-items: center;
+}
+
+.vw-radio__text {
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
+}
+
+.vw-own textarea {
+  width: 100%;
+}
+
+/* ── The review ─────────────────────────────────────────────────────────── */
+.vw-review__value {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  min-width: 0;
+}
+
+.vw-review__text {
+  overflow: hidden;
+  color: var(--ref-color-grey-80);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vw-review .pb2-nv-row {
+  grid-template-columns: 120px minmax(0, 1fr) auto;
+}
+
+.vw__leave {
+  color: var(--ref-color-grey-100);
+}
+
+/* ── The preview ─────────────────────────────────────────────────────────
+   A sample post on the page's grey, in the network's shape: the line the step
+   changes sits on a soft band, so you see what your pick touches. */
+.vw__aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-md);
+  border-radius: var(--ref-border-radius-md);
+  background: var(--app-surface-subtle);
+}
+
+.vw__aside-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  margin: 0;
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
+}
+
+.vwp {
+  overflow: hidden;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  background: var(--ref-color-white);
+}
+
+.vwp__head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-sm) 0;
+}
+
+.vwp__avatar {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  overflow: hidden;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: 50%;
+  background: var(--ref-color-grey-10);
+  color: var(--ref-color-white);
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.vwp__avatar > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--ref-color-white);
+}
+
+.vwp__who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.vwp__name {
+  color: var(--ref-color-grey-100);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.vwp__meta {
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-xs);
+}
+
+.vwp__media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: var(--ref-spacing-sm);
+  background: var(--ref-color-grey-10);
+  color: var(--ref-color-grey-80);
+}
+
+.vwp__media > img {
+  max-width: 40%;
+  max-height: 40%;
+}
+
+/* Full card width; the height says the format (square, vertical, landscape)
+   without letting a 360px column turn into a poster. */
+.vwp__media--square {
+  height: 180px;
+}
+
+.vwp__media--tall {
+  height: 220px;
+}
+
+.vwp__media--wide {
+  aspect-ratio: 16 / 9;
+}
+
+.vwp__caption {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-sm);
+}
+
+.vwp__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.vwp__line {
+  margin: 0;
+  color: var(--ref-color-grey-100);
+  font-size: var(--ref-font-size-sm);
+  line-height: 1.5;
+}
+
+.vwp__tags {
+  color: var(--ref-color-grey-80);
+}
+
+/* What this step changes, banded softly — never a coloured edge bar. */
+.vwp__line.is-touched,
+.vwp__body.is-touched {
+  margin: 0 calc(-1 * var(--ref-spacing-xxs));
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs);
+  border-radius: var(--ref-border-radius-sm);
+  background: var(--app-butter, var(--ref-color-grey-10));
+}
+
+@media (max-width: 900px) {
+  .vw__content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

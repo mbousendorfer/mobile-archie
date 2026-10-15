@@ -410,6 +410,69 @@ const NETWORK_ADAPTATIONS = {
   },
 };
 
+// A second option for every part, so the Optimize wizard offers a real choice
+// (the first option of each part is NETWORK_ADAPTATIONS). The closings also
+// feed the coaching question ("How do you usually end a post on X?").
+const NETWORK_ALTERNATIVES = {
+  linkedin: {
+    signatureHooks: ["A lesson from this week:"],
+    closingPatterns: ["What's your take? Reply and tell me.", "Follow for more like this.", "Link in the comments."],
+    formattingStyle: "A one-line opener, a short story in three beats, then the lesson in one plain sentence.",
+    visualStyle: "No emoji at all. Sentence case. Two hashtags at most, at the end.",
+  },
+  instagram: {
+    signatureHooks: ["Real talk:"],
+    closingPatterns: ["Tell me in the comments.", "Link in bio."],
+    formattingStyle: "A one-line caption that frames the visual; the details live in the carousel.",
+    visualStyle: "Emoji as line bullets. Lowercase is fine. Five to ten hashtags in the first comment.",
+  },
+  x: {
+    signatureHooks: ["Unpopular opinion:"],
+    closingPatterns: ["Agree or disagree?"],
+    formattingStyle: "A short hook post, then the detail as a reply thread of two to four posts.",
+    visualStyle: "No emoji. Lowercase welcome. No hashtags.",
+  },
+  facebook: {
+    signatureHooks: ["We need to talk about this:"],
+    closingPatterns: ["Link in the comments."],
+    formattingStyle: "One short paragraph and a clear link preview — the link does the work.",
+    visualStyle: "Warm and casual, an emoji to open the post. No hashtags.",
+  },
+  tiktok: {
+    signatureHooks: ["POV:"],
+    closingPatterns: ["Tell me in the comments."],
+    formattingStyle: "The caption asks the question the video answers.",
+    visualStyle: "All lowercase, one emoji, two niche hashtags.",
+  },
+  youtube: {
+    signatureHooks: ["The short version:"],
+    closingPatterns: ["Full video linked below."],
+    formattingStyle:
+      "The title asks a question; the description gives the answer in three short lines, main link first.",
+    visualStyle: "One emoji at most in the description. Title case for the title.",
+  },
+};
+
+/**
+ * What Archie offers for each part of a network voice — the Optimize wizard's
+ * options: 3 hooks, 3 closings, 2 formattings, 2 emoji & casing. The first of
+ * each is what Optimize writes when nobody chooses (analyzeNetworkVoices).
+ * @param {string} network
+ * @returns {{ signatureHooks: string[], closingPatterns: string[], formattingStyle: string[], visualStyle: string[] } | null}
+ */
+export function networkVoiceOptions(network) {
+  const a = NETWORK_ADAPTATIONS[network];
+  const b = NETWORK_ALTERNATIVES[network];
+  if (!a || !b) return null;
+  const three = (list) => [...new Set(list)].slice(0, 3);
+  return {
+    signatureHooks: three([...a.signatureHooks, ...b.signatureHooks]),
+    closingPatterns: three([...a.closingPatterns, ...b.closingPatterns]),
+    formattingStyle: [a.formattingStyle, b.formattingStyle],
+    visualStyle: [a.visualStyle, b.visualStyle],
+  };
+}
+
 /**
  * Pretend to read the posts of each network the Playbook publishes on and
  * return how each one adapts the base voice — the voiceByNetwork a Playbook is

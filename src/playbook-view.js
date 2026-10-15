@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1778";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1784";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -26,16 +26,11 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1778";
-import {
-  analyzeWebsite,
-  discoverCompetitors,
-  competitorKey,
-  analyzeNetworkVoices,
-} from "./context-mock-analysis.js?v=1778";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1778";
-import { isFlagOn } from "./feature-flags.js?v=1778";
-import { parseHashParams } from "./url-state.js?v=1778";
+} from "./playbook-brand-kit.js?v=1784";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1784";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1784";
+import { isFlagOn } from "./feature-flags.js?v=1784";
+import { parseHashParams } from "./url-state.js?v=1784";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -49,15 +44,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1778";
+} from "./network-voice.js?v=1784";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1778";
-import { showToast } from "./components/toast.js?v=1778";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1778";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1778";
+} from "./voice-coach-store.js?v=1784";
+import { showToast } from "./components/toast.js?v=1784";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1784";
+import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1784";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1784";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2481,30 +2477,39 @@ function nvChecklist(data, net) {
   const rows = NV_FIELDS.map(([field, title]) => {
     const own = isOverridden(data, net, field);
     const name = live
-      ? `<button type="button" class="ap-link standalone pb2-nv-row__name" data-nv-fit-adapt="${field}" title="Edit ${esc(title.toLowerCase())} for ${esc(label)}">${esc(title)}</button>`
-      : `<span class="pb2-nv-row__name">${esc(title)}</span>`;
+      ? `<button type="button" class="ap-link standalone pb2-nv-part__name" data-nv-fit-adapt="${field}" title="Edit ${esc(title.toLowerCase())} for ${esc(label)}">${esc(title)}</button>`
+      : `<span class="pb2-nv-part__name">${esc(title)}</span>`;
     const action =
       !own && live
-        ? `<button type="button" class="ap-button stroked blue" data-nv-optimize-part="${field}" aria-label="Optimize ${esc(title.toLowerCase())} for ${esc(label)}"><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Optimize</span></button>`
+        ? `<button type="button" class="ap-link standalone pb2-nv-part__go" data-nv-optimize-part="${field}" aria-label="Optimize ${esc(title.toLowerCase())} for ${esc(label)}"><i class="ap-icon-sparkles" aria-hidden="true"></i>Optimize</button>`
         : "";
-    return `<li class="pb2-nv-row">
+    // One compact cell per part, side by side — four short states don't need
+    // four full-width rows.
+    return `<li class="pb2-nv-part">
         ${name}
-        <span class="pb2-nv-row__state">${nvSourceBadge(data, net, field)}</span>
-        <span class="pb2-nv-row__action">${action}</span>
+        ${nvSourceBadge(data, net, field)}
+        ${action}
       </li>`;
   });
-  return `<ul class="pb2-nv-rows" aria-label="What's optimized for ${esc(label)}">${rows.join("")}</ul>`;
+  return `<ul class="pb2-nv-parts" aria-label="What's optimized for ${esc(label)}">${rows.join("")}</ul>`;
 }
 
+// The arcs a wizard save just completed — set for one repaint, so they fill once.
+let nvFresh = null;
+const nvFreshFor = (n) => (nvFresh?.net === n ? nvFresh.arcs : []);
+
 // Where a network stands, in words, under its ring.
-function nvProgressText(data, net) {
+// `short`: for a tile, where the sentence sits beside a button.
+function nvProgressText(data, net, { short = false } = {}) {
   if (net === baseNetwork(data)) return "Base voice";
   const done = nvOptimizedCount(data, net);
   if (done === NV_FIELDS.length) return "Optimized";
+  if (short) return done ? `${done} of ${NV_FIELDS.length} optimized` : "Not optimized";
   return done ? `${done} of ${NV_FIELDS.length} parts optimized` : "Not optimized yet";
 }
 
-// A network's head: its ring, where it stands, the offer — then its parts.
+// A network's head, in one band: its ring and where it stands on the left, its
+// four parts side by side on the right; the offer sits in the block's head.
 function nvIdentityBlock(data, net) {
   const label = networkLabel(net);
   const done = nvOptimizedCount(data, net);
@@ -2512,19 +2517,20 @@ function nvIdentityBlock(data, net) {
   const sub =
     done === NV_FIELDS.length
       ? `Every part is written for ${label}.`
-      : `Optimized parts are written for ${label}. The others follow your ${networkLabel(baseNetwork(data))} voice.`;
+      : `The others follow your ${networkLabel(baseNetwork(data))} voice.`;
   return pb2Block(
     `Your ${label} voice`,
-    `<div class="pb2-nv-summary">
-       ${progressRingHtml(net, { done: partsDone(data, net), size: 64 })}
-       <div class="pb2-nv-summary__text">
-         <p class="pb2-nv-summary__count">${esc(nvProgressText(data, net))}</p>
-         <p class="pb2-nv-summary__sub">${esc(sub)}</p>
+    `<div class="pb2-nv-overview">
+       <div class="pb2-nv-summary">
+         ${progressRingHtml(net, { done: partsDone(data, net), size: 56, fresh: nvFreshFor(net) })}
+         <div class="pb2-nv-summary__text">
+           <p class="pb2-nv-summary__count">${esc(nvProgressText(data, net))}</p>
+           <p class="pb2-nv-summary__sub">${esc(sub)}</p>
+         </div>
        </div>
-       ${offer ? `<div class="pb2-nv-summary__action">${offer}</div>` : ""}
-     </div>
-     ${nvChecklist(data, net)}`,
-    { wide: true, index: 0 },
+       ${nvChecklist(data, net)}
+     </div>`,
+    { wide: true, index: 0, aside: offer ? `<span class="pb2-nv-summary__action">${offer}</span>` : "" },
   );
 }
 
@@ -2540,9 +2546,9 @@ function nvAllTiles(data) {
       const isBase = n === base;
       const action = isBase ? "" : nvOptimizeButton(data, n, { tone: "stroked blue", short: true });
       return `<li class="pb2-nv-tile${isBase ? " is-base" : ""}" data-nv-net="${n}">
-        ${progressRingHtml(n, { done: partsDone(data, n), base: isBase, size: 56 })}
+        ${progressRingHtml(n, { done: partsDone(data, n), base: isBase, size: 44, fresh: nvFreshFor(n) })}
         <button type="button" class="pb2-nv-tile__name" data-nv-net="${n}">${esc(networkLabel(n))}</button>
-        <span class="pb2-nv-tile__state">${esc(nvProgressText(data, n))}</span>
+        <span class="pb2-nv-tile__state">${esc(nvProgressText(data, n, { short: true }))}</span>
         ${action ? `<div class="pb2-nv-tile__action">${action}</div>` : ""}
       </li>`;
     })
@@ -2684,30 +2690,35 @@ function onNetworkVoiceClick(event) {
   if (!nvOn()) return false;
   const data = cfg.getData();
   if (!data) return false;
-  // Archie optimizes: the whole network (only the parts still on the base —
-  // never one you adapted), or one part from the checklist.
+  // Optimize opens the wizard on the network — on the part asked, or the first
+  // still on the base. Nothing is written until its Save, which lands here.
   const optimize = event.target.closest("[data-nv-optimize], [data-nv-optimize-part]");
   if (optimize) {
     const net = optimize.dataset.nvOptimize || activeNetworkFor(data);
-    const part = optimize.dataset.nvOptimizePart;
-    const fresh = nvOptimizedCount(data, net) === 0;
-    const drafted = analyzeNetworkVoices([net], baseNetwork(data))[net] || {};
-    const entry = nvWritableEntry(data, net);
-    for (const [field] of NV_FIELDS) {
-      if ((part && field !== part) || entry[field] !== undefined || drafted[field] === undefined) continue;
-      entry[field] = Array.isArray(drafted[field]) ? drafted[field].slice() : drafted[field];
-    }
-    if (fresh && !part) entry.drafted = true;
-    activeNetwork = net;
-    setNetworkInUrl(net);
-    cfg.commit?.();
-    const title = NV_FIELDS.find(([f]) => f === part)?.[1];
-    showToast(
-      part
-        ? `${title} optimized for ${networkLabel(net)}.`
-        : `I optimized your ${networkLabel(net)} voice. Edit anything that's off.`,
-    );
-    repaint();
+    openVoiceWizard({
+      data,
+      network: net,
+      part: optimize.dataset.nvOptimizePart || null,
+      onSave: ({ values, drafted }) => {
+        const before = partsDone(data, net);
+        const entry = nvWritableEntry(data, net);
+        for (const [field] of NV_FIELDS) {
+          if (values[field] === undefined) delete entry[field];
+          else entry[field] = Array.isArray(values[field]) ? values[field].slice() : values[field];
+        }
+        if (drafted) entry.drafted = true;
+        // The arcs this save completed fill once on the rings that show them.
+        const after = partsDone(data, net);
+        nvFresh = { net, arcs: after.map((on, i) => (on && !before[i] ? i : -1)).filter((i) => i >= 0) };
+        activeNetwork = net;
+        setNetworkInUrl(net);
+        cfg.commit?.();
+        const done = after.filter(Boolean).length;
+        showToast(`${networkLabel(net)} voice saved — ${done} of ${NV_FIELDS.length} parts optimized.`);
+        repaint();
+        nvFresh = null;
+      },
+    });
     return true;
   }
   // A tab, a tile, a network's name — after Optimize, which sits inside a tile.
