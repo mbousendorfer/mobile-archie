@@ -25,6 +25,13 @@
   flex-wrap: wrap;
 }
 
+/* The host's actions (the creation recap's Save and continue), on the right. */
+.pb2-hero__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
 /* Top-aligned: the mark lines up with the name, and stays put when the facts
    line wraps instead of drifting to the middle of a taller block. */
 .pb2-hero__id {

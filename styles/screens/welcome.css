@@ -156,22 +156,6 @@
   margin-inline: auto;
 }
 
-/* ── Identity header ──────────────────────────────────────────────────── */
-.recap__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--ref-spacing-md);
-  flex-wrap: wrap;
-}
-
-.recap__id {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-md);
-  min-width: 0;
-}
-
 .recap__monogram {
   width: 52px;
   height: 52px;
@@ -210,80 +194,10 @@
   display: none;
 }
 
-.recap__id-text {
-  display: flex;
-  flex-direction: column;
-  gap: var(--app-spacing-micro);
-  min-width: 0;
-}
-
-.recap__id-titlerow {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-}
-
-.recap__name {
-  margin: 0;
-  font-family: var(--sys-text-style-h1-font-family);
-  font-size: var(--sys-text-style-h1-size);
-  line-height: var(--sys-text-style-h1-line-height);
-  font-weight: var(--sys-text-style-h1-weight);
-  color: var(--ref-color-grey-100);
-  letter-spacing: -0.01em;
-}
-
-.recap__name-edit {
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-}
-
-.recap__meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-}
-
-.recap__meta-item {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  font-weight: var(--sys-text-style-caption-weight);
-  color: var(--ref-color-grey-80);
-}
-
-.recap__meta-item i {
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-grey-80);
-}
-
-.recap__meta-dim {
-  color: var(--ref-color-grey-80);
-}
-
-/* Ownership mark, inline after the Playbook's name — it qualifies the title,
-   the same placement as on the /contexts card. Nothing about ownership becomes
-   a section of the fiche. */
-.recap__owner-tag {
-  flex: 0 0 auto;
-}
-
 /* Read-only banner, between the header and the sections: it explains the whole
    page, so it sits above the whole page rather than inside one panel. */
 .recap__notice {
   margin-bottom: var(--ref-spacing-md);
-}
-
-.recap__header-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  flex-shrink: 0;
-  flex-wrap: wrap;
 }
 
 /* Header dropdown menus (Auto-fill / ⋯ More) — the pop uses the DS
@@ -295,129 +209,6 @@
 
 .recap__menu-caret {
   font-size: var(--sys-icon-css-sm);
-}
-
-/* ── Two-column layout (sticky rail + sections) ───────────────────────── */
-.recap__layout {
-  display: grid;
-  grid-template-columns: 232px minmax(0, 1fr);
-  gap: var(--ref-spacing-xl);
-  align-items: start;
-}
-
-.recap__rail {
-  position: sticky;
-  top: 0;
-  align-self: start;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-lg);
-}
-
-.recap__nav {
-  display: flex;
-  flex-direction: column;
-  gap: var(--app-spacing-micro);
-}
-
-.recap__nav-link {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border: 0;
-  border-radius: var(--app-radius-lg);
-  background: transparent;
-  color: var(--ref-color-grey-80);
-  font-family: inherit;
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background 160ms var(--app-ease-out),
-    color 160ms var(--app-ease-out);
-}
-
-.recap__nav-link i {
-  font-size: var(--sys-icon-css-md);
-  color: var(--ref-color-grey-80);
-  transition: color 160ms var(--app-ease-out);
-}
-
-.recap__nav-link:hover {
-  background: var(--app-surface-subtle);
-  color: var(--ref-color-grey-100);
-}
-
-.recap__nav-link.is-active {
-  background: var(--app-surface);
-  color: var(--ref-color-grey-100);
-  box-shadow: inset 0 0 0 1px var(--app-border);
-}
-
-.recap__nav-link.is-active i {
-  color: var(--ref-color-mermaid-gradient-from);
-}
-
-.recap__facts {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-md);
-  background: var(--app-surface);
-  border: 1px solid var(--app-border);
-  border-radius: var(--ref-border-radius-md);
-}
-
-.recap__fact {
-  display: flex;
-  flex-direction: column;
-  gap: var(--app-spacing-micro);
-}
-
-.recap__fact dt {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-80);
-}
-
-.recap__fact dd {
-  margin: 0;
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--ref-color-grey-100);
-}
-
-/* Owner quick-fact: the avatar keeps the dd on one line with the name, so the
-   fact reads like the others rather than wrapping under its own picture. */
-.recap__fact-owner {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-}
-
-.recap__fact-dots {
-  display: inline-flex;
-  gap: var(--ref-spacing-xxs);
-  margin-top: var(--app-spacing-micro);
-}
-
-.recap__fact-dot {
-  width: 16px;
-  height: 16px;
-  border-radius: var(--app-radius-circle);
-  border: 1px solid var(--app-border);
-}
-
-.recap__main {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-lg);
-  min-width: 0;
 }
 
 /* ── Section panels ───────────────────────────────────────────────────── */
@@ -492,28 +283,6 @@
   border-top: 1px solid var(--app-border);
 }
 
-.recap__row-label {
-  padding-top: 2px;
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-body-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-80);
-}
-
-.recap__row-value {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-}
-
-.recap__row-text {
-  margin: 0;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  color: var(--ref-color-grey-100);
-}
-
 .recap__row-empty {
   font-size: var(--sys-text-style-body-size);
   line-height: var(--sys-text-style-body-line-height);
@@ -522,26 +291,6 @@
 }
 
 /* ── Edit-mode guidance ───────────────────────────────────────────────── */
-/* Per-field hint (Audience & goals) — sits above the editor in the value
-   cell while the section is being edited. */
-.recap__field-hint {
-  display: flex;
-  flex-direction: column;
-  gap: var(--app-spacing-micro);
-}
-
-.recap__field-hint-q {
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-100);
-}
-
-.recap__field-hint-a {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-80);
-}
 
 /* Section-level hint banner (Voice & style, Brand) — a subtle "captured by
    Archie" note at the top of the section's edit body. */
@@ -588,46 +337,10 @@
   border-bottom: 1px solid var(--app-border);
 }
 
-.recap__manual {
-  padding: var(--ref-spacing-md) var(--ref-spacing-lg);
-}
-
-.recap__manual .ap-textarea-field {
-  width: 100%;
-}
-
 .recap__chips {
   display: flex;
   flex-wrap: wrap;
   gap: var(--ref-spacing-xxs);
-}
-
-/* ── Voice & style — quoted snippet lines ─────────────────────────────── */
-.recap__quotes {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-}
-
-.recap__quote {
-  display: flex;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  background: var(--app-surface-subtle);
-  border-radius: var(--app-radius-lg);
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  color: var(--ref-color-grey-100);
-}
-
-.recap__quote i {
-  flex-shrink: 0;
-  margin-top: 2px;
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-mermaid-gradient-from);
 }
 
 /* ── Brand — the logo gallery ─────────────────────────────────────────── */
@@ -759,13 +472,6 @@ button.recap__logotile:hover {
   align-self: flex-start;
 }
 
-/* ── Brand — colour swatches ──────────────────────────────────────────── */
-.recap__swatches {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-sm);
-}
-
 .recap__swatch {
   display: flex;
   align-items: center;
@@ -781,25 +487,6 @@ button.recap__logotile:hover {
   flex-shrink: 0;
   border-radius: var(--app-radius-circle);
   border: 1px solid var(--app-border);
-}
-
-.recap__swatch-meta {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-}
-
-.recap__swatch-name {
-  font-size: var(--sys-text-style-caption-bold-size);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-100);
-}
-
-.recap__swatch-hex {
-  font-size: var(--sys-text-style-caption-size);
-  color: var(--ref-color-grey-80);
-  font-variant-numeric: tabular-nums;
-  text-transform: uppercase;
 }
 
 /* Brand-colour editor (#10) — named #hex rows inside the Visual identity
@@ -1571,51 +1258,6 @@ button.recap__logotile:hover {
   min-width: 0;
 }
 
-.recap__type-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-lg);
-}
-
-.recap__type-cell {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-sm);
-}
-
-.recap__type-specimen {
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--app-radius-lg);
-  background: var(--app-surface-subtle);
-  color: var(--ref-color-grey-100);
-  font-size: var(--sys-text-style-h2-size);
-  line-height: 1;
-  font-weight: var(--sys-text-style-h2-weight);
-}
-
-.recap__type-meta {
-  display: flex;
-  flex-direction: column;
-}
-
-.recap__type-role {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-80);
-}
-
-.recap__type-name {
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--ref-color-grey-100);
-}
-
 /* Voice & style + brand editors — line list + typography inputs */
 .recap__line-list {
   display: flex;
@@ -1697,35 +1339,12 @@ button.recap__logotile:hover {
   color: var(--ref-color-grey-80);
 }
 
-/* "primary" marker on the read-mode language chip + edit primary picker */
-.recap__lang-primary-tag {
-  margin-left: var(--ref-spacing-xxs);
-  padding: 0 var(--ref-spacing-xxs);
-  border-radius: var(--app-radius-sm);
-  background: var(--ref-color-grey-10);
-  font-size: 0.72em;
-  opacity: 0.75;
-}
-
 /* Voice per network (flag networkVoices) on the recap: the network tabs and
    the strip under them sit on the rows' inset; a row's source logo heads its
    value. */
 .recap__panel-body > .pb2-netbar {
   margin-bottom: 0;
   padding: var(--ref-spacing-sm) var(--ref-spacing-lg) 0;
-}
-
-.recap__nv-lead {
-  padding: var(--ref-spacing-md) var(--ref-spacing-lg) 0;
-}
-
-.recap__nv-source {
-  display: flex;
-  margin-bottom: var(--ref-spacing-xs);
-}
-
-.recap__nv-source > .pb2-nv-source {
-  margin-left: 0;
 }
 
 /* Voice examples — per-language switcher toolbar. Mirrors the Guided /
@@ -1751,16 +1370,6 @@ button.recap__logotile:hover {
 .recap__voice-langs-group {
   display: flex;
   gap: var(--ref-spacing-xxs);
-}
-
-/* ── CTA links (read) ─────────────────────────────────────────────────── */
-.recap__cta-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xs);
 }
 
 .recap__cta {
@@ -2019,8 +1628,7 @@ button.recap__logotile:hover {
 /* Each panel carries an always-visible pencil in its head; while editing it
    swaps for Cancel (×) / Save (✓), and every other panel's pencil hides so
    the user finishes one edit before starting another. */
-.recap__panel-edit,
-.recap__name-edit {
+.recap__panel-edit {
   flex-shrink: 0;
 }
 
@@ -2040,16 +1648,8 @@ button.recap__logotile:hover {
   height: 28px;
 }
 
-.welcome-screen--reveal.is-editing .recap__panel-edit,
-.welcome-screen--reveal.is-editing .recap__name-edit {
+.welcome-screen--reveal.is-editing .recap__panel-edit {
   display: none;
-}
-
-/* While a section is being edited, the global top actions (Start a chat /
-   Auto-fill / Delete) are disabled so the user finishes the current edit. */
-.welcome-screen--reveal.is-editing .recap__header-actions {
-  opacity: 0.4;
-  pointer-events: none;
 }
 
 /* The panel being edited stays flat (no elevation) — a slightly stronger
@@ -2058,42 +1658,10 @@ button.recap__logotile:hover {
   border-color: var(--ref-color-grey-20);
 }
 
-/* Rail drops below the content and goes horizontal on narrow viewports. */
-@media (max-width: 920px) {
-  .recap__layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .recap__rail {
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: var(--ref-spacing-md);
-  }
-
-  .recap__nav {
-    flex: 1 1 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  .recap__facts {
-    flex: 1 1 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: var(--ref-spacing-lg);
-  }
-}
-
 @media (max-width: 640px) {
   .recap__row {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--ref-spacing-xxs);
-  }
-
-  .recap__header-actions {
-    width: 100%;
   }
 
   .recap__cta-edit {
@@ -2169,13 +1737,6 @@ button.recap__logotile:hover {
 .recap__kit-logo-label {
   min-width: calc(var(--ref-spacing-xxxl) * 1.5);
   color: var(--ref-color-grey-100);
-}
-
-/* A colour's role, under its hex — sentence case, unlike the hex above it. */
-.recap__swatch-role {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-80);
 }
 
 .recap__kit-facts {

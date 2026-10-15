@@ -14,29 +14,28 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1769";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1772";
 import {
   renderColorRole,
   colorRoleCaption,
   renderLogoVariants,
   renderVisualRules,
-  renderImageStyles,
   handleImageStylesClick,
   handleKitClick,
   handleKitInput,
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1769";
+} from "./playbook-brand-kit.js?v=1772";
 import {
   analyzeWebsite,
   discoverCompetitors,
   competitorKey,
   analyzeNetworkVoices,
-} from "./context-mock-analysis.js?v=1769";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1769";
-import { isFlagOn } from "./feature-flags.js?v=1769";
-import { parseHashParams } from "./url-state.js?v=1769";
+} from "./context-mock-analysis.js?v=1772";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1772";
+import { isFlagOn } from "./feature-flags.js?v=1772";
+import { parseHashParams } from "./url-state.js?v=1772";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -48,16 +47,15 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1769";
+} from "./network-voice.js?v=1772";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1769";
-import { NETWORKS } from "./social-profiles.js?v=1769";
-import { showToast } from "./components/toast.js?v=1769";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1769";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1769";
+} from "./voice-coach-store.js?v=1772";
+import { showToast } from "./components/toast.js?v=1772";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1772";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1772";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -91,11 +89,6 @@ const SECTIONS = [
   { id: "pbk-sec-competitors", scope: "competitors", icon: "ap-icon-buildings", title: "Competitors" },
   { id: "pbk-sec-influencers", scope: "influencers", icon: "ap-icon-star", title: "Influencers" },
 ];
-
-// The sections this Playbook shows — drives the rail nav and the panels.
-function sectionsFor() {
-  return SECTIONS;
-}
 
 // Edit-mode guidance. Surfaced only while a section is being edited (one at a
 // time), so the read view stays clean. Audience & goals gets a per-field hint
@@ -178,7 +171,6 @@ let activeNetwork = null; // flag networkVoices: the network voice the Voice tab
 let loadingTimer = null;
 let loadingStage = 0;
 let phase = "ready"; // "loading" | "ready"
-let scrollSpy = null; // IntersectionObserver for the section-nav active state
 let activeTab = "goals"; // Playbook 2.0: the tab on screen
 
 // ── Public API ───────────────────────────────────────────────────────────
@@ -246,7 +238,7 @@ export function mount(target, config) {
   // A reload can't save (nothing persists across it), so it's the one exit
   // that still has to ask — only while there is something to lose.
   const onBeforeUnloadH = (e) => {
-    if (!v2On() || !editScope || !isDirty(cfg.getData())) return;
+    if (!isLibrary() || !editScope || !isDirty(cfg.getData())) return;
     e.preventDefault();
     e.returnValue = "";
   };
@@ -255,11 +247,10 @@ export function mount(target, config) {
   return () => {
     // Leaving the fiche — a chat in the rail, Start a chat, any route — saves
     // the open section rather than dropping it (Playbook 2.0).
-    if (v2On()) saveOnLeave();
+    if (isLibrary()) saveOnLeave();
     window.removeEventListener("beforeunload", onBeforeUnloadH);
     stopLoading();
     stopRosterScan();
-    detachScrollSpy();
     target.removeEventListener("click", onClickH);
     target.removeEventListener("input", onInputH);
     target.removeEventListener("change", onChangeH);
@@ -529,14 +520,6 @@ function editActionButtons() {
   `;
 }
 
-// Read-only mode. A Playbook shared with me is a fiche I can use, not one I can
-// change — so every affordance that WRITES has to disappear, not just refuse.
-// Default true: the onboarding recap and my own Playbooks never pass the flag.
-function imageStylesRow(data) {
-  const row = renderImageStyles(data, canEditView());
-  return row ? renderRow("Image styles", row) : "";
-}
-
 function canEditView() {
   return cfg?.canEdit !== false;
 }
@@ -550,8 +533,7 @@ function panelEditActions() {
 }
 
 function renderPanelHead(section, edit, extraAction = "") {
-  if (v2On())
-    return `
+  return `
     <header class="recap__panel-head pb2-panel-head">
       <p class="pb2-panel-lead">${esc(SECTION_LEADS[section.scope] || "")}</p>
       ${edit ? panelEditActions() : `${extraAction}${canEditView() ? panelPen(section.scope) : ""}`}
@@ -564,80 +546,6 @@ function renderPanelHead(section, edit, extraAction = "") {
       ${edit ? panelEditActions() : `${extraAction}${canEditView() ? panelPen(section.scope) : ""}`}
     </header>
   `;
-}
-
-function renderRow(label, valueHtml) {
-  return `
-    <div class="recap__row">
-      <span class="recap__row-label">${esc(label)}</span>
-      <div class="recap__row-value">${valueHtml}</div>
-    </div>
-  `;
-}
-
-function renderText(text) {
-  return text ? `<p class="recap__row-text">${esc(text)}</p>` : `<span class="recap__row-empty">Not set yet</span>`;
-}
-
-function renderChips(values) {
-  const list = Array.isArray(values) ? values.filter(Boolean) : [];
-  if (!list.length) return `<span class="recap__row-empty">Not set yet</span>`;
-  return `<div class="recap__chips">${list
-    .map((v) => `<span class="ap-tag blue recap__chip">${esc(v)}</span>`)
-    .join("")}</div>`;
-}
-
-function renderQuotes(values) {
-  const list = Array.isArray(values) ? values.filter((v) => (v || "").trim()) : [];
-  if (!list.length) return `<span class="recap__row-empty">Not set yet</span>`;
-  return `<ul class="recap__quotes">${list
-    .map((v) => `<li class="recap__quote"><i class="ap-icon-quote" aria-hidden="true"></i><span>${esc(v)}</span></li>`)
-    .join("")}</ul>`;
-}
-
-function renderCtaList(data) {
-  const ctas = (Array.isArray(data.ctaLinks) ? data.ctaLinks : []).filter((l) => l.checked);
-  if (!ctas.length) return `<span class="recap__row-empty">No links yet</span>`;
-  return `<ul class="recap__cta-list">${ctas
-    .map(
-      (c) => `
-      <li class="recap__cta">
-        <i class="ap-icon-link" aria-hidden="true"></i>
-        <span class="recap__cta-text">${esc(c.label || prettyUrl(c.url))}</span>
-      </li>`,
-    )
-    .join("")}</ul>`;
-}
-
-function renderSwatches(colors) {
-  if (!colors.length) return `<span class="recap__row-empty">Not set yet</span>`;
-  return `<div class="recap__swatches">${colors
-    .map(
-      (c) => `
-      <div class="recap__swatch">
-        <span class="recap__swatch-chip" style="background:${esc(c.hex || "#ffffff")};"></span>
-        <span class="recap__swatch-meta">
-          <span class="recap__swatch-name">${esc(c.name || "Colour")}</span>
-          <span class="recap__swatch-hex">${esc((c.hex || "").toUpperCase())}</span>
-          ${colorRoleCaption(c) ? `<span class="recap__swatch-role">${esc(colorRoleCaption(c))}</span>` : ""}
-        </span>
-      </div>`,
-    )
-    .join("")}</div>`;
-}
-
-function renderTypeSpecimen(data) {
-  const { headingFont, bodyFont } = brandFonts(data);
-  if (!headingFont && !bodyFont) return `<span class="recap__row-empty">Not set yet</span>`;
-  const cell = (role, font) => `
-    <div class="recap__type-cell">
-      <span class="recap__type-specimen" style="font-family:'${esc(font)}', var(--sys-text-style-body-font-family);">Ag</span>
-      <span class="recap__type-meta">
-        <span class="recap__type-role">${esc(role)}</span>
-        <span class="recap__type-name">${esc(font || "—")}</span>
-      </span>
-    </div>`;
-  return `<div class="recap__type-grid">${cell("Headings", headingFont)}${cell("Body", bodyFont)}</div>`;
 }
 
 // The brand marks — a GALLERY, because a site carries several and Archie brings
@@ -1060,12 +968,6 @@ function renderRefModal(data) {
   </div>`;
 }
 
-// Per-field edit hint (Audience & goals) — prompt + what Archie does with it.
-function renderFieldHint(hint) {
-  if (!hint) return "";
-  return `<div class="recap__field-hint"><span class="recap__field-hint-q">${esc(hint.q)}</span><span class="recap__field-hint-a">${esc(hint.a)}</span></div>`;
-}
-
 // Static Archie brand mark (same glyph as the loader, sans the SMIL pop
 // animation). Paints with currentColor so the banner can tint it brand orange.
 const ARCHIE_MARK_SVG = `<svg class="recap__panel-hint-icon" viewBox="0 0 227.15 170.03" aria-hidden="true"><path fill="currentColor" d="M227.15,81.98v29.37c0,4.69-3.81,8.5-8.5,8.5h-29.37c-4.69,0-8.5-3.81-8.5-8.5v-27.11c0-4.69-3.78-8.5-8.47-8.5h-27.45c-4.69,0-8.5,3.81-8.5,8.5v26.91c0,4.69-3.78,8.47-8.47,8.47h-28.92c-4.69,0-8.5,3.81-8.5,8.5v33.89c0,4.69-3.78,8.47-8.47,8.47h-32.67c-4.69,0-8.47-3.78-8.47-8.47v-34.03c0-4.69-3.81-8.47-8.5-8.47H8.47c-4.69,0-8.47-3.81-8.47-8.5v-23.86c0-4.69,3.78-8.47,8.47-8.47h23.89c4.69,0,8.5-3.81,8.5-8.5v-14.18c0-4.69,3.78-8.5,8.47-8.5h16.07c4.69,0,8.47-3.78,8.47-8.44V8.5C73.87,3.81,77.66,0,82.34,0h32.64C119.67,0,123.46,3.81,123.46,8.5v32.11c0,4.69-3.78,8.47-8.47,8.47h-32.64c-4.69,0-8.47,3.81-8.47,8.5v14.46c0,4.69-3.81,8.5-8.5,8.5h-16.04c-4.69,0-8.47,3.78-8.47,8.47v20.05c0,4.69,3.78,8.5,8.47,8.5h32.67c4.69,0,8.47-3.81,8.47-8.5v-26.83c0-4.72,3.81-8.5,8.5-8.5h30.38c3.87,0,7-3.13,7-7v-26.94c0-4.69,3.81-8.5,8.5-8.5h27.45c4.69,0,8.47,3.81,8.47,8.5v25.22c0,4.69,3.81,8.47,8.5,8.47h29.37c4.69,0,8.5,3.81,8.5,8.5Z"/></svg>`;
@@ -1085,18 +987,6 @@ function renderSectionHint(hint) {
 }
 
 // ── Section panels ─────────────────────────────────────────────────────
-
-// Read view — the declared languages as chips, the primary one marked.
-function renderLanguageChips(data) {
-  const langs = contextLanguages(data);
-  const primary = data.primaryLanguage || langs[0];
-  return `<div class="recap__chips">${langs
-    .map(
-      (l) =>
-        `<span class="ap-tag blue recap__chip">${esc(l)}${l === primary && langs.length > 1 ? ` <span class="recap__lang-primary-tag">primary</span>` : ""}</span>`,
-    )
-    .join("")}</div>`;
-}
 
 // Edit view — toggle chips for language membership + a primary-language picker
 // when more than one is selected. Voice examples are then authored per language
@@ -1125,53 +1015,6 @@ function renderLanguagePicker(data) {
          </label>`
       : "";
   return `<div class="recap__lang-picker" data-recap-langs>${chips}</div>${primaryPicker}`;
-}
-
-function renderGoalsPanel(data, edit) {
-  const section = SECTIONS[0];
-  let body;
-  if (edit) {
-    body = [
-      renderRow(
-        contextLanguages(data).length > 1 ? "Languages" : "Language",
-        (multilingualOn() ? renderFieldHint(FIELD_HINTS.languages) : "") + renderLanguagePicker(data),
-      ),
-      renderRow(
-        "Business",
-        renderFieldHint(FIELD_HINTS.businessSummary) +
-          `<div class="ap-textarea-field resizable">
-           <textarea data-recap-summary rows="4" placeholder="Describe your business in a few sentences…">${esc(data.businessSummary || "")}</textarea>
-         </div>`,
-      ),
-      ...GOAL_FIELDS.map((f) =>
-        renderRow(
-          f.label,
-          renderFieldHint(FIELD_HINTS[f.key]) +
-            (f.key === "audience" ? renderAudiencePicker(data) : renderEditChips(f.key, data[f.key], f.placeholder)),
-        ),
-      ),
-      renderRow("CTA links", renderFieldHint(FIELD_HINTS.ctaLinks) + renderCtaEditor(data)),
-    ].join("");
-  } else {
-    body = [
-      // Mirror the edit order: language leads the panel so the recap surfaces
-      // which language(s) Archie writes in (it's the first field in edit mode).
-      renderRow(contextLanguages(data).length > 1 ? "Languages" : "Language", renderLanguageChips(data)),
-      renderRow("Business", renderText(data.businessSummary)),
-      // Primary audience is single-select, so show it as plain text rather than
-      // a one-chip row; the other goal fields stay multi-value chips.
-      ...GOAL_FIELDS.map((f) =>
-        renderRow(f.label, f.key === "audience" ? renderText((data.audience || [])[0]) : renderChips(data[f.key])),
-      ),
-      renderRow("CTA links", renderCtaList(data)),
-    ].join("");
-  }
-  return `
-    <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" ${edit ? "data-recap-editing-card" : ""}>
-      ${renderPanelHead(section, edit)}
-      <div class="recap__panel-body">${body}</div>
-    </section>
-  `;
 }
 
 // Guided ⇄ Free-form switch for the Voice & style section (edit mode).
@@ -1203,74 +1046,6 @@ function renderVoiceLangSwitcher(data) {
           .join("")}
       </div>
     </div>`;
-}
-
-// The base network, on the recap: where it was learned, and that the others start from it.
-function nvRecapBaseLead(data) {
-  const others = voiceNetworks(data).length > 1;
-  return `<p class="pb2-prose recap__nv-lead">${esc(maturity(data, baseNetwork(data)).detail)}${others ? " The other networks start from it." : ""}</p>`;
-}
-
-function renderVoicePanel(data, edit) {
-  const section = SECTIONS[1];
-  const manual = data.voiceMode === "manual";
-  const ve = voiceEntry(data);
-  let body;
-  const nvBody = nvOn() && !manual ? nvRecapBody(data, edit) : null;
-  if (nvBody) {
-    body = renderNetworkSwitcher(data) + nvBody;
-  } else if (edit) {
-    const fields = manual
-      ? `<div class="recap__manual">
-           <div class="ap-textarea-field resizable">
-             <textarea data-recap-text="voiceManual" rows="10" placeholder="Write your voice in your own words — how you open, your tone, the way you format posts, and anything to avoid…">${esc(data.voiceManual || "")}</textarea>
-           </div>
-         </div>`
-      : [
-          nvOn() ? renderNetworkSwitcher(data) + nvRecapBaseLead(data) : "",
-          renderVoiceLangSwitcher(data),
-          ...LINE_FIELDS.map((f) => renderRow(f.label, renderLineEditor(f.key, ve[f.key], f.placeholder))),
-          renderRow(
-            "Formatting",
-            renderTextarea(
-              "formattingStyle",
-              data.formattingStyle,
-              "How posts are structured — line breaks, lists, rhythm…",
-            ),
-          ),
-          renderRow(
-            // Label only — the key stays `visualStyle` across the store, the analysis and
-            // the mocks. This row is about TEXT mechanics (its own placeholder says so) and
-            // sits in Voice & style; with "Default look" now in Brand, the old label was an
-            // active trap. Renaming the key would be churn no user can see.
-            "Emoji & casing",
-            renderTextarea("visualStyle", data.visualStyle, "Emoji use, capitalisation, hashtags, links…"),
-          ),
-          renderRow("Words to avoid", renderEditChips("voiceAvoid", data.voiceAvoid, "Add a word or phrase…")),
-        ].join("");
-    body = renderSectionHint(SECTION_HINTS.voice) + renderVoiceModeToggle(data.voiceMode) + fields;
-  } else if (manual) {
-    body = renderRow("In your words", renderText(data.voiceManual));
-  } else {
-    body = [
-      nvOn() ? renderNetworkSwitcher(data) + nvRecapBaseLead(data) : "",
-      renderVoiceLangSwitcher(data),
-      renderRow("Signature hooks", renderQuotes(ve.signatureHooks)),
-      renderRow("Closing patterns", renderQuotes(ve.closingPatterns)),
-      renderRow("Formatting", renderText(data.formattingStyle)),
-      renderRow("Emoji & casing", renderText(data.visualStyle)),
-      renderRow("Words to avoid", renderChips(data.voiceAvoid || [])),
-    ].join("");
-  }
-  // "Learn from…" — a single DS dropdown that merges the old "Learn from my
-  // posts" (social profiles) and document analysis, both scoped to Voice & style.
-  const analyzeBtn = !edit ? learnMenu() : "";
-  return `
-    <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" ${edit ? "data-recap-editing-card" : ""}>
-      ${renderPanelHead(section, edit, analyzeBtn)}
-      <div class="recap__panel-body">${body}</div>
-    </section>
-  `;
 }
 
 // "Learn from…" — a single DS dropdown that merges the old "Learn from my
@@ -1329,59 +1104,6 @@ function renderTypoEditor(data) {
         <input type="text" data-recap-typo="bodyFont" value="${esc(fonts.bodyFont || "")}" placeholder="Body font" aria-label="Body font" />
       </div>
     </div>`;
-}
-
-function renderBrandPanel(data, edit) {
-  const section = SECTIONS[2];
-  const colors = visualColors(data);
-  let body;
-  if (edit) {
-    body = [
-      renderSectionHint(SECTION_HINTS.brand),
-      renderBrandGroup("Identity"),
-      // Logo first: it's the most concrete piece of the visual identity, and the
-      // one thing the image generator stamps into the pixels.
-      renderRow("Logo", renderFieldHint(FIELD_HINTS.brandLogo) + renderBrandLogo(data, true)),
-      // Which version each mark is.
-      renderRow("Logo versions", renderLogoVariants(data, true, data.brandLogos)),
-      renderRow("Brand color", renderColorEditor(data)),
-      renderRow("Typography", renderTypoEditor(data)),
-      renderRow(
-        "Personality",
-        renderTextarea(
-          "brandPersonality",
-          data.brandPersonality,
-          "How the brand comes across — its character in a few sentences…",
-        ),
-      ),
-      renderBrandGroup("Imagery"),
-      // Reference images live under Brand. They're always-editable (per-image
-      // modal + remove + add) regardless of the Brand section's edit state —
-      // but not when the fiche itself is read-only.
-      // Image styles: the brand's own, always live (managed outside the section's
-      // edit mode).
-      imageStylesRow(data),
-      renderRow("Visual rules", renderVisualRules(data, true)),
-    ].join("");
-  } else {
-    body = [
-      renderBrandGroup("Identity"),
-      renderRow("Logo", renderBrandLogo(data, false)),
-      renderRow("Logo versions", renderLogoVariants(data, false, brandLogoList(data))),
-      renderRow("Brand color", renderSwatches(colors)),
-      renderRow("Typography", renderTypeSpecimen(data)),
-      renderRow("Personality", renderText(data.brandPersonality)),
-      renderBrandGroup("Imagery"),
-      imageStylesRow(data),
-      renderRow("Visual rules", renderVisualRules(data, false)),
-    ].join("");
-  }
-  return `
-    <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" ${edit ? "data-recap-editing-card" : ""}>
-      ${renderPanelHead(section, edit)}
-      <div class="recap__panel-body">${body}</div>
-    </section>
-  `;
 }
 
 // ── Competitors + Influencers (the two rosters) ────────────────────────
@@ -1704,7 +1426,7 @@ function renderRosterPanel(data, r, edit) {
 
   // Playbook 2.0, reading: the tab's own head (lead + Discover + Edit), like the
   // other tabs, and the cards in a block below — no panel head repeating it.
-  if (v2On() && !edit)
+  if (!edit)
     return `${pb2TabHead("competitors", discoverBtn)}
       <section class="pb2-block pb2-block--bare" id="${section.id}">${body}</section>`;
   return `
@@ -2109,14 +1831,24 @@ const SECTION_LEADS = {
   influencers: "The creators the audience already listens to.",
 };
 
-function v2On() {
+// The saved Playbook's page, as opposed to the creation recap: only there does
+// leaving save an open section, or a reload ask first. Both pages share ONE
+// layout (tabs + blocks) — the recap's old panels were deleted (2026-10-15).
+function isLibrary() {
   return cfg?.mode === "library";
+}
+
+// The tabs on screen. Creation has no Images tab: image styles hang off a saved
+// Playbook (their routes need its id), and the old recap never had them either.
+function visibleTabs() {
+  return isLibrary() ? TABS : TABS.filter((t) => t.id !== "images");
 }
 
 function tabFromUrl() {
   const q = parseHashParams();
   const wanted = q.get("tab") || q.get("section");
-  return TABS.some((t) => t.id === wanted) ? wanted : TABS[0].id;
+  const tabs = visibleTabs();
+  return tabs.some((t) => t.id === wanted) ? wanted : tabs[0].id;
 }
 
 // The tab is the page's state, kept in the URL without a route change (the
@@ -2189,6 +1921,7 @@ function renderHeader2(data) {
           <div class="pb2-meta">${meta}</div>
         </div>
       </div>
+      ${cfg.headerActions?.() ? `<div class="pb2-hero__actions">${cfg.headerActions()}</div>` : ""}
     </header>
   `;
 }
@@ -2217,14 +1950,16 @@ function renderTabs2(data) {
   return `
     <div class="ap-tabs flush pb2-tabs">
       <div class="ap-tabs-nav" role="tablist" aria-label="Playbook sections">
-        ${TABS.map((t) => {
-          const on = t.id === activeTab;
-          return `<button type="button" class="ap-tabs-tab${on ? " active" : ""}" role="tab" aria-selected="${on}"
+        ${visibleTabs()
+          .map((t) => {
+            const on = t.id === activeTab;
+            return `<button type="button" class="ap-tabs-tab${on ? " active" : ""}" role="tab" aria-selected="${on}"
             data-pb2-tab="${t.id}">
             <span>${esc(t.title)}</span>
             ${t.id === "competitors" && cmpCount ? `<span class="ap-counter normal grey">${cmpCount}</span>` : ""}
           </button>`;
-        }).join("")}
+          })
+          .join("")}
       </div>
     </div>
   `;
@@ -2576,7 +2311,7 @@ function renderVoiceRead2(data, learnMenu) {
 // Add brings one in (CONCEPTS §1, "propose beside, never write inside").
 
 function nvOn() {
-  return networkVoicesOn() && (v2On() || cfg?.mode === "onboarding");
+  return networkVoicesOn();
 }
 
 function activeNetworkFor(data) {
@@ -2892,36 +2627,6 @@ const NV_FIELDS = [
   ["visualStyle", "Emoji & casing"],
 ];
 
-// The recap (Playbook creation): the same network tabs, in the recap's rows.
-// Nothing is learned yet, so no rules and no proposals — what a network shows
-// is the adaptation Archie drafted from that network's posts, to review
-// before the Playbook is saved.
-function nvRecapBody(data, edit) {
-  const net = activeNetworkFor(data);
-  const base = baseNetwork(data);
-  if (net === base) return null;
-  const caption = (field) => `<div class="recap__nv-source">${nvSourceBadge(data, net, field)}</div>`;
-  const show = { list: renderQuotes, text: renderText };
-  const RECAP_LABELS = {
-    signatureHooks: "Signature hooks",
-    closingPatterns: "Closing patterns",
-    formattingStyle: "Formatting",
-    visualStyle: "Emoji & casing",
-  };
-  const rows = NV_FIELDS.map(([field]) => {
-    const value = edit
-      ? nvFieldEdit(data, net, field, show)
-      : field === "signatureHooks" || field === "closingPatterns"
-        ? renderQuotes(nvFieldValue(data, net, field))
-        : renderText(nvFieldValue(data, net, field));
-    return renderRow(RECAP_LABELS[field], caption(field) + value);
-  });
-  // The same strip as the Playbook page: where each part comes from, at a glance.
-  const offer = nvOptimizeButton(data, net);
-  const lead = `<div class="recap__nv-lead">${nvFitStrip(data, net)}${offer ? `<div class="pb2-nv-offer">${offer}</div>` : ""}</div>`;
-  return lead + rows.join("");
-}
-
 function setNetworkInUrl(net) {
   const [path] = window.location.hash.slice(1).split("?");
   const q = parseHashParams();
@@ -3068,14 +2773,6 @@ function renderBrandRead2(data) {
   return `${pb2TabHead("brand")}<div class="pb2-grid">${blocks.join("")}</div>`;
 }
 
-// Playbook 2.0: the Brand panel reads as two groups — what the brand IS (marks,
-// colours, type, personality) and what its images follow (styles, references, rules).
-// Called by renderBrandPanel in EVERY mode: the recap (not v2) gets no group heads.
-function renderBrandGroup(title) {
-  if (!v2On()) return "";
-  return `<h3 class="pb2-group">${esc(title)}</h3>`;
-}
-
 // The Images tab saves as it changes (styles, reference images, Generate image
 // settings), so its head has no Edit. Image styles lead — making one is the
 // tab's main act.
@@ -3111,92 +2808,6 @@ function renderHeaderMark(data, accent, primary, { square = false } = {}) {
   return `<span class="recap__monogram recap__monogram--mark"><img src="${esc(icon || data.brandLogo)}" alt="${esc(
     data.name || "Brand",
   )} logo" data-recap-brand-logo /></span>${mono}`;
-}
-
-function renderHeader(data) {
-  const colors = visualColors(data);
-  const accent = colors.find((c) => /accent/i.test(c.name))?.hex || colors[0]?.hex || "var(--ref-color-orange-100)";
-  const primary = colors[0]?.hex || accent;
-  const site = brandSite(data);
-  const domain = site?.domain || prettyUrl(data.websiteUrl);
-  const usedIn = typeof data.usedIn === "number" ? data.usedIn : null;
-
-  const meta = [
-    `<span class="recap__meta-item"><i class="ap-icon-web" aria-hidden="true"></i>${esc(contextLanguages(data).join(" · "))}</span>`,
-    domain ? `<span class="recap__meta-item recap__meta-dim">${esc(domain)}</span>` : "",
-    usedIn !== null ? `<span class="recap__meta-item">Used in ${usedIn} ${usedIn === 1 ? "chat" : "chats"}</span>` : "",
-  ]
-    .filter(Boolean)
-    .join("");
-
-  return `
-    <header class="recap__header">
-      <div class="recap__id">
-        ${renderHeaderMark(data, accent, primary)}
-        <div class="recap__id-text">
-          <div class="recap__id-titlerow">
-            <h1 class="recap__name">${esc(data.name || "Untitled Playbook")}</h1>
-            ${
-              cfg.onEditName
-                ? `<button type="button" class="ap-icon-button transparent recap__name-edit" data-recap-edit-name title="Rename" aria-label="Rename Playbook"><i class="ap-icon-pen"></i></button>`
-                : ""
-            }
-            ${
-              cfg.ownership?.tag
-                ? `<span class="ap-tag grey mini recap__owner-tag" title="${esc(cfg.ownership.tag)}"><span>${esc(cfg.ownership.tag)}</span></span>`
-                : ""
-            }
-          </div>
-          <div class="recap__meta">${meta}</div>
-        </div>
-      </div>
-      ${cfg.headerActions ? `<div class="recap__header-actions">${cfg.headerActions()}</div>` : ""}
-    </header>
-  `;
-}
-
-function renderRail(data) {
-  const nav = sectionsFor()
-    .map(
-      (s, i) => `
-    <button type="button" class="recap__nav-link ${i === 0 ? "is-active" : ""}" data-recap-nav="${s.id}">
-      <i class="${s.icon}" aria-hidden="true"></i><span>${esc(s.title)}</span>
-    </button>`,
-    )
-    .join("");
-
-  const colors = visualColors(data).slice(0, 6);
-  const usedIn = typeof data.usedIn === "number" ? data.usedIn : null;
-  const site = brandSite(data);
-  const domain = site?.domain || prettyUrl(data.websiteUrl);
-
-  const facts = [
-    // Ownership sits with Updated and Used-in — traceability about the fiche,
-    // never a section OF the fiche (CONCEPTS.md §1).
-    cfg.ownership?.owner
-      ? `<div class="recap__fact"><dt>Owner</dt><dd><span class="recap__fact-owner"><span class="ap-avatar size-24" aria-hidden="true"><span class="ap-avatar-initials">${esc(cfg.ownership.initials || "?")}</span></span>${esc(cfg.ownership.owner)}</span></dd></div>`
-      : "",
-    `<div class="recap__fact"><dt>${contextLanguages(data).length > 1 ? "Languages" : "Language"}</dt><dd>${esc(contextLanguages(data).join(", "))}</dd></div>`,
-    usedIn !== null
-      ? `<div class="recap__fact"><dt>Used in</dt><dd>${usedIn} ${usedIn === 1 ? "chat" : "chats"}</dd></div>`
-      : "",
-    data.updatedAt ? `<div class="recap__fact"><dt>Updated</dt><dd>${esc(data.updatedAt)}</dd></div>` : "",
-    domain ? `<div class="recap__fact"><dt>Source</dt><dd>${esc(domain)}</dd></div>` : "",
-    colors.length
-      ? `<div class="recap__fact"><dt>Brand color</dt><dd><span class="recap__fact-dots">${colors
-          .map((c) => `<span class="recap__fact-dot" style="background:${esc(c.hex)};"></span>`)
-          .join("")}</span></dd></div>`
-      : "",
-  ]
-    .filter(Boolean)
-    .join("");
-
-  return `
-    <aside class="recap__rail">
-      <nav class="recap__nav" aria-label="Playbook sections">${nav}</nav>
-      <dl class="recap__facts">${facts}</dl>
-    </aside>
-  `;
 }
 
 // ── Loader + top strip ─────────────────────────────────────────────────
@@ -3247,7 +2858,6 @@ function paint() {
   const modeClass = cfg.mode === "library" ? "welcome-screen--library" : "";
 
   if (phase === "loading") {
-    detachScrollSpy();
     mountTarget.innerHTML = html`
       <section class="welcome-screen welcome-screen--reveal welcome-screen--loading ${modeClass}">
         <div class="welcome-screen__bg" aria-hidden="true"></div>
@@ -3260,51 +2870,21 @@ function paint() {
 
   const data = cfg.getData();
   const scope = editScope;
-  if (v2On()) {
-    mountTarget.innerHTML = html`
-      <section class="welcome-screen welcome-screen--reveal ${modeClass} pb2 ${scope ? "is-editing" : ""}">
-        <div class="welcome-screen__body recap pb2__body">
-          ${raw(renderHeader2(data))} ${raw(cfg.notice?.() || "")} ${raw(renderTabs2(data))}
-          <div class="pb2__panel" role="tabpanel">${raw(renderActivePanel(data))}</div>
-          ${raw(renderRefModal(data))} ${raw(renderRosterModal(data))} ${raw(renderInfluencerAddModal())}
-        </div>
-      </section>
-    `;
-    // The edit bar sticks right under the tabs, so it needs their height.
-    const tabsEl = mountTarget.querySelector(".pb2-tabs");
-    if (tabsEl) mountTarget.querySelector(".pb2")?.style.setProperty("--pb2-tabs-h", `${tabsEl.offsetHeight}px`);
-    watchTabHeadStuck();
-    portalModal();
-    return;
-  }
-  const body = `
-    ${renderHeader(data)}
-    ${cfg.notice?.() || ""}
-    <div class="recap__layout">
-      ${renderRail(data)}
-      <div class="recap__main">
-        ${renderGoalsPanel(data, scope === "goals")}
-        ${renderVoicePanel(data, scope === "voice")}
-        ${renderBrandPanel(data, scope === "brand")}
-        ${renderRosterPanel(data, ROSTERS.competitors, scope === "competitors")}
-        ${renderInfluencersPanel(data, scope === "influencers")}
-      </div>
-    </div>
-    ${renderRefModal(data)}
-    ${renderRosterModal(data)}
-    ${renderInfluencerAddModal()}
-  `;
-
   mountTarget.innerHTML = html`
-    <section class="welcome-screen welcome-screen--reveal ${modeClass} ${scope ? "is-editing" : ""}">
-      <div class="welcome-screen__bg" aria-hidden="true"></div>
+    <section class="welcome-screen welcome-screen--reveal ${modeClass} pb2 ${scope ? "is-editing" : ""}">
       ${raw(renderTop())}
-      <div class="welcome-screen__body recap">${raw(body)}</div>
+      <div class="welcome-screen__body recap pb2__body">
+        ${raw(renderHeader2(data))} ${raw(cfg.notice?.() || "")} ${raw(renderTabs2(data))}
+        <div class="pb2__panel" role="tabpanel">${raw(renderActivePanel(data))}</div>
+        ${raw(renderRefModal(data))} ${raw(renderRosterModal(data))} ${raw(renderInfluencerAddModal())}
+      </div>
     </section>
   `;
-
+  // The edit bar sticks right under the tabs, so it needs their height.
+  const tabsEl = mountTarget.querySelector(".pb2-tabs");
+  if (tabsEl) mountTarget.querySelector(".pb2")?.style.setProperty("--pb2-tabs-h", `${tabsEl.offsetHeight}px`);
+  watchTabHeadStuck();
   portalModal();
-  attachScrollSpy();
 }
 
 // The detail modals (reference image, competitor) are rendered inside the recap
@@ -3337,30 +2917,6 @@ function setActiveNav(id) {
   mountTarget?.querySelectorAll("[data-recap-nav]").forEach((el) => {
     el.classList.toggle("is-active", el.dataset.recapNav === id);
   });
-}
-
-function detachScrollSpy() {
-  if (scrollSpy) {
-    scrollSpy.disconnect();
-    scrollSpy = null;
-  }
-}
-
-function attachScrollSpy() {
-  detachScrollSpy();
-  if (!mountTarget) return;
-  const root = mountTarget.querySelector(".welcome-screen");
-  const sections = [...mountTarget.querySelectorAll(".recap__panel[id]")];
-  if (!root || !sections.length || !("IntersectionObserver" in window)) return;
-  scrollSpy = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((e) => {
-        if (e.isIntersecting) setActiveNav(e.target.id);
-      });
-    },
-    { root, rootMargin: "-15% 0px -70% 0px", threshold: 0 },
-  );
-  sections.forEach((s) => scrollSpy.observe(s));
 }
 
 // ── Competitor logo fallback + discovery scan ───────────────────────────
