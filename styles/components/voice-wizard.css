@@ -36,15 +36,10 @@
   gap: var(--ref-spacing-xs);
 }
 
+/* The stepper's steps carry their own 8px inset: pulled back by it so the
+   first badge lines up with the title. */
 .vw__steps {
-  flex-wrap: wrap;
-  row-gap: var(--ref-spacing-xxs);
-}
-
-.vw__steps .ap-stepper-item:focus-visible {
-  border-radius: var(--ref-border-radius-sm);
-  outline: 2px solid var(--ref-color-electric-blue-100);
-  outline-offset: 2px;
+  margin-left: calc(-1 * var(--ref-spacing-xxs));
 }
 
 /* Fills the fixed-height dialog, so the footer sits at the bottom. */

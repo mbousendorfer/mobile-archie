@@ -983,3 +983,83 @@ button.ap-link {
 :not(.ap-button) > .ap-icon-sparkles-mermaid {
   background: var(--ref-color-mermaid-gradient-background);
 }
+
+/* ── .app-stepper — a PORT of the V2 Atoms Stepper ──────────────────────────
+   The DS's newer stepper (Figma V2 Atoms, node 7873:1568 — "Stepper",
+   Steps=2…5; step = Stepper Step, badge = Stepper Badge). CSS-UI still ships
+   the older .ap-stepper (filled pastel circles, a check on passed steps), so
+   this transcribes the Figma until the DS publishes the class. Two step types
+   only, as in the Figma: Current (badge electric-blue-150 filled, white
+   number; label electric-blue-150) and Future (badge grey-20 outline, grey-80
+   number; label grey-80) — no "done" type: a passed step reads as the others.
+   Labels and numbers are Body Bold 14/18. A step is clickable (padding xxs,
+   radius sm); the separators are 16px chevrons.
+   Markup: <nav class="app-stepper"><button class="app-stepper__step is-current">
+   <span class="app-stepper__badge">1</span><span>Opens with</span></button>
+   <i class="ap-icon-chevron-right app-stepper__sep"></i>…</nav> */
+.app-stepper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.app-stepper__step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs);
+  border: 0;
+  border-radius: var(--ref-border-radius-sm);
+  background: none;
+  color: var(--ref-color-grey-80);
+  font-family: var(--ref-font-family);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Not in the Figma (Default state only): the app's hover / focus for a
+   clickable step — the page's grey, the DS focus ring. */
+.app-stepper__step:hover {
+  background: var(--ref-color-grey-05);
+}
+
+.app-stepper__step:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 0;
+}
+
+.app-stepper__badge {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: 24px;
+  color: var(--ref-color-grey-80);
+}
+
+.app-stepper__step.is-current {
+  color: var(--ref-color-electric-blue-150);
+}
+
+.app-stepper__step.is-current .app-stepper__badge {
+  border-color: var(--ref-color-electric-blue-150);
+  background: var(--ref-color-electric-blue-150);
+  color: var(--ref-color-white);
+}
+
+/* The Figma's "chevron-right [Legacy]" glyph, 16px, in the separator grey. */
+.app-stepper__sep {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--ref-color-grey-40);
+}

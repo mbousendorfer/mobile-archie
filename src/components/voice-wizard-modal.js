@@ -2,7 +2,8 @@
 //
 // Every Optimize on the Voice tab opens it: the parts of a network voice, one
 // step each (Opens with · Closes with · Formatting · Emoji & casing …), then a
-// review. The header names the steps — the DS stepper, each one clickable.
+// review. The header names the steps — the DS stepper (V2 Atoms, ported as
+// .app-stepper), each one clickable.
 // A step: on the left, the choices — the job is to write this part for the
 // network, so they come first, with nothing pre-picked. While nothing is
 // picked the part keeps the base voice; a small note under the choices says
@@ -29,10 +30,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1829";
-import { bindReorder } from "../drag-reorder.js?v=1829";
-import { escapeHtml as esc } from "../utils.js?v=1829";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1829";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1830";
+import { bindReorder } from "../drag-reorder.js?v=1830";
+import { escapeHtml as esc } from "../utils.js?v=1830";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1830";
 import {
   networkFields,
   isNewPart,
@@ -41,7 +42,7 @@ import {
   baseNetwork,
   networkEntry,
   resolvedVoice,
-} from "../network-voice.js?v=1829";
+} from "../network-voice.js?v=1830";
 
 const MODAL_ID = "voiceWizard";
 
@@ -277,17 +278,18 @@ function paint() {
   paintFooter();
 }
 
-// The DS stepper (CSS-UI .ap-stepper): every part, then Review. Passed steps
-// read completed, the current one active; any step opens on click.
+// The DS stepper — the V2 Atoms version (Figma 7873:1568), ported in
+// ds-patches.css as .app-stepper until CSS-UI ships it: every part, then
+// Review; the current step filled blue, the others outlined. Any step opens
+// on click.
 function renderSteps() {
   const names = [...w.fields.map((f) => PARTS[f].title), "Review"];
-  return `<nav class="ap-stepper vw__steps" aria-label="Steps">${names
+  return `<nav class="app-stepper vw__steps" aria-label="Steps">${names
     .map((name, i) => {
-      const state = i < w.step ? "completed" : i === w.step ? "active" : "pending";
-      return `${i ? `<span class="ap-stepper-separator" aria-hidden="true"><i class="ap-icon-chevron-right"></i></span>` : ""}
-        <div class="ap-stepper-item ${state} clickable" role="button" tabindex="0" data-vw-goto="${i}"${
-          i === w.step ? ' aria-current="step"' : ""
-        }><span>${state === "completed" ? `<i class="ap-icon-check" aria-hidden="true"></i>` : i + 1}</span><span>${esc(name)}</span></div>`;
+      const current = i === w.step;
+      return `${i ? `<i class="ap-icon-chevron-right app-stepper__sep" aria-hidden="true"></i>` : ""}<button type="button" class="app-stepper__step${
+        current ? " is-current" : ""
+      }" data-vw-goto="${i}"${current ? ' aria-current="step"' : ""}><span class="app-stepper__badge">${i + 1}</span><span>${esc(name)}</span></button>`;
     })
     .join("")}</nav>`;
 }
@@ -600,13 +602,6 @@ function onKeydown(event) {
   if (event.key === "Enter" && event.target.matches("[data-vw-add]")) {
     event.preventDefault();
     addLine(w.fields[w.step]);
-  }
-  // A step of the stepper is a div (the DS's markup): Enter / Space opens it.
-  const step = event.target.closest?.("[data-vw-goto][role='button']");
-  if (step && (event.key === "Enter" || event.key === " ")) {
-    event.preventDefault();
-    go(Number(step.dataset.vwGoto));
-    return;
   }
   // ↑ ↓ on a row's handle: the keyboard way to reorder; focus follows the line.
   const handle = event.target.closest?.("[data-vw-handle]");
