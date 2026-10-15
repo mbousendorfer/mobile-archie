@@ -118,12 +118,6 @@ i.memory-mark {
   container-type: inline-size;
 }
 
-/* In the Playbook's tray the card fills its block: at the chat's width its
-   question wrapped on three lines inside a full-width block. */
-.memory-cards > .memory-card {
-  width: 100%;
-}
-
 /* In the thread: the turn stretches to the thread's width, the card doesn't. */
 .memory-turn {
   display: flex;
@@ -149,8 +143,9 @@ i.memory-mark {
 
 /* "What I've learned" on the Voice tab — Archie's block, proposals and kept
    rules together. His butter is the header band, edge to edge, and nowhere
-   else: the cards inside drop their own butter (the band already says who is
-   talking). A grey-20 hairline under the band. */
+   else on the block. The proposals inside are the chat's memory card, as is —
+   same butter body, same width; never a Playbook variant. A grey-20 hairline
+   under the band. */
 .pb2-block.pb2-block--memory {
   gap: 0;
   padding: 0;
@@ -168,10 +163,6 @@ i.memory-mark {
   flex-direction: column;
   gap: var(--ref-spacing-sm);
   padding: var(--ref-spacing-md);
-}
-
-.pb2-block--memory .memory-card__body {
-  background: transparent;
 }
 
 .memory-notes {

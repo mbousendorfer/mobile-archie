@@ -18,11 +18,11 @@
 // modal EMBEDS (the panel is a view of that dialog, the design's own "the panel
 // slides"); `open()` wraps the same flow in a standalone body-level dialog.
 
-import { escapeHtml as esc } from "../utils.js?v=1800";
-import { getConnectedProfileById } from "../social-profiles.js?v=1800";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1800";
-import { getContextById } from "../contexts-store.js?v=1800";
-import { catalogEntries } from "../objective-measures.js?v=1800";
+import { escapeHtml as esc } from "../utils.js?v=1801";
+import { getConnectedProfileById } from "../social-profiles.js?v=1801";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1801";
+import { getContextById } from "../contexts-store.js?v=1801";
+import { catalogEntries } from "../objective-measures.js?v=1801";
 
 let flowSeq = 0;
 

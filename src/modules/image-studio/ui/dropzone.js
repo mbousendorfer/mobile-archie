@@ -1,7 +1,7 @@
 // Image Generator — a dropzone that really accepts a drop (DS port .ap-dropzone,
 // from ds-patches). Markup + binding; the module's own copy of the pattern.
 
-import { html } from "../lib/html.js?v=1800";
+import { html } from "../lib/html.js?v=1801";
 
 export function dropzone({
   id,
