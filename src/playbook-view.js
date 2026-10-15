@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1837";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1838";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -26,11 +26,11 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1837";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1837";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1837";
-import { isFlagOn } from "./feature-flags.js?v=1837";
-import { parseHashParams } from "./url-state.js?v=1837";
+} from "./playbook-brand-kit.js?v=1838";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1838";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1838";
+import { isFlagOn } from "./feature-flags.js?v=1838";
+import { parseHashParams } from "./url-state.js?v=1838";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -47,16 +47,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1837";
+} from "./network-voice.js?v=1838";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1837";
-import { showToast } from "./components/toast.js?v=1837";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1837";
-import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1837";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1837";
+} from "./voice-coach-store.js?v=1838";
+import { showToast } from "./components/toast.js?v=1838";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1838";
+import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1838";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1838";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2418,7 +2418,7 @@ function renderNetworkSwitcher(data) {
 // only — in edit, "Adapt for X" does it part by part.
 // `short`: "Optimize" alone, for a list whose row already names the network —
 // same width on every row, one clean column.
-function nvOptimizeButton(data, net, { tone = "primary orange", short = false } = {}) {
+function nvOptimizeButton(data, net, { tone = "primary blue", short = false } = {}) {
   if (!canEditView() || editScope || net === baseNetwork(data)) return "";
   const done = nvOptimizedCount(data, net);
   if (done === nvFields().length) return "";
