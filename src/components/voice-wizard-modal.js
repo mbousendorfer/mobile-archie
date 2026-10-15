@@ -2,13 +2,14 @@
 //
 // Every Optimize on the Voice tab opens it: the parts of a network voice, one
 // step each (Opens with · Closes with · Formatting · Emoji & casing …), then a
-// review. A step reads top to bottom: what the network itself says about this
-// part (a DS infobox — the reason before the picks), then Leave as default
-// (the part follows the base voice) or Make it {network}'s, then the choices:
+// review. A step: on the left, Leave as default (the part follows the base
+// voice) or Make it {network}'s, then the choices:
 // for lines, Archie's suggestions and your own in ONE list you order by
 // preference (drag, or ↑ ↓ on a row's handle) — the checked lines, in that
 // order, are the value; for a single-value part, Archie's pick · another way ·
-// your own. A live preview of a post on that network changes as you choose.
+// your own. On the right, what the network itself recommends for that part —
+// the reason behind Archie's picks. (2026-10-15: a live sample post stood
+// there — "ça n'a pas de sens".)
 // The progress ring in the header is the one on the Voice tab.
 //
 // A STAGED draft (the objective modal's pattern): nothing reaches the Playbook
@@ -20,9 +21,9 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1806";
-import { escapeHtml as esc } from "../utils.js?v=1806";
-import { networkVoiceOptions, networkGuidance } from "../context-mock-analysis.js?v=1806";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1807";
+import { escapeHtml as esc } from "../utils.js?v=1807";
+import { networkVoiceOptions, networkGuidance } from "../context-mock-analysis.js?v=1807";
 import {
   networkFields,
   isNewPart,
@@ -32,7 +33,7 @@ import {
   networkEntry,
   resolvedVoice,
   progressRingHtml,
-} from "../network-voice.js?v=1806";
+} from "../network-voice.js?v=1807";
 
 const MODAL_ID = "voiceWizard";
 
@@ -252,12 +253,13 @@ function paint() {
         onPart ? `${esc(PARTS[w.fields[w.step]].title)} · ${w.step + 1} of ${review()}` : "Review your choices"
       }</span>
     </div>`;
+  // Right column: what the network itself recommends for this step's part.
+  // The review has none — it spans the dialog.
+  const guide = onPart ? renderGuidance(w.fields[w.step]) : "";
+  bodyEl.classList.toggle("vw__content--single", !guide);
   bodyEl.innerHTML = `
     <div class="vw__main">${onPart ? renderPart(w.fields[w.step]) : renderReview()}</div>
-    <div class="vw__aside">
-      <p class="vw__aside-title"><i class="${networkIcon(w.net)}" aria-hidden="true"></i>Preview on ${esc(label)}</p>
-      ${renderPreview(onPart ? w.fields[w.step] : null)}
-    </div>`;
+    ${guide}`;
   paintFooter();
 }
 
@@ -303,20 +305,15 @@ function baseValue(field) {
 
 const ARCHIE_MARK = `<span class="vw-option__archie" title="Archie's pick"><i class="ap-icon-sparkles" aria-hidden="true"></i></span>`;
 
-// What the network itself recommends for this part — the reason before the
-// picks. The DS infobox, the network's glyph in place of the info icon.
+// What the network itself recommends for this part — the reason behind
+// Archie's picks, in the right column beside the choices.
 function renderGuidance(field) {
   const lines = networkGuidance(w.net, field);
   if (!lines.length) return "";
-  return `<div class="ap-infobox info has-title vw-guide">
-      <i class="${networkIcon(w.net)}" aria-hidden="true"></i>
-      <div class="ap-infobox-content">
-        <div class="ap-infobox-texts">
-          <span class="ap-infobox-title">What ${esc(networkLabel(w.net))} says</span>
-          ${lines.map((l) => `<span class="ap-infobox-message">${esc(l)}</span>`).join("")}
-        </div>
-      </div>
-    </div>`;
+  return `<aside class="vw__aside" aria-label="What ${esc(networkLabel(w.net))} says">
+      <p class="vw__aside-title"><i class="${networkIcon(w.net)}" aria-hidden="true"></i>What ${esc(networkLabel(w.net))} says</p>
+      <ul class="vw-guide">${lines.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>
+    </aside>`;
 }
 
 // Leave as default (the part follows the base voice) or make it the network's.
@@ -343,7 +340,6 @@ function renderPart(field) {
   const head = `<h3 class="vw__ask">${esc(P.ask(networkLabel(w.net)))}${
     isNewPart(field) ? ` <span class="ap-status orange vw__new">New in your voice</span>` : ""
   }</h3>
-    ${renderGuidance(field)}
     ${renderMode(field, isDefault)}`;
   if (isDefault) return head;
   if (P.list) {
@@ -425,102 +421,6 @@ function renderReview() {
   return `<h3 class="vw__ask">Your ${esc(label)} voice</h3>
     <p class="vw__hint">${n} of ${review()} parts optimized for ${esc(label)}. The others follow your ${esc(baseLabel)} voice.</p>
     <ul class="pb2-nv-rows vw-review">${rows}</ul>`;
-}
-
-// ── The preview ──────────────────────────────────────────────────────────────
-// A sample post in the network's shape, written with the draft. Hooks and
-// closings are the draft's own lines; formatting and emoji & casing are read
-// for a few tell-tale words.
-// ponytail: keyword-read mock of how a layout or an emoji rule reshapes a post;
-// the real preview is the generator writing a post with the draft voice.
-
-function sampleBody() {
-  const first = String(w.data.businessSummary || "")
-    .split(/(?<=[.!?])\s+/)[0]
-    .trim();
-  const lead = first && first.length <= 160 ? first : "We changed how our team plans a week of posts.";
-  return [lead, "Three habits made the difference. The last one surprised us."];
-}
-
-function hashtagsFor(n) {
-  const brand = String(w.data.name || "Brand")
-    .split(/[^A-Za-z0-9]+/)
-    .filter(Boolean)[0];
-  return [brand, "SocialMedia", "ContentStrategy", "MarketingOps", "Growth"].slice(0, n).map((t) => `#${t}`);
-}
-
-function hashtagCount(text) {
-  const t = text.toLowerCase();
-  if (/no hashtags?/.test(t)) return 0;
-  if (/one hashtag|1 hashtag/.test(t)) return 1;
-  if (/two hashtags|two niche/.test(t)) return 2;
-  if (/three|3 hashtags/.test(t)) return 3;
-  if (/five|four/.test(t)) return 5;
-  return /hashtag/.test(t) ? 2 : 0;
-}
-
-function composePost() {
-  const pick = (field) => {
-    const v = valueOf(field);
-    return v === undefined ? baseValue(field) : v;
-  };
-  const firstLine = (list) => (Array.isArray(list) ? list : []).find((l) => l && !/\[[^\]]*\]/.test(l)) || "";
-  const formatting = String(pick("formattingStyle") || "");
-  const visual = String(pick("visualStyle") || "");
-  let hook = firstLine(pick("signatureHooks"));
-  let body = sampleBody();
-  let closing = firstLine(pick("closingPatterns"));
-  if (/thread/i.test(formatting)) body = body.map((b, i) => `${i + 1}/ ${b}`);
-  else if (/one idea|one-line caption|one line|single line|one short paragraph/i.test(formatting)) body = [body[0]];
-  else if (/short paragraphs|line breaks|air between|three beats|short lines/i.test(formatting))
-    body = body.flatMap((b) => b.split(/(?<=[.!?])\s+/));
-  if (/no emoji/i.test(visual)) {
-    /* nothing to add */
-  } else if (/emoji as line bullets/i.test(visual)) body = body.map((b) => `✔︎ ${b}`);
-  else if (/emoji/i.test(visual)) hook = hook ? `✨ ${hook}` : hook;
-  if (/all lowercase|lowercase is fine|lowercase welcome/i.test(visual)) {
-    hook = hook.toLowerCase();
-    body = body.map((b) => b.toLowerCase());
-    closing = closing.toLowerCase();
-  }
-  return { hook, body, closing, hashtags: hashtagsFor(hashtagCount(visual)) };
-}
-
-// Built by concatenation: .vwp__media--square / --tall / --wide (voice-wizard.css).
-const MEDIA = { instagram: "square", tiktok: "tall", youtube: "wide" };
-
-function renderPreview(touched) {
-  const net = w.net;
-  const post = composePost();
-  const name = w.data.name || "Your brand";
-  const handle = `@${String(name)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "")}`;
-  const usesHandle = net === "x" || net === "instagram" || net === "tiktok";
-  const color = (w.data.brandColors || [])[0]?.hex || "";
-  const avatar = w.data.brandLogo
-    ? `<img src="${esc(w.data.brandLogo)}" alt="" />`
-    : `<span>${esc(String(name).charAt(0).toUpperCase())}</span>`;
-  const mark = (on, inner) => (inner ? `<p class="vwp__line${on ? " is-touched" : ""}">${inner}</p>` : "");
-  const all = touched === "visualStyle";
-  const media = MEDIA[net]
-    ? `<div class="vwp__media vwp__media--${MEDIA[net]}">${w.data.brandLogo ? `<img src="${esc(w.data.brandLogo)}" alt="" />` : `<span>${esc(name)}</span>`}</div>`
-    : "";
-  const caption = `
-    ${mark(touched === "signatureHooks" || all, esc(post.hook))}
-    <div class="vwp__body${touched === "formattingStyle" || all ? " is-touched" : ""}">${post.body.map((b) => `<p class="vwp__line">${esc(b)}</p>`).join("")}</div>
-    ${mark(touched === "closingPatterns" || all, esc(post.closing))}
-    ${post.hashtags.length ? `<p class="vwp__line vwp__tags${all ? " is-touched" : ""}">${esc(post.hashtags.join(" "))}</p>` : ""}`;
-  return `<article class="vwp vwp--${esc(net)}" aria-label="Sample ${esc(networkLabel(net))} post">
-      <header class="vwp__head">
-        <span class="vwp__avatar"${color && !w.data.brandLogo ? ` style="background:${esc(color)}"` : ""}>${avatar}</span>
-        <span class="vwp__who"><span class="vwp__name">${esc(usesHandle ? handle : name)}</span><span class="vwp__meta">Just now</span></span>
-        <i class="${networkIcon(net)} vwp__net" aria-hidden="true"></i>
-      </header>
-      ${net === "youtube" ? media : ""}
-      ${net === "instagram" || net === "tiktok" ? media : ""}
-      <div class="vwp__caption">${caption}</div>
-    </article>`;
 }
 
 // ── Events ───────────────────────────────────────────────────────────────────
@@ -628,12 +528,10 @@ function onChange(event) {
   }
 }
 
-// Typing in "Write my own" updates the preview without repainting the field.
+// Typing in "Write my own" keeps the draft current without repainting the field.
 function onInput(event) {
   if (!w || !event.target.matches("[data-vw-own]")) return;
   w.parts[w.fields[w.step]].own = event.target.value;
-  const aside = bodyEl.querySelector(".vw__aside .vwp");
-  if (aside) aside.outerHTML = renderPreview(w.fields[w.step]);
 }
 
 function onKeydown(event) {

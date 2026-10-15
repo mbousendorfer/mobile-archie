@@ -24,12 +24,12 @@
 // card (defined in right-panel.css). Classes prefixed `clip-card__*`
 // own clip-specific bits (thumbnail, timeframe overlay).
 
-import { iconFor } from "../file-kinds.js?v=1806";
-import { escapeText, escapeAttr, formatClock } from "../utils.js?v=1806";
-import { installMoreMenu } from "./more-menu.js?v=1806";
-import { renderFeedbackThumbs, renderFeedbackPanel } from "./feedback-control.js?v=1806";
-import { videoForClip } from "../clip-captions.js?v=1806";
-import { FORMATS } from "../clip-formats.js?v=1806";
+import { iconFor } from "../file-kinds.js?v=1807";
+import { escapeText, escapeAttr, formatClock } from "../utils.js?v=1807";
+import { installMoreMenu } from "./more-menu.js?v=1807";
+import { renderFeedbackThumbs, renderFeedbackPanel } from "./feedback-control.js?v=1807";
+import { videoForClip } from "../clip-captions.js?v=1807";
+import { FORMATS } from "../clip-formats.js?v=1807";
 
 const fmtTime = (s) => formatClock(s);
 

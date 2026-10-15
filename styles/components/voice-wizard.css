@@ -1,5 +1,5 @@
 /* Optimize wizard — "Optimize your Instagram voice" (voice-wizard-modal.js).
-   Two columns: the step on the left, a live post preview on the right. The
+   Two columns: the step on the left, what the network says on the right. The
    backdrop wraps and centres the dialog (the objective modal's pattern: no
    transform, so nothing inside fights a containing block). */
 
@@ -65,14 +65,6 @@
 .vw__hint {
   margin: 0 0 var(--ref-spacing-xs);
   color: var(--ref-color-grey-80);
-}
-
-/* What the network says — the DS infobox; the network's own glyph (its brand
-   colour, set by the icon) stands in for the info icon. */
-.vw-guide > i {
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
 }
 
 /* Leave as default · Make it {network}'s — two radio cards side by side. */
@@ -233,13 +225,15 @@
   color: var(--ref-color-grey-100);
 }
 
-/* ── The preview ─────────────────────────────────────────────────────────
-   A sample post on the page's grey, in the network's shape: the line the step
-   changes sits on a soft band, so you see what your pick touches. */
+/* ── What the network says ──────────────────────────────────────────────
+   The right column: the network's own recommendations for this part, on the
+   page's grey. Its glyph and name head it; the sentences read as a short
+   list, ink grey-100. The review has no column (vw__content--single). */
 .vw__aside {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-sm);
+  align-self: start;
   padding: var(--ref-spacing-md);
   border-radius: var(--ref-border-radius-md);
   background: var(--app-surface-subtle);
@@ -250,123 +244,23 @@
   align-items: center;
   gap: var(--ref-spacing-xs);
   margin: 0;
-  color: var(--ref-color-grey-80);
-  font-size: var(--ref-font-size-sm);
-}
-
-.vwp {
-  overflow: hidden;
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: var(--ref-border-radius-md);
-  background: var(--ref-color-white);
-}
-
-.vwp__head {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm) var(--ref-spacing-sm) 0;
-}
-
-.vwp__avatar {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  overflow: hidden;
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: 50%;
-  background: var(--ref-color-grey-10);
-  color: var(--ref-color-white);
-  font-weight: var(--sys-text-style-body-bold-weight);
-}
-
-.vwp__avatar > img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  background: var(--ref-color-white);
-}
-
-.vwp__who {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.vwp__name {
   color: var(--ref-color-grey-100);
-  font-size: var(--ref-font-size-sm);
   font-weight: var(--sys-text-style-body-bold-weight);
 }
 
-.vwp__meta {
-  color: var(--ref-color-grey-80);
-  font-size: var(--ref-font-size-xs);
-}
-
-.vwp__media {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: var(--ref-spacing-sm);
-  background: var(--ref-color-grey-10);
-  color: var(--ref-color-grey-80);
-}
-
-.vwp__media > img {
-  max-width: 40%;
-  max-height: 40%;
-}
-
-/* Full card width; the height says the format (square, vertical, landscape)
-   without letting a 360px column turn into a poster. */
-.vwp__media--square {
-  height: 180px;
-}
-
-.vwp__media--tall {
-  height: 220px;
-}
-
-.vwp__media--wide {
-  aspect-ratio: 16 / 9;
-}
-
-.vwp__caption {
+.vw-guide {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-sm);
-}
-
-.vwp__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-}
-
-.vwp__line {
+  gap: var(--ref-spacing-sm);
   margin: 0;
+  padding: 0;
   color: var(--ref-color-grey-100);
-  font-size: var(--ref-font-size-sm);
   line-height: 1.5;
+  list-style: none;
 }
 
-.vwp__tags {
-  color: var(--ref-color-grey-80);
-}
-
-/* What this step changes, banded softly — never a coloured edge bar. */
-.vwp__line.is-touched,
-.vwp__body.is-touched {
-  margin: 0 calc(-1 * var(--ref-spacing-xxs));
-  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs);
-  border-radius: var(--ref-border-radius-sm);
-  background: var(--app-butter, var(--ref-color-grey-10));
+.vw__content--single {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 @media (max-width: 900px) {
