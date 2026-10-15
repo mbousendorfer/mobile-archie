@@ -1,10 +1,15 @@
 // voice-wizard-modal — "Optimize your Instagram voice" (flag networkVoices).
 //
-// Every Optimize on the Voice tab opens it: the four parts of a network voice,
-// one step each (Opens with · Closes with · Formatting · Emoji & casing), then
-// a review. Each step offers Archie's options (pre-picked), the base network's
-// version, or your own — and a live preview of a post on that network changes
-// as you choose. The progress ring in the header is the one on the Voice tab.
+// Every Optimize on the Voice tab opens it: the parts of a network voice, one
+// step each (Opens with · Closes with · Formatting · Emoji & casing …), then a
+// review. A step reads top to bottom: what the network itself says about this
+// part (a DS infobox — the reason before the picks), then Leave as default
+// (the part follows the base voice) or Make it {network}'s, then the choices:
+// for lines, Archie's suggestions and your own in ONE list you order by
+// preference (drag, or ↑ ↓ on a row's handle) — the checked lines, in that
+// order, are the value; for a single-value part, Archie's pick · another way ·
+// your own. A live preview of a post on that network changes as you choose.
+// The progress ring in the header is the one on the Voice tab.
 //
 // A STAGED draft (the objective modal's pattern): nothing reaches the Playbook
 // until Save; the host gets the four final values and writes them. Leaving with
@@ -15,9 +20,9 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1803";
-import { escapeHtml as esc } from "../utils.js?v=1803";
-import { networkVoiceOptions } from "../context-mock-analysis.js?v=1803";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1805";
+import { escapeHtml as esc } from "../utils.js?v=1805";
+import { networkVoiceOptions, networkGuidance } from "../context-mock-analysis.js?v=1805";
 import {
   networkFields,
   isNewPart,
@@ -27,7 +32,7 @@ import {
   networkEntry,
   resolvedVoice,
   progressRingHtml,
-} from "../network-voice.js?v=1803";
+} from "../network-voice.js?v=1805";
 
 const MODAL_ID = "voiceWizard";
 
@@ -36,35 +41,30 @@ const PARTS = {
     title: "Opens with",
     list: true,
     ask: (n) => `How do your posts open on ${n}?`,
-    keep: (b) => `Keep my ${b} openings`,
     add: "Write your own opening line…",
   },
   closingPatterns: {
     title: "Closes with",
     list: true,
     ask: (n) => `How do your posts end on ${n}?`,
-    keep: (b) => `Keep my ${b} closings`,
     add: "Write your own closing line…",
   },
   formattingStyle: {
     title: "Formatting",
     list: false,
     ask: (n) => `How should a post be laid out on ${n}?`,
-    keep: (b) => `Keep my ${b} formatting`,
     add: "How posts are structured on this network…",
   },
   hashtagStyle: {
     title: "Hashtags",
     list: false,
     ask: (n) => `How do you use hashtags on ${n}?`,
-    keep: (b) => `Keep my ${b} hashtags`,
     add: "How many, where, which kind…",
   },
   visualStyle: {
     title: "Emoji & casing",
     list: false,
     ask: (n) => `Emoji, casing and hashtags on ${n}?`,
-    keep: (b) => `Keep my ${b} conventions`,
     add: "Emoji, capitalisation, hashtags, links…",
   },
 };
@@ -78,8 +78,10 @@ let footRightEl = null;
 let initialized = false;
 
 // { data, net, base, opts, fields, step, parts: { [field]: part }, initial, startParts, leaving, onSave }
-//   list part: { keep, picked: string[], custom: string[] }
-//   text part: { choice: 0 | 1 | "keep" | "own", own }
+//   list part: { keep, order: string[], picked: string[] } — order = every line
+//     (Archie's + yours) in preference order; picked = the checked ones
+//   text part: { choice: 0 | 1 | "keep" | "own", own, prev } — prev = the choice
+//     to come back to when you leave "default"
 let w = null;
 
 // The step after the parts: the review.
@@ -113,6 +115,10 @@ export function init() {
   panel.addEventListener("change", onChange);
   panel.addEventListener("input", onInput);
   panel.addEventListener("keydown", onKeydown);
+  panel.addEventListener("dragstart", onDragStart);
+  panel.addEventListener("dragover", onDragOver);
+  panel.addEventListener("drop", onDrop);
+  panel.addEventListener("dragend", onDragEnd);
   backdrop.addEventListener("click", (e) => {
     if (e.target === backdrop) requestClose();
   });
@@ -183,12 +189,9 @@ function requestClose() {
 // Archie's picks otherwise (the first two lines, the first option).
 function initialPart(field, value, options) {
   if (PARTS[field].list) {
-    if (value === undefined) return { keep: false, picked: options.slice(0, 2), custom: [] };
-    return {
-      keep: false,
-      picked: options.filter((o) => value.includes(o)),
-      custom: value.filter((v) => !options.includes(v)),
-    };
+    if (value === undefined) return { keep: false, order: [...options], picked: options.slice(0, 2) };
+    // The saved order first, then Archie's other options to pick from.
+    return { keep: false, order: [...value, ...options.filter((o) => !value.includes(o))], picked: [...value] };
   }
   if (value === undefined) return { choice: 0, own: "" };
   const i = options.indexOf(value);
@@ -200,7 +203,7 @@ function valueOf(field) {
   const p = w.parts[field];
   if (PARTS[field].list) {
     if (p.keep) return undefined;
-    const lines = [...p.picked, ...p.custom.map((c) => c.trim()).filter(Boolean)];
+    const lines = p.order.filter((l) => p.picked.includes(l));
     return lines.length ? lines : undefined;
   }
   if (p.choice === "keep") return undefined;
@@ -210,8 +213,7 @@ function valueOf(field) {
 
 function isArchieDefault(field) {
   const p = w.parts[field];
-  if (PARTS[field].list)
-    return !p.keep && !p.custom.length && p.picked.join("\n") === w.opts[field].slice(0, 2).join("\n");
+  if (PARTS[field].list) return !p.keep && (valueOf(field) || []).join("\n") === w.opts[field].slice(0, 2).join("\n");
   return p.choice === 0;
 }
 
@@ -301,46 +303,79 @@ function baseValue(field) {
 
 const ARCHIE_MARK = `<span class="vw-option__archie" title="Archie's pick"><i class="ap-icon-sparkles" aria-hidden="true"></i></span>`;
 
+// What the network itself recommends for this part — the reason before the
+// picks. The DS infobox, the network's glyph in place of the info icon.
+function renderGuidance(field) {
+  const lines = networkGuidance(w.net, field);
+  if (!lines.length) return "";
+  return `<div class="ap-infobox info has-title vw-guide">
+      <i class="${networkIcon(w.net)}" aria-hidden="true"></i>
+      <div class="ap-infobox-content">
+        <div class="ap-infobox-texts">
+          <span class="ap-infobox-title">What ${esc(networkLabel(w.net))} says</span>
+          ${lines.map((l) => `<span class="ap-infobox-message">${esc(l)}</span>`).join("")}
+        </div>
+      </div>
+    </div>`;
+}
+
+// Leave as default (the part follows the base voice) or make it the network's.
+function renderMode(field, isDefault) {
+  const label = networkLabel(w.net);
+  const card = (value, title, text, on) => `
+    <label class="ap-radio-card card vw-radio">
+      <input type="radio" name="vw-mode" data-vw-mode="${value}" ${on ? "checked" : ""} />
+      <div class="vw-radio__body">
+        <span class="ap-radio-card-title">${esc(title)}</span>
+        <span class="vw-radio__text">${esc(text)}</span>
+      </div>
+    </label>`;
+  return `<div class="vw-mode" role="radiogroup" aria-label="${esc(PARTS[field].title)}">
+      ${card("default", "Leave as default", `Same as your ${networkLabel(w.base)} voice: ${baseSummary(field)}`, isDefault)}
+      ${card("own", `Make it ${label}'s`, PARTS[field].list ? "Pick, write and order the lines." : "Pick one, or write your own.", !isDefault)}
+    </div>`;
+}
+
 function renderPart(field) {
   const P = PARTS[field];
   const p = w.parts[field];
-  const label = networkLabel(w.net);
-  const baseLabel = networkLabel(w.base);
-  const head = `<h3 class="vw__ask">${esc(P.ask(label))}${
+  const isDefault = P.list ? p.keep : p.choice === "keep";
+  const head = `<h3 class="vw__ask">${esc(P.ask(networkLabel(w.net)))}${
     isNewPart(field) ? ` <span class="ap-status orange vw__new">New in your voice</span>` : ""
   }</h3>
-    <p class="vw__hint">I picked these from how posts work on ${esc(label)}. Change anything.</p>`;
+    ${renderGuidance(field)}
+    ${renderMode(field, isDefault)}`;
+  if (isDefault) return head;
   if (P.list) {
-    const rows = w.opts[field]
-      .map((o, i) => {
-        const on = !p.keep && p.picked.includes(o);
-        return `<label class="ap-checkbox-container vw-option${p.keep ? " is-off" : ""}">
-          <input type="checkbox" data-vw-pick="${i}" ${on ? "checked" : ""} ${p.keep ? "disabled" : ""} />
-          <i aria-hidden="true"></i>
-          <span class="vw-option__text">“${esc(o)}”</span>
-          ${i < 2 ? ARCHIE_MARK : ""}
-        </label>`;
+    const n = p.order.length;
+    const rows = p.order
+      .map((line, i) => {
+        const own = !w.opts[field].includes(line);
+        const archie = w.opts[field].slice(0, 2).includes(line);
+        return `<div class="vw-option vw-line" data-vw-line="${i}" draggable="true">
+          <button type="button" class="ap-icon-button transparent grey vw-line__handle" data-vw-handle="${i}" aria-label="${esc(`Move “${line}” — ${i + 1} of ${n}. Use the up and down arrow keys.`)}"><i class="ap-icon-move"></i></button>
+          <label class="ap-checkbox-container vw-line__check">
+            <input type="checkbox" data-vw-pick="${i}" ${p.picked.includes(line) ? "checked" : ""} />
+            <i aria-hidden="true"></i>
+            <span class="vw-option__text">“${esc(line)}”</span>
+          </label>
+          ${
+            own
+              ? `<button type="button" class="ap-icon-button transparent grey" data-vw-unadd="${i}" aria-label="Remove this line"><i class="ap-icon-close"></i></button>`
+              : archie
+                ? ARCHIE_MARK
+                : ""
+          }
+        </div>`;
       })
       .join("");
-    const custom = p.custom
-      .map(
-        (c, i) => `<div class="vw-option vw-option--own${p.keep ? " is-off" : ""}">
-          <span class="vw-option__text">“${esc(c)}”</span>
-          <button type="button" class="ap-icon-button transparent grey" data-vw-unadd="${i}" aria-label="Remove this line" ${p.keep ? "disabled" : ""}><i class="ap-icon-close"></i></button>
-        </div>`,
-      )
-      .join("");
     return `${head}
-      <div class="vw-options">${rows}${custom}</div>
+      <div class="vw-list-head"><span class="vw-list-head__title">Suggestions</span><span class="vw-list-head__hint">Drag to order by preference</span></div>
+      <div class="vw-options">${rows}</div>
       <div class="vw-add">
-        <div class="ap-input-group"><input type="text" data-vw-add placeholder="${esc(P.add)}" aria-label="${esc(P.add)}" ${p.keep ? "disabled" : ""} /></div>
-        <button type="button" class="ap-button stroked blue" data-vw-add-btn ${p.keep ? "disabled" : ""}><i class="ap-icon-plus" aria-hidden="true"></i><span>Add</span></button>
-      </div>
-      <label class="ap-checkbox-container vw-option vw-option--keep">
-        <input type="checkbox" data-vw-keep ${p.keep ? "checked" : ""} />
-        <i aria-hidden="true"></i>
-        <span class="vw-option__text">${esc(P.keep(baseLabel))}<span class="vw-option__sub">${esc(baseSummary(field))}</span></span>
-      </label>`;
+        <div class="ap-input-group"><input type="text" data-vw-add placeholder="${esc(P.add)}" aria-label="${esc(P.add)}" /></div>
+        <button type="button" class="ap-button stroked blue" data-vw-add-btn><i class="ap-icon-plus" aria-hidden="true"></i><span>Add</span></button>
+      </div>`;
   }
   const radio = (value, title, text, archie = false) => `
     <label class="ap-radio-card card vw-radio">
@@ -351,10 +386,10 @@ function renderPart(field) {
       </div>
     </label>`;
   return `${head}
+    <div class="vw-list-head"><span class="vw-list-head__title">Suggestions</span></div>
     <div class="vw-options">
       ${radio(0, "Archie's pick", w.opts[field][0], true)}
       ${radio(1, "Another way", w.opts[field][1])}
-      ${radio("keep", P.keep(baseLabel), baseSummary(field))}
       ${radio("own", "Write my own", "")}
       ${
         p.choice === "own"
@@ -502,15 +537,25 @@ function focusFirst() {
   });
 }
 
+// A line you write goes to the end of the list, checked.
 function addLine(field) {
   const input = bodyEl.querySelector("[data-vw-add]");
   const text = (input?.value || "").trim();
   if (!text) return;
   const p = w.parts[field];
-  if (!p.custom.includes(text) && !w.opts[field].includes(text)) p.custom.push(text);
-  else if (w.opts[field].includes(text) && !p.picked.includes(text)) p.picked.push(text);
+  if (!p.order.includes(text)) p.order.push(text);
+  if (!p.picked.includes(text)) p.picked.push(text);
   paint();
   bodyEl.querySelector("[data-vw-add]")?.focus();
+}
+
+// Preference order: move one line, by drag or by ↑ ↓ on its handle.
+function moveLine(field, from, to) {
+  const order = w.parts[field].order;
+  if (to < 0 || to >= order.length || from === to) return false;
+  const [line] = order.splice(from, 1);
+  order.splice(to, 0, line);
+  return true;
 }
 
 function onClick(event) {
@@ -540,7 +585,9 @@ function onClick(event) {
   if (t.closest("[data-vw-add-btn]")) return addLine(field);
   const unadd = t.closest("[data-vw-unadd]");
   if (unadd) {
-    w.parts[field].custom.splice(Number(unadd.dataset.vwUnadd), 1);
+    const p = w.parts[field];
+    const [line] = p.order.splice(Number(unadd.dataset.vwUnadd), 1);
+    p.picked = p.picked.filter((l) => l !== line);
     return paint();
   }
   if (t.closest("[data-vw-save]")) {
@@ -560,15 +607,17 @@ function onChange(event) {
   const field = w.fields[w.step];
   const p = w.parts[field];
   if (t.matches("[data-vw-pick]")) {
-    const option = w.opts[field][Number(t.dataset.vwPick)];
-    const set = new Set(p.picked);
-    if (t.checked) set.add(option);
-    else set.delete(option);
-    p.picked = w.opts[field].filter((o) => set.has(o)); // keep Archie's order
+    const line = p.order[Number(t.dataset.vwPick)];
+    p.picked = t.checked ? [...p.picked, line] : p.picked.filter((l) => l !== line);
     return paint();
   }
-  if (t.matches("[data-vw-keep]")) {
-    p.keep = t.checked;
+  if (t.matches("[data-vw-mode]")) {
+    const toDefault = t.dataset.vwMode === "default";
+    if (PARTS[field].list) p.keep = toDefault;
+    else if (toDefault) {
+      if (p.choice !== "keep") p.prev = p.choice;
+      p.choice = "keep";
+    } else p.choice = p.prev ?? 0;
     return paint();
   }
   if (t.matches("[data-vw-choice]")) {
@@ -593,4 +642,52 @@ function onKeydown(event) {
     event.preventDefault();
     addLine(w.fields[w.step]);
   }
+  // ↑ ↓ on a row's handle: the keyboard way to reorder; focus follows the line.
+  const handle = event.target.closest?.("[data-vw-handle]");
+  if (handle && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
+    event.preventDefault();
+    const from = Number(handle.dataset.vwHandle);
+    const to = from + (event.key === "ArrowUp" ? -1 : 1);
+    if (!moveLine(w.fields[w.step], from, to)) return;
+    paint();
+    bodyEl.querySelector(`[data-vw-handle="${to}"]`)?.focus();
+  }
+}
+
+// Drag a row onto another to put it there. The row under the pointer takes
+// the blue border (the drop target); the dragged one fades.
+let dragFrom = -1;
+
+function onDragStart(event) {
+  const row = event.target.closest?.("[data-vw-line]");
+  if (!w || !row) return;
+  dragFrom = Number(row.dataset.vwLine);
+  event.dataTransfer.effectAllowed = "move";
+  event.dataTransfer.setData("text/plain", String(dragFrom));
+  row.classList.add("is-dragging");
+}
+
+function onDragOver(event) {
+  const row = event.target.closest?.("[data-vw-line]");
+  if (!w || dragFrom < 0 || !row) return;
+  event.preventDefault();
+  event.dataTransfer.dropEffect = "move";
+  bodyEl.querySelectorAll(".vw-line.is-drop").forEach((r) => r !== row && r.classList.remove("is-drop"));
+  if (Number(row.dataset.vwLine) !== dragFrom) row.classList.add("is-drop");
+}
+
+function onDrop(event) {
+  const row = event.target.closest?.("[data-vw-line]");
+  if (!w || dragFrom < 0 || !row) return;
+  event.preventDefault();
+  const from = dragFrom;
+  dragFrom = -1;
+  if (moveLine(w.fields[w.step], from, Number(row.dataset.vwLine))) paint();
+}
+
+function onDragEnd() {
+  dragFrom = -1;
+  bodyEl
+    ?.querySelectorAll(".vw-line.is-dragging, .vw-line.is-drop")
+    .forEach((r) => r.classList.remove("is-dragging", "is-drop"));
 }

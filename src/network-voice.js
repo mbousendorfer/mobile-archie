@@ -21,9 +21,9 @@
 // ON an overridden hook is written in one language. Per-language × per-network
 // examples when a brand actually publishes in two languages on one network.
 
-import { isFlagOn } from "./feature-flags.js?v=1803";
-import { escapeHtml } from "./utils.js?v=1803";
-import { NETWORKS, normalizeNetwork, getConnectedProfileById } from "./social-profiles.js?v=1803";
+import { isFlagOn } from "./feature-flags.js?v=1805";
+import { escapeHtml } from "./utils.js?v=1805";
+import { NETWORKS, normalizeNetwork, getConnectedProfileById } from "./social-profiles.js?v=1805";
 
 // The parts of a voice — ONE registry, in reading order. `isNew` marks a part
 // the product just added: a network that hasn't optimized it is told so (an
@@ -390,17 +390,21 @@ export function followRules(draft, rules = []) {
 
 // A fresh draft, written in the network voice: opens on one of its hooks,
 // closes on one of its closings, follows its rules. `seed` picks which hook
-// and closing, so a batch doesn't open five drafts the same way. Hooks with a
+// and closing — the favourite (first) one every other draft — so a batch
+// doesn't open five drafts the same way. Hooks with a
 // [placeholder] are templates for a person, not lines to publish.
 export function writeInVoice(ctx, network, draft, seed = 0) {
   const v = resolvedVoice(ctx, network, draft.language);
   const usable = (list) => list.filter((l) => l && !/\[[^\]]*\]/.test(l));
   const hooks = usable(v.signatureHooks);
   const closings = usable(v.closingPatterns);
+  // The lines are in preference order (the wizard's drag): the first one leads
+  // every other draft, the rest take turns.
+  const favour = (list) => (seed % 2 === 0 ? list[0] : list[seed % list.length]);
   const text = [
-    ...(hooks.length ? [hooks[seed % hooks.length]] : []),
+    ...(hooks.length ? [favour(hooks)] : []),
     ...(draft.text || []),
-    ...(closings.length ? [closings[seed % closings.length]] : []),
+    ...(closings.length ? [favour(closings)] : []),
   ];
   return {
     ...followRules({ text, hashtags: draft.hashtags }, v.rules),

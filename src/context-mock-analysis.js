@@ -492,6 +492,91 @@ const HASHTAG_OPTIONS = {
   ],
 };
 
+// What each network itself recommends, part by part — the "What Instagram
+// says" box at the top of each step of the Optimize wizard: the reason behind
+// Archie's picks, before the picks. Paraphrased from each platform's public
+// creator / business guidance, never quoted.
+// ponytail: static copy; the real thing reads the platforms' guidance pages.
+const NETWORK_GUIDANCE = {
+  linkedin: {
+    signatureHooks: [
+      "Only the first two or three lines show before “see more” — the hook has to land there.",
+      "Posts that open on a concrete lesson or number get more dwell time than ones that open on a question.",
+    ],
+    closingPatterns: [
+      "Comments weigh more than reactions: a closing that invites a real answer keeps the post circulating.",
+      "Links in the post cut reach — point to the comments instead.",
+    ],
+    formattingStyle: [
+      "Short paragraphs and line breaks read better on mobile, where most people scroll the feed.",
+      "Long posts are fine when every line earns the next one.",
+    ],
+    visualStyle: ["Emoji are rare in the feed; one or two at most keeps a professional tone."],
+    hashtagStyle: ["Three relevant hashtags at the end are plenty — more adds noise, not reach."],
+  },
+  instagram: {
+    signatureHooks: [
+      "Captions are cut after about 125 characters — the first line is all most people see before “more”.",
+      "Posts people save travel further: an opening that promises something worth saving helps.",
+    ],
+    closingPatterns: [
+      "Saves and shares count more than likes — ask for one of those.",
+      "Links in captions aren't clickable: point to the link in bio.",
+    ],
+    formattingStyle: [
+      "The visual does the stopping; the caption gives the context in a few short lines.",
+      "Carousels keep people on a post longer than a single image.",
+    ],
+    visualStyle: ["Emoji are part of the language here — used as markers, not in every word."],
+    hashtagStyle: ["A few specific hashtags beat thirty generic ones — Instagram recommends three to five."],
+  },
+  x: {
+    signatureHooks: [
+      "Posts are 280 characters: the opening is most of the post.",
+      "Posts that state a point plainly get more replies than ones that tease it.",
+    ],
+    closingPatterns: ["Replies drive the conversation — a short question works better than a call to action."],
+    formattingStyle: ["One idea per post. Longer ideas work as a thread, each post readable on its own."],
+    visualStyle: ["Emoji and hashtags eat characters — one of each at most."],
+    hashtagStyle: ["One or two hashtags at most; more reads as spam and lowers engagement."],
+  },
+  facebook: {
+    signatureHooks: [
+      "Posts that open like a conversation get more comments than announcements.",
+      "Long text is cut after a few lines on mobile.",
+    ],
+    closingPatterns: ["Questions open the comments, and comments widen who sees the post."],
+    formattingStyle: ["Two or three short paragraphs read like a conversation; walls of text get skipped."],
+    visualStyle: ["A few emoji fit the tone; links stay in the post so the preview card shows."],
+    hashtagStyle: ["Hashtags do little here — none, or one branded tag."],
+  },
+  tiktok: {
+    signatureHooks: [
+      "The first second of the video is the hook — the caption backs it up, it doesn't replace it.",
+      "Captions that repeat the hook in words help people who watch on mute.",
+    ],
+    closingPatterns: ["Follows and saves come from a clear “part 2” or a reason to come back."],
+    formattingStyle: ["Keep the caption short: the video carries the story."],
+    visualStyle: ["Casual casing and emoji that match the clip feel native."],
+    hashtagStyle: ["Three to five hashtags — one broad, the rest specific to the niche — help TikTok place the video."],
+  },
+  youtube: {
+    signatureHooks: [
+      "The title and thumbnail do the hooking; the first line of the description supports the title.",
+      "Only the first 100 or so characters of the description show above “more”.",
+    ],
+    closingPatterns: ["Ending screens and a subscribe ask work best when they point to the next video."],
+    formattingStyle: ["A description that opens with what the video answers, then chapters, helps search and viewers."],
+    visualStyle: ["No emoji in titles; links and timestamps belong in the description."],
+    hashtagStyle: ["Up to three hashtags in the description — the first ones show above the title."],
+  },
+};
+
+/** What the network itself says about one part of a voice (1–2 sentences). */
+export function networkGuidance(network, field) {
+  return NETWORK_GUIDANCE[network]?.[field] || [];
+}
+
 /**
  * Pretend to read the posts of each network the Playbook publishes on and
  * return how each one adapts the base voice — the voiceByNetwork a Playbook is

@@ -67,6 +67,40 @@
   color: var(--ref-color-grey-80);
 }
 
+/* What the network says — the DS infobox; the network's own glyph (its brand
+   colour, set by the icon) stands in for the info icon. */
+.vw-guide > i {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+/* Leave as default · Make it {network}'s — two radio cards side by side. */
+.vw-mode {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--ref-spacing-xs);
+}
+
+/* "Suggestions" + how to order them, above the list. */
+.vw-list-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  margin-top: var(--ref-spacing-xs);
+}
+
+.vw-list-head__title {
+  color: var(--ref-color-grey-100);
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.vw-list-head__hint {
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
+}
+
 /* ── The options ─────────────────────────────────────────────────────────
    Lines (hooks, closings) are DS checkboxes on option cards; layouts and
    conventions are DS radio cards. A picked card takes the blue border — the
@@ -90,11 +124,6 @@
 
 .vw-option:has(input:checked) {
   border-color: var(--ref-color-electric-blue-100);
-}
-
-.vw-option.is-off {
-  opacity: 0.5;
-  cursor: default;
 }
 
 /* Two classes: the DS checkbox container centres its label span. A list of
@@ -123,13 +152,33 @@
   color: var(--app-butter-accent);
 }
 
-.vw-option--own {
+/* A line row: handle · checkbox + line · Archie's mark or remove. The row is
+   what you drag; the handle says so (and takes ↑ ↓ from the keyboard). The
+   row being dragged fades; the one it would land on takes the blue border. */
+/* The handle is a 36px DS icon button: a 4px inset keeps the row at the
+   height the checkbox rows had (≈ 46px). */
+.vw-line {
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-md) var(--ref-spacing-xxxs) var(--ref-spacing-xxxs);
   cursor: default;
 }
 
-/* "Keep my LinkedIn openings" — set apart from Archie's options. */
-.vw-option--keep {
-  margin-top: var(--ref-spacing-xs);
+.vw-line__handle {
+  cursor: grab;
+}
+
+.vw-line__check {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.vw-line.is-dragging {
+  opacity: 0.4;
+}
+
+.vw-line.is-drop {
+  border-color: var(--ref-color-electric-blue-100);
 }
 
 .vw-add {
@@ -327,6 +376,9 @@
 
 @media (max-width: 900px) {
   .vw__content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .vw-mode {
     grid-template-columns: minmax(0, 1fr);
   }
 }
