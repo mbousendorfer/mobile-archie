@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1772";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1773";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -26,16 +26,16 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1772";
+} from "./playbook-brand-kit.js?v=1773";
 import {
   analyzeWebsite,
   discoverCompetitors,
   competitorKey,
   analyzeNetworkVoices,
-} from "./context-mock-analysis.js?v=1772";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1772";
-import { isFlagOn } from "./feature-flags.js?v=1772";
-import { parseHashParams } from "./url-state.js?v=1772";
+} from "./context-mock-analysis.js?v=1773";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1773";
+import { isFlagOn } from "./feature-flags.js?v=1773";
+import { parseHashParams } from "./url-state.js?v=1773";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -47,15 +47,15 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1772";
+} from "./network-voice.js?v=1773";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1772";
-import { showToast } from "./components/toast.js?v=1772";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1772";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1772";
+} from "./voice-coach-store.js?v=1773";
+import { showToast } from "./components/toast.js?v=1773";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1773";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1773";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2290,6 +2290,8 @@ function renderVoiceRead2(data, learnMenu) {
     const own = pb2Block("In your own words", pb2Text(data.voiceManual), { wide: true, icon: "ap-icon-quote" });
     return `${pb2TabHead("voice", learnMenu)}${renderVoiceLangSwitcher(data)}<div class="pb2-grid">${own}</div>`;
   }
+  if (nvAllView())
+    return `${pb2TabHead("voice", "", { noEdit: true, below: renderNetworkSwitcher(data) })}<div class="pb2-grid">${nvAllBlock(data, 0)}</div>`;
   if (nvOn()) {
     const net = activeNetworkFor(data);
     const grid = net === baseNetwork(data) ? nvBaseBlocks(data, ve) : nvNetworkReadBlocks(data, net);
@@ -2317,6 +2319,13 @@ function nvOn() {
 function activeNetworkFor(data) {
   const nets = voiceNetworks(data);
   return nets.includes(activeNetwork) ? activeNetwork : baseNetwork(data);
+}
+
+// The "All networks" tab: the voice on every network at once — the overview
+// and the offers to optimize. A view, not a voice: nothing to edit there.
+const ALL_NETWORKS = "all";
+function nvAllView() {
+  return nvOn() && activeNetwork === ALL_NETWORKS && !editScope;
 }
 
 // The network entry an editor writes into, created on demand.
@@ -2350,9 +2359,16 @@ function renderNetworkSwitcher(data) {
     <div class="pb2-netbar">
       <div class="ap-tabs pb2-nettabs">
         <div class="ap-tabs-nav" role="tablist" aria-label="Voice per network">
+          <button type="button" class="ap-tabs-tab${nvAllView() ? " active" : ""}" role="tab" aria-selected="${nvAllView()}" data-nv-net="${ALL_NETWORKS}"${
+            // Disabled, not hidden, while a voice is edited: a vanishing tab
+            // would slide every other one under the cursor.
+            editScope ? ' disabled title="Save or cancel your changes to see every network"' : ""
+          }>
+            <i class="ap-icon-view-grid" aria-hidden="true"></i><span>All networks</span>
+          </button>
           ${voiceNetworks(data)
             .map((n) => {
-              const on = n === active;
+              const on = !nvAllView() && n === active;
               const pending = getSuggestions(data.id, { network: n }).length;
               // Grey logo = still writing in the base voice (not optimized).
               const borrowed = n !== activeBase && !isOptimized(data, n);
@@ -2427,13 +2443,10 @@ function nvBaseBlocks(data, ve) {
       icon: "ap-icon-quote",
       caption: `${maturity(data, net).detail} Other networks start from it.`,
     }),
-    // Where the voice stands elsewhere, and the offer to optimize — a proposal,
-    // so it sits with the proposals.
-    nvOthersBlock(data, 1),
-    nvSuggestionsBlock(data, net, 2),
-    nvRulesBlock(data, net, 3),
-    ...pb2VoiceFieldBlocks(data, ve, 4),
-    pb2AvoidBlock(data, 8, "Every network"),
+    nvSuggestionsBlock(data, net, 1),
+    nvRulesBlock(data, net, 2),
+    ...pb2VoiceFieldBlocks(data, ve, 3),
+    pb2AvoidBlock(data, 7, "Every network"),
   ].filter(Boolean);
 }
 
@@ -2457,8 +2470,9 @@ function nvSourceBadge(data, net, field) {
 function nvFitStrip(data, net, { mini = false } = {}) {
   const label = networkLabel(net);
   const parts = NV_FIELDS.map(([field, title]) => {
-    const own = isOverridden(data, net, field);
-    const say = `${title}: ${NV_CAPTION(data, net, field).toLowerCase()}`;
+    const own = net === baseNetwork(data) || isOverridden(data, net, field);
+    const say =
+      net === baseNetwork(data) ? `${title}: base voice` : `${title}: ${NV_CAPTION(data, net, field).toLowerCase()}`;
     const inner = `<span class="pb2-nv-fit__glyph${own ? "" : " is-borrowed"}"><i class="${networkIcon(own ? net : baseNetwork(data))}" aria-hidden="true"></i></span>
         ${mini ? "" : `<span class="pb2-nv-fit__name">${esc(title)}</span>`}`;
     // A borrowed part is the way in: it opens Edit straight on that part,
@@ -2487,28 +2501,32 @@ function nvIdentityBlock(data, net) {
   );
 }
 
-// On the base tab: where the voice stands on every other network, with the
-// offer to optimize the ones that still write like the base.
-function nvOthersBlock(data, index) {
+// The "All networks" tab: where the voice stands on every network — the base
+// first, then each other one with its strip in miniature and the offer to
+// optimize it. It lived on the base's tab until 2026-10-15, where it read as
+// part of the LinkedIn voice.
+function nvAllBlock(data, index) {
   const base = baseNetwork(data);
   const rows = voiceNetworks(data)
-    .filter((n) => n !== base)
     .map((n) => {
       const m = maturity(data, n);
+      const isBase = n === base;
       return `<li class="pb2-nv-others__row">
         <button type="button" class="ap-link standalone pb2-nv-others__net" data-nv-net="${n}">
-          <i class="${networkIcon(n)}${isOptimized(data, n) ? "" : " pb2-nv-borrowed-mark"}" aria-hidden="true"></i><span>${esc(networkLabel(n))}</span>
+          <i class="${networkIcon(n)}${isBase || isOptimized(data, n) ? "" : " pb2-nv-borrowed-mark"}" aria-hidden="true"></i><span>${esc(networkLabel(n))}</span>
         </button>
         <span class="pb2-nv-others__fit" title="${esc(`${m.label} — ${m.detail}`)}">${nvFitStrip(data, n, { mini: true })}</span>
-        <span class="pb2-nv-others__action">${nvOptimizeButton(data, n, { tone: "stroked blue" })}</span>
+        <span class="pb2-nv-others__action">${
+          isBase ? nvLevelTag(data, n) : nvOptimizeButton(data, n, { tone: "stroked blue" })
+        }</span>
       </li>`;
     })
     .join("");
-  return pb2Block("Your voice on other networks", `<ul class="pb2-nv-others">${rows}</ul>`, {
+  return pb2Block("Your voice on every network", `<ul class="pb2-nv-others">${rows}</ul>`, {
     wide: true,
     index,
-    icon: "ap-icon-sparkles",
-    caption: `They start from your ${networkLabel(base)} voice`,
+    icon: "ap-icon-view-grid",
+    caption: `Each one starts from your ${networkLabel(base)} voice`,
   });
 }
 
