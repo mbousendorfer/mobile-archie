@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1796";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1797";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -26,11 +26,11 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1796";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1796";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1796";
-import { isFlagOn } from "./feature-flags.js?v=1796";
-import { parseHashParams } from "./url-state.js?v=1796";
+} from "./playbook-brand-kit.js?v=1797";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1797";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1797";
+import { isFlagOn } from "./feature-flags.js?v=1797";
+import { parseHashParams } from "./url-state.js?v=1797";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -47,16 +47,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1796";
+} from "./network-voice.js?v=1797";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1796";
-import { showToast } from "./components/toast.js?v=1796";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1796";
-import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1796";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1796";
+} from "./voice-coach-store.js?v=1797";
+import { showToast } from "./components/toast.js?v=1797";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1797";
+import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1797";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1797";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2551,71 +2551,39 @@ function nvIdentityBlock(data, net) {
     </div>`;
 }
 
-// The "All networks" tab: where the voice stands on each network, at a glance
-// — one row per network (base first, then the ones you publish on, then the
-// rest), one column per part, a MARK per cell: green check = optimized, grey
-// dash = same as the base, orange dot = a part the product just added. No text
-// in the cells (the first table with excerpts and counts was "TMI"); the full
-// state is in each cell's tooltip, and a cell opens the wizard on that part.
+// The "All networks" tab: one line per network — its name, where its voice
+// stands overall (the progress ring + the state in words), Optimize. No detail
+// per part: that's what a network's own tab is for. The base first, then the
+// networks you publish on, then the rest; a line opens its network.
+// (2026-10-15: tiles, then a table per part — "TMI", "pas le détail des sections".)
 function nvAllMatrix(data) {
   const base = baseNetwork(data);
-  const baseLabel = networkLabel(base);
   const fields = nvFields();
-  const live = canEditView() && !editScope;
   const nets = voiceNetworks(data);
   const optimizedNets = nets.filter((n) => n !== base && nvOptimizedCount(data, n) === fields.length).length;
-
-  const head = `<tr>
-      <th scope="col" class="pb2-nv-mx__corner" aria-label="Network"></th>
-      ${fields.map(([, title]) => `<th scope="col">${esc(title)}</th>`).join("")}
-      <th scope="col" class="pb2-nv-mx__end" aria-label="Actions"></th>
-    </tr>`;
-
   const rows = nets
     .map((n) => {
       const isBase = n === base;
       const label = networkLabel(n);
-      const name = `<th scope="row" class="pb2-nv-mx__net">
-          <button type="button" class="pb2-nv-mx__open" data-nv-net="${n}" aria-label="Open your ${esc(label)} voice">
-            <i class="${networkIcon(n)}" aria-hidden="true"></i><span class="pb2-nv-mx__name">${esc(label)}</span>
-          </button>
-        </th>`;
-      if (isBase) {
-        return `<tr class="is-base">${name}<td colspan="${fields.length + 1}" class="pb2-nv-mx__base">Base voice — every network starts from it</td></tr>`;
-      }
+      const complete = !isBase && nvOptimizedCount(data, n) === fields.length;
       const fresh = partsNew(data, n);
-      const cells = fields
-        .map(([field, title], i) => {
-          const own = isOverridden(data, n, field);
-          const state = own ? "Optimized" : fresh[i] ? "New part" : `Same as ${baseLabel}`;
-          const mark = own
-            ? `<i class="ap-icon-rounded-check_fill pb2-nv-mx__check" aria-hidden="true"></i>`
-            : fresh[i]
-              ? `<span class="pb2-nv-mx__new" aria-hidden="true"></span>`
-              : `<span class="pb2-nv-mx__dash" aria-hidden="true"></span>`;
-          const say = `${title} on ${label}: ${state.toLowerCase()}`;
-          return `<td class="pb2-nv-mx__cell">${
-            live
-              ? `<button type="button" class="pb2-nv-mx__hit" data-nv-optimize="${n}" data-nv-optimize-part="${field}" title="${esc(`${title}: ${state}`)}" aria-label="${esc(say)}">${mark}</button>`
-              : `<span class="pb2-nv-mx__hit" title="${esc(`${title}: ${state}`)}" role="img" aria-label="${esc(say)}">${mark}</span>`
-          }</td>`;
-        })
-        .join("");
-      const complete = nvOptimizedCount(data, n) === fields.length;
-      const action = complete
-        ? `<span class="pb2-nv-mx__done"><i class="ap-icon-rounded-check_fill" aria-hidden="true"></i>Optimized</span>`
-        : nvOptimizeButton(data, n, { tone: "stroked blue", short: true });
-      return `<tr>${name}${cells}<td class="pb2-nv-mx__end">${action}</td></tr>`;
+      const state = isBase ? "Base voice — every network starts from it" : nvProgressText(data, n);
+      const action = isBase || complete ? "" : nvOptimizeButton(data, n, { tone: "stroked blue", short: true });
+      return `<li class="pb2-nv-line${isBase ? " is-base" : ""}">
+        <button type="button" class="pb2-nv-line__open" data-nv-net="${n}" aria-label="Open your ${esc(label)} voice">
+          <i class="${networkIcon(n)}" aria-hidden="true"></i><span class="pb2-nv-line__name">${esc(label)}</span>
+        </button>
+        <span class="pb2-nv-line__state">
+          ${progressRingHtml(n, { done: partsDone(data, n), base: isBase, attention: fresh, size: 28, fresh: nvFreshFor(n) })}
+          <span>${esc(state)}</span>
+          ${fresh.some(Boolean) && !isBase ? `<span class="ap-status orange">New part</span>` : ""}
+        </span>
+        <span class="pb2-nv-line__action">${action}</span>
+      </li>`;
     })
     .join("");
-
-  return `<p class="pb2-nv-intro">${optimizedNets} of ${nets.length - 1} networks fully optimized. Open a cell to optimize that part.</p>
-    <div class="pb2-nv-mx-wrap">
-      <table class="pb2-nv-mx">
-        <thead>${head}</thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
+  return `<p class="pb2-nv-intro">${optimizedNets} of ${nets.length - 1} networks fully optimized.</p>
+    <ul class="pb2-nv-lines">${rows}</ul>`;
 }
 
 // Another network: the difference is the content. What it adapted reads in

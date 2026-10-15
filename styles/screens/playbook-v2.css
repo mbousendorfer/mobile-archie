@@ -890,137 +890,65 @@
   background: var(--ref-color-orange-100);
 }
 
-/* "All networks": a table of marks — rows = networks, columns = parts. Green
-   check = optimized, grey dash = same as the base, orange dot = a new part.
-   No text in the cells; each one is a button (blue inset on hover). */
-.pb2-nv-mx-wrap {
-  overflow-x: auto;
+/* "All networks": one line per network in a white card — name, overall state
+   (small ring + words), Optimize. Every line the same height. */
+.pb2-nv-lines {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--app-radius-card);
   background: var(--ref-color-white);
+  list-style: none;
 }
 
-.pb2-nv-mx {
-  width: 100%;
-  min-width: 640px;
-  border-collapse: collapse;
-  table-layout: fixed;
+.pb2-nv-line {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) auto;
+  gap: var(--ref-spacing-md);
+  align-items: center;
+  min-height: 60px;
+  padding: 0 var(--ref-spacing-md);
 }
 
-.pb2-nv-mx th,
-.pb2-nv-mx td {
-  padding: 0;
+.pb2-nv-line + .pb2-nv-line {
   border-top: 1px solid var(--ref-color-grey-20);
-  vertical-align: middle;
 }
 
-.pb2-nv-mx thead th {
-  padding: var(--ref-spacing-sm) var(--ref-spacing-xs);
-  border-top: 0;
-  color: var(--ref-color-grey-100);
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  text-align: center;
-}
-
-.pb2-nv-mx__corner {
-  width: 200px;
-}
-
-.pb2-nv-mx th.pb2-nv-mx__end,
-.pb2-nv-mx td.pb2-nv-mx__end {
-  width: 170px;
-}
-
-.pb2-nv-mx td.pb2-nv-mx__end {
-  padding: var(--ref-spacing-xs) var(--ref-spacing-md);
-  text-align: right;
-}
-
-.pb2-nv-mx__open {
-  display: flex;
+.pb2-nv-line__open {
+  display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  width: 100%;
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  justify-self: start;
+  padding: 0;
   border: 0;
   background: none;
   font: inherit;
-  text-align: left;
   cursor: pointer;
 }
 
-.pb2-nv-mx__name {
+.pb2-nv-line__name {
   color: var(--ref-color-grey-100);
   font-weight: var(--sys-text-style-body-bold-weight);
 }
 
-.pb2-nv-mx__open:hover .pb2-nv-mx__name,
-.pb2-nv-mx__open:focus-visible .pb2-nv-mx__name {
+.pb2-nv-line__open:hover .pb2-nv-line__name,
+.pb2-nv-line__open:focus-visible .pb2-nv-line__name {
   color: var(--ref-color-electric-blue-100);
 }
 
-.pb2-nv-mx__base {
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
-  color: var(--ref-color-grey-80);
-  font-size: var(--ref-font-size-sm);
-  text-align: center;
-}
-
-.pb2-nv-mx__hit {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-height: 52px;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-}
-
-span.pb2-nv-mx__hit {
-  cursor: default;
-}
-
-button.pb2-nv-mx__hit:hover,
-button.pb2-nv-mx__hit:focus-visible {
-  outline: none;
-  box-shadow: inset 0 0 0 1px var(--ref-color-electric-blue-100);
-}
-
-.pb2-nv-mx__check {
-  width: 20px;
-  height: 20px;
-  color: var(--ref-color-green-100);
-}
-
-.pb2-nv-mx__dash {
-  width: 14px;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--ref-color-grey-40);
-}
-
-.pb2-nv-mx__new {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--ref-color-orange-100);
-}
-
-.pb2-nv-mx__done {
+.pb2-nv-line__state {
   display: inline-flex;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
-  color: var(--ref-color-grey-100);
-  font-weight: var(--sys-text-style-body-bold-weight);
+  gap: var(--ref-spacing-xs);
+  min-width: 0;
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
 }
 
-.pb2-nv-mx__done > i {
-  width: 16px;
-  height: 16px;
-  color: var(--ref-color-green-100);
+.pb2-nv-line__action {
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* A part not optimized yet reads DISABLED: the block on the page's grey, the
