@@ -3,7 +3,9 @@
 // The model, stored on the Playbook (it's identity: how this brand sounds on
 // LinkedIn is true before the first post and after the hundredth):
 //   voiceBaseNetwork  "linkedin" — where the base voice was learned from (the
-//                     network of the profile picked at creation).
+//                     first network connected or picked at creation;
+//                     the others get an adaptation drafted then, see
+//                     analyzeNetworkVoices).
 //   voiceByNetwork    { [network]: { signatureHooks?, closingPatterns?,
 //                     formattingStyle?, visualStyle?, rules: string[] } }
 //
@@ -17,9 +19,9 @@
 // ON an overridden hook is written in one language. Per-language × per-network
 // examples when a brand actually publishes in two languages on one network.
 
-import { isFlagOn } from "./feature-flags.js?v=1745";
-import { escapeHtml } from "./utils.js?v=1745";
-import { NETWORKS, normalizeNetwork, getConnectedProfileById } from "./social-profiles.js?v=1745";
+import { isFlagOn } from "./feature-flags.js?v=1749";
+import { escapeHtml } from "./utils.js?v=1749";
+import { NETWORKS, normalizeNetwork, getConnectedProfileById } from "./social-profiles.js?v=1749";
 
 export const NETWORK_FIELDS = ["signatureHooks", "closingPatterns", "formattingStyle", "visualStyle"];
 const LIST_FIELDS = new Set(["signatureHooks", "closingPatterns"]);

@@ -364,6 +364,59 @@ export function analyzeSocialProfiles(profileIds = []) {
   return result;
 }
 
+// How each network bends the base voice, as Archie would read it off that
+// network's posts. Only what DIFFERS — every other part inherits the base.
+const NETWORK_ADAPTATIONS = {
+  linkedin: {
+    formattingStyle:
+      "A first line strong enough to earn the « see more », then short paragraphs with air between them. Ends on a takeaway or a question.",
+    visualStyle: "Sentence case. Emoji rarely, as bullets at most. Three hashtags at the end, never in the text.",
+  },
+  instagram: {
+    closingPatterns: ["Save this for later.", "Tag someone who needs this."],
+    formattingStyle:
+      "The hook sits in the first line, before the caption is cut. Short paragraphs, then the hashtags in one block at the very end.",
+    visualStyle:
+      "Emoji welcome — one or two to open a line, never mid-sentence. No link in the caption: point to the link in bio.",
+  },
+  x: {
+    closingPatterns: ["Thoughts?", "More in the thread below."],
+    formattingStyle: "One idea per post, under 280 characters. Anything longer becomes a numbered thread.",
+    visualStyle: "One emoji at most. One hashtag at most. The link goes last.",
+  },
+  facebook: {
+    formattingStyle:
+      "Two or three short paragraphs that read like a conversation, then a question to open the comments.",
+    visualStyle: "A few emoji are fine. Links stay in the post so the preview card shows.",
+  },
+  tiktok: {
+    formattingStyle: "The caption backs the video: one line that says the hook again in words.",
+    visualStyle: "Casual casing, emoji that fit the clip, three or four hashtags with one broad one.",
+  },
+  youtube: {
+    formattingStyle: "The title carries the hook. The description opens with what the video answers, then chapters.",
+    visualStyle: "No emoji in titles. Links and timestamps live in the description.",
+  },
+};
+
+/**
+ * Pretend to read the posts of each network the Playbook publishes on and
+ * return how each one adapts the base voice — the voiceByNetwork a Playbook is
+ * born with (flag networkVoices). The base network gets no entry: it IS the
+ * base. `rules` start empty — those are what Archie learns later and the user
+ * keeps.
+ * @param {string[]} networks
+ * @param {string} base
+ */
+export function analyzeNetworkVoices(networks = [], base = "") {
+  const out = {};
+  for (const n of new Set(networks)) {
+    if (n === base || !NETWORK_ADAPTATIONS[n]) continue;
+    out[n] = { ...clone(NETWORK_ADAPTATIONS[n]), rules: [] };
+  }
+  return out;
+}
+
 /**
  * Pretend to analyse a website and return a draft skeleton.
  * @param {string} url

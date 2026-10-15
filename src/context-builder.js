@@ -13,24 +13,25 @@
 // tones, contentStyle, objective, contentAction, ctaLinks, language, color,
 // suggestions, editingId, onComplete }.
 
-import * as inlineQuestion from "./inline-question.js?v=1745";
-import { connectableNetworkCards, accountIdsForNetwork } from "./connect-profiles-flow.js?v=1745";
-import { open as openConnectAccountModal } from "./components/connect-account-modal.js?v=1745";
-import { open as openSkipConnectModal } from "./components/skip-connect-modal.js?v=1745";
-import { showToast } from "./components/toast.js?v=1745";
-import { recordReasons } from "./feedback-store.js?v=1745";
-import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=1745";
-import { addContext, updateContext, getContextById } from "./contexts-store.js?v=1745";
-import { isWorkspaceMode, setActivePlaybook } from "./active-playbook.js?v=1745";
-import { analyzeWebsite, analyzeBrandFiles } from "./context-mock-analysis.js?v=1745";
-import { connectors as connectorMocks } from "./mocks.js?v=1745";
+import * as inlineQuestion from "./inline-question.js?v=1749";
+import { connectableNetworkCards, accountIdsForNetwork } from "./connect-profiles-flow.js?v=1749";
+import { open as openConnectAccountModal } from "./components/connect-account-modal.js?v=1749";
+import { open as openSkipConnectModal } from "./components/skip-connect-modal.js?v=1749";
+import { showToast } from "./components/toast.js?v=1749";
+import { recordReasons } from "./feedback-store.js?v=1749";
+import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=1749";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=1749";
+import { isWorkspaceMode, setActivePlaybook } from "./active-playbook.js?v=1749";
+import { analyzeWebsite, analyzeBrandFiles, analyzeNetworkVoices } from "./context-mock-analysis.js?v=1749";
+import { networkVoicesOn, cloneVoiceByNetwork, networkLabel } from "./network-voice.js?v=1749";
+import { connectors as connectorMocks } from "./mocks.js?v=1749";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
   PROFILE_SEARCH_THRESHOLD,
-} from "./social-profiles.js?v=1745";
-import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1745";
-import { isFlagOn } from "./feature-flags.js?v=1745";
+} from "./social-profiles.js?v=1749";
+import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1749";
+import { isFlagOn } from "./feature-flags.js?v=1749";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -99,6 +100,8 @@ function emptyDraft(overrides = {}) {
     sourcePlatform: null,
     connectedSocials: [],
     selectedProfileId: null,
+    voiceBaseNetwork: "",
+    voiceByNetwork: {},
     imageVoice: { websites: [] },
     suggestions: {
       audience: [],
@@ -485,11 +488,21 @@ function askAltLanguage(sessionId) {
 // Record the account(s) this Playbook publishes as, echo them, and move on.
 // The first one is the selected profile — connecting several is allowed, but a
 // Playbook still names ONE identity.
-function commitAltProfiles(sessionId, profiles) {
+//
+// `add` (flag networkVoices) keeps what an earlier connect already recorded: a
+// network connected after the first one joins the Playbook instead of
+// replacing it.
+function commitAltProfiles(sessionId, profiles, { add = false } = {}) {
   const d = drafts.get(sessionId);
   if (!d || !profiles.length) return;
-  d.selectedProfileId = profiles[0].id;
-  d.connectedSocials = profiles.map((p) => p.platform);
+  const keep = add && d.selectedProfileId;
+  if (!keep) d.selectedProfileId = profiles[0].id;
+  const nets = profiles.map((p) => p.platform);
+  d.connectedSocials = keep ? [...new Set([...(d.connectedSocials || []), ...nets])] : nets;
+  // The base voice is learned from the first network; every other one gets
+  // Archie's first adaptation, reviewed on the recap.
+  d.voiceBaseNetwork = d.connectedSocials[0];
+  d.voiceByNetwork = networkVoicesOn() ? analyzeNetworkVoices(d.connectedSocials, d.voiceBaseNetwork) : {};
   postUserProfilesTurn(sessionId, profiles);
 }
 
@@ -539,7 +552,8 @@ function askAltProfile(sessionId, { announce = true } = {}) {
             commitAltProfiles(sessionId, accounts);
             inlineQuestion.exit(sessionId);
             notify(sessionId);
-            askAltDocuments(sessionId);
+            if (networkVoicesOn()) askAltMoreNetworks(sessionId);
+            else askAltDocuments(sessionId);
           },
           // Backing out of the dialog puts the grid back, not a dead end.
           onDismiss: () => askAltProfile(sessionId, { announce: false }),
@@ -567,13 +581,49 @@ function askAltProfile(sessionId, { announce = true } = {}) {
     return;
   }
 
-  if (announce) {
-    postAssistantMessage(sessionId, "Pick the profile to use for this Playbook. I'll tune tone and format for it.");
-  }
   // Connected profiles + their picker presentation come from the shared
   // social-profiles helper so this onboarding step and the in-session
   // draft profile picker stay identical.
   const items = buildConnectedProfileItems();
+
+  // Voice per network: the Playbook can publish from several profiles, and
+  // the voice adapts to each network picked. The first one is the base.
+  if (networkVoicesOn()) {
+    if (announce) {
+      postAssistantMessage(
+        sessionId,
+        "Pick the profiles this Playbook will publish from. I'll learn your voice from the first one, then adapt it for each network.",
+      );
+    }
+    inlineQuestion.ask(sessionId, {
+      title: "Which profiles will publish? (optional)",
+      stepLabel: altStepLabel("profile"),
+      items,
+      multi: true,
+      searchable: items.length > PROFILE_SEARCH_THRESHOLD,
+      searchPlaceholder: "Search profiles by name, handle or network…",
+      onPick: (ids) => {
+        if (!drafts.get(sessionId)) return;
+        const picked = (ids || []).map((id) => connectedProfiles.find((p) => p.id === id)).filter(Boolean);
+        if (picked.length) commitAltProfiles(sessionId, picked);
+        inlineQuestion.exit(sessionId);
+        notify(sessionId);
+        askAltDocuments(sessionId);
+      },
+      skipLabel: "Skip",
+      onSkip: () => {
+        inlineQuestion.exit(sessionId);
+        notify(sessionId);
+        askAltDocuments(sessionId);
+      },
+      onBack: () => askAltPrevious(sessionId, "profile"),
+    });
+    return;
+  }
+
+  if (announce) {
+    postAssistantMessage(sessionId, "Pick the profile to use for this Playbook. I'll tune tone and format for it.");
+  }
   inlineQuestion.ask(sessionId, {
     title: "Which profile will publish? (optional)",
     stepLabel: altStepLabel("profile"),
@@ -598,6 +648,55 @@ function askAltProfile(sessionId, { announce = true } = {}) {
     // Back to the language picker (multilingual on) or the URL question — and
     // askAltPrevious re-renders question 1 with whatever URL the draft holds.
     onBack: () => askAltPrevious(sessionId, "profile"),
+  });
+}
+
+// Voice per network, after the first account is connected: the brand rarely
+// publishes on one network only, and each one it adds gets its own adaptation
+// of the voice. Optional — Continue moves on with what's connected.
+function askAltMoreNetworks(sessionId, { announce = true } = {}) {
+  const d = drafts.get(sessionId);
+  if (!d) return;
+  const connected = d.connectedSocials || [];
+  const items = connectableNetworkCards().filter((c) => !connected.includes(c.value));
+  if (!items.length) {
+    askAltDocuments(sessionId);
+    return;
+  }
+  if (announce) {
+    postAssistantMessage(
+      sessionId,
+      `I'll learn your voice from ${networkLabel(d.voiceBaseNetwork)}. Publishing somewhere else too? Connect it and I'll adapt your voice for it.`,
+    );
+  }
+  inlineQuestion.ask(sessionId, {
+    title: "Connect another network? (optional)",
+    subtitle: "Each network you add gets its own version of your voice.",
+    stepLabel: altStepLabel("profile"),
+    variant: "cards",
+    cardCols: 4,
+    items,
+    skipLabel: "Continue",
+    onPick: (platform) => {
+      openConnectAccountModal({
+        network: platform,
+        preselected: accountIdsForNetwork(platform),
+        onConfirm: (accounts) => {
+          if (!accounts.length) return;
+          commitAltProfiles(sessionId, accounts, { add: true });
+          inlineQuestion.exit(sessionId);
+          notify(sessionId);
+          // The echo of the account is the answer; the question stands as is.
+          askAltMoreNetworks(sessionId, { announce: false });
+        },
+        onDismiss: () => askAltMoreNetworks(sessionId, { announce: false }),
+      });
+    },
+    onSkip: () => {
+      inlineQuestion.exit(sessionId);
+      notify(sessionId);
+      askAltDocuments(sessionId);
+    },
   });
 }
 
@@ -755,8 +854,8 @@ export function save(sessionId) {
     sourcePlatform: d.sourcePlatform || null,
     connectedSocials: Array.isArray(d.connectedSocials) ? d.connectedSocials.slice() : [],
     selectedProfileId: d.selectedProfileId || null,
-    // The base voice is learned from the network of the profile picked here.
-    voiceBaseNetwork: Array.isArray(d.connectedSocials) ? d.connectedSocials[0] || "" : "",
+    voiceBaseNetwork: d.voiceBaseNetwork || "",
+    voiceByNetwork: cloneVoiceByNetwork(d.voiceByNetwork),
     businessSummary: d.businessSummary,
     briefSummary: d.businessSummary, // mirror to legacy field for backwards-read compat
     audience: d.audience,

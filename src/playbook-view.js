@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1745";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1749";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -27,11 +27,16 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1745";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1745";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1745";
-import { isFlagOn } from "./feature-flags.js?v=1745";
-import { parseHashParams } from "./url-state.js?v=1745";
+} from "./playbook-brand-kit.js?v=1749";
+import {
+  analyzeWebsite,
+  discoverCompetitors,
+  competitorKey,
+  analyzeNetworkVoices,
+} from "./context-mock-analysis.js?v=1749";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1749";
+import { isFlagOn } from "./feature-flags.js?v=1749";
+import { parseHashParams } from "./url-state.js?v=1749";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -42,16 +47,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1745";
+} from "./network-voice.js?v=1749";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1745";
-import { NETWORKS } from "./social-profiles.js?v=1745";
-import { showToast } from "./components/toast.js?v=1745";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1745";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1745";
+} from "./voice-coach-store.js?v=1749";
+import { NETWORKS } from "./social-profiles.js?v=1749";
+import { showToast } from "./components/toast.js?v=1749";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1749";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1749";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -1199,12 +1204,21 @@ function renderVoiceLangSwitcher(data) {
     </div>`;
 }
 
+// The base network, on the recap: where it was learned, and that the others start from it.
+function nvRecapBaseLead(data) {
+  const others = voiceNetworks(data).length > 1;
+  return `<p class="pb2-prose recap__nv-lead">${esc(maturity(data, baseNetwork(data)).detail)}${others ? " The other networks start from it." : ""}</p>`;
+}
+
 function renderVoicePanel(data, edit) {
   const section = SECTIONS[1];
   const manual = data.voiceMode === "manual";
   const ve = voiceEntry(data);
   let body;
-  if (edit) {
+  const nvBody = nvOn() && !manual ? nvRecapBody(data, edit) : null;
+  if (nvBody) {
+    body = renderNetworkSwitcher(data) + nvBody;
+  } else if (edit) {
     const fields = manual
       ? `<div class="recap__manual">
            <div class="ap-textarea-field resizable">
@@ -1212,6 +1226,7 @@ function renderVoicePanel(data, edit) {
            </div>
          </div>`
       : [
+          nvOn() ? renderNetworkSwitcher(data) + nvRecapBaseLead(data) : "",
           renderVoiceLangSwitcher(data),
           ...LINE_FIELDS.map((f) => renderRow(f.label, renderLineEditor(f.key, ve[f.key], f.placeholder))),
           renderRow(
@@ -1237,6 +1252,7 @@ function renderVoicePanel(data, edit) {
     body = renderRow("In your words", renderText(data.voiceManual));
   } else {
     body = [
+      nvOn() ? renderNetworkSwitcher(data) + nvRecapBaseLead(data) : "",
       renderVoiceLangSwitcher(data),
       renderRow("Signature hooks", renderQuotes(ve.signatureHooks)),
       renderRow("Closing patterns", renderQuotes(ve.closingPatterns)),
@@ -2537,7 +2553,7 @@ function renderVoiceRead2(data, learnMenu) {
 // Add brings one in (CONCEPTS §1, "propose beside, never write inside").
 
 function nvOn() {
-  return v2On() && networkVoicesOn();
+  return networkVoicesOn() && (v2On() || cfg?.mode === "onboarding");
 }
 
 function activeNetworkFor(data) {
@@ -2639,7 +2655,7 @@ function nvRulesBlock(data, net, index) {
     rules.length
       ? `<ul class="memory-notes">${rules.map((r) => memoryNote(r)).join("")}</ul>`
       : pb2Empty(
-          `Nothing yet. Rework a ${networkLabel(net)} draft or tell me what was off, and I'll suggest what to remember here.`,
+          `Nothing yet. Rework one of your ${networkLabel(net)} drafts or tell me what was off, and I'll suggest what to remember here.`,
         ),
     { wide: true, index, icon: MEMORY_MARK, caption: `${networkLabel(net)} only` },
   );
@@ -2694,24 +2710,40 @@ function nvNetworkReadBlocks(data, net, ve) {
 
 // Edit, on a network that isn't the base: an inherited field reads as the
 // base's value with "Adapt for X"; an adapted one is its own editor with "Use
-// the base voice" to drop the difference.
+// the base voice" to drop the difference. `show` renders an inherited value in
+// the host's own vocabulary (Playbook 2.0 blocks, or the recap's rows).
+const NV_PLACEHOLDERS = {
+  formattingStyle: "How posts are structured on this network…",
+  visualStyle: "Emoji, hashtags, links on this network…",
+};
+
+function nvFieldEdit(data, net, field, show = { list: pb2Lines, text: pb2Text }) {
+  const e = networkEntry(data, net) || {};
+  const own = e[field] !== undefined;
+  const btn = own
+    ? `<button type="button" class="ap-button ghost grey pb2-nv-toggle" data-nv-reset="${field}"><i class="ap-icon-close" aria-hidden="true"></i><span>Use the ${esc(networkLabel(baseNetwork(data)))} voice</span></button>`
+    : `<button type="button" class="ap-button stroked grey pb2-nv-toggle" data-nv-adapt="${field}"><i class="ap-icon-pen" aria-hidden="true"></i><span>Adapt for ${esc(networkLabel(net))}</span></button>`;
+  if (field === "signatureHooks" || field === "closingPatterns") {
+    const placeholder = LINE_FIELDS.find((f) => f.key === field)?.placeholder || "";
+    return (own ? renderLineEditor(field, e[field], placeholder) : show.list(voiceEntry(data)[field])) + btn;
+  }
+  return (
+    (own
+      ? `<div class="ap-textarea-field resizable"><textarea data-nv-text="${field}" rows="3" placeholder="${esc(NV_PLACEHOLDERS[field])}">${esc(e[field] || "")}</textarea></div>`
+      : show.text(data[field])) + btn
+  );
+}
+
+// What a network reads as: its own value where it adapted one, else the base's.
+function nvFieldValue(data, net, field) {
+  const e = networkEntry(data, net) || {};
+  if (e[field] !== undefined) return e[field];
+  return field === "signatureHooks" || field === "closingPatterns" ? voiceEntry(data)[field] : data[field];
+}
+
 function nvNetworkEditBlocks(data, net) {
-  const ve = voiceEntry(data);
   const e = networkEntry(data, net) || {};
   const label = networkLabel(net);
-  const line = (key) => LINE_FIELDS.find((f) => f.key === key)?.placeholder || "";
-  const reset = (field) =>
-    `<button type="button" class="ap-button ghost grey pb2-nv-toggle" data-nv-reset="${field}"><i class="ap-icon-close" aria-hidden="true"></i><span>Use the ${esc(networkLabel(baseNetwork(data)))} voice</span></button>`;
-  const adapt = (field) =>
-    `<button type="button" class="ap-button stroked grey pb2-nv-toggle" data-nv-adapt="${field}"><i class="ap-icon-pen" aria-hidden="true"></i><span>Adapt for ${esc(label)}</span></button>`;
-  const listField = (field, baseValue) =>
-    e[field] !== undefined
-      ? renderLineEditor(field, e[field], line(field)) + reset(field)
-      : pb2Lines(baseValue) + adapt(field);
-  const textField = (field, baseValue, placeholder) =>
-    e[field] !== undefined
-      ? `<div class="ap-textarea-field resizable"><textarea data-nv-text="${field}" rows="3" placeholder="${esc(placeholder)}">${esc(e[field] || "")}</textarea></div>${reset(field)}`
-      : pb2Text(baseValue) + adapt(field);
   return [
     pb2Block("What I've learned", renderLineEditor("rules", e.rules || [], `A rule for ${label}…`), {
       wide: true,
@@ -2719,24 +2751,45 @@ function nvNetworkEditBlocks(data, net) {
       icon: MEMORY_MARK,
       caption: `${label} only`,
     }),
-    pb2Block("Opens with", listField("signatureHooks", ve.signatureHooks), {
-      index: 1,
-      caption: NV_CAPTION(data, net, "signatureHooks"),
-    }),
-    pb2Block("Closes with", listField("closingPatterns", ve.closingPatterns), {
-      index: 2,
-      caption: NV_CAPTION(data, net, "closingPatterns"),
-    }),
-    pb2Block(
-      "Formatting",
-      textField("formattingStyle", data.formattingStyle, "How posts are structured on this network…"),
-      { index: 3, caption: NV_CAPTION(data, net, "formattingStyle") },
+    ...NV_FIELDS.map(([field, title], i) =>
+      pb2Block(title, nvFieldEdit(data, net, field), { index: i + 1, caption: NV_CAPTION(data, net, field) }),
     ),
-    pb2Block("Emoji & casing", textField("visualStyle", data.visualStyle, "Emoji, hashtags, links on this network…"), {
-      index: 4,
-      caption: NV_CAPTION(data, net, "visualStyle"),
-    }),
   ];
+}
+
+const NV_FIELDS = [
+  ["signatureHooks", "Opens with"],
+  ["closingPatterns", "Closes with"],
+  ["formattingStyle", "Formatting"],
+  ["visualStyle", "Emoji & casing"],
+];
+
+// The recap (Playbook creation): the same network tabs, in the recap's rows.
+// Nothing is learned yet, so no rules and no proposals — what a network shows
+// is the adaptation Archie drafted from that network's posts, to review
+// before the Playbook is saved.
+function nvRecapBody(data, edit) {
+  const net = activeNetworkFor(data);
+  const base = baseNetwork(data);
+  if (net === base) return null;
+  const caption = (field) => `<span class="pb2-block__caption">${esc(NV_CAPTION(data, net, field))}</span>`;
+  const show = { list: renderQuotes, text: renderText };
+  const RECAP_LABELS = {
+    signatureHooks: "Signature hooks",
+    closingPatterns: "Closing patterns",
+    formattingStyle: "Formatting",
+    visualStyle: "Emoji & casing",
+  };
+  const rows = NV_FIELDS.map(([field]) => {
+    const value = edit
+      ? nvFieldEdit(data, net, field, show)
+      : field === "signatureHooks" || field === "closingPatterns"
+        ? renderQuotes(nvFieldValue(data, net, field))
+        : renderText(nvFieldValue(data, net, field));
+    return renderRow(RECAP_LABELS[field], caption(field) + value);
+  });
+  const lead = `<p class="pb2-prose recap__nv-lead">I adapted your ${esc(networkLabel(base))} voice to how posts work on ${esc(networkLabel(net))}. Whatever isn't adapted follows ${esc(networkLabel(base))}.</p>`;
+  return lead + rows.join("");
 }
 
 function setNetworkInUrl(net) {
@@ -2760,11 +2813,19 @@ function onNetworkVoiceClick(event) {
   const add = event.target.closest("[data-nv-add]");
   if (add) {
     add.closest("details")?.removeAttribute("open");
-    nvWritableEntry(data, add.dataset.nvAdd);
+    const entry = nvWritableEntry(data, add.dataset.nvAdd);
     activeNetwork = add.dataset.nvAdd;
     setNetworkInUrl(activeNetwork);
+    // At creation, Archie drafts the adaptation like it did for the networks
+    // picked in the flow; on a saved Playbook it starts from the base and learns.
+    const drafted = cfg.mode === "onboarding";
+    if (drafted) Object.assign(entry, analyzeNetworkVoices([activeNetwork], baseNetwork(data))[activeNetwork]);
     cfg.commit?.();
-    showToast(`${networkLabel(activeNetwork)} voice added — it starts from your base voice.`);
+    showToast(
+      drafted
+        ? `I adapted your voice for ${networkLabel(activeNetwork)} — check it below.`
+        : `${networkLabel(activeNetwork)} voice added — it starts from your base voice.`,
+    );
     repaint();
     return true;
   }

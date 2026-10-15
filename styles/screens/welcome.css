@@ -1710,6 +1710,30 @@ button.recap__logotile:hover {
 /* Voice examples — per-language switcher toolbar. Mirrors the Guided /
    Write-it-yourself toggle (.recap__voice-mode): same padding + divider so it
    aligns to the panel grid instead of floating flush-left. */
+/* Voice per network (flag networkVoices) on the recap: the network tabs and
+   the line under them sit on the rows' inset; a row's "Adapted for X" caption
+   heads its value. */
+.recap__panel-body > .pb2-netbar {
+  flex-wrap: wrap;
+  margin-bottom: 0;
+  padding: var(--ref-spacing-sm) var(--ref-spacing-lg) 0;
+}
+
+/* The recap's panel is narrow: the tabs keep their width and "Add a network"
+   wraps under them instead of sliding over the last tab. */
+.recap__panel-body > .pb2-netbar > .pb2-nettabs {
+  flex: 1 0 auto;
+}
+
+.recap__nv-lead {
+  padding: var(--ref-spacing-md) var(--ref-spacing-lg) 0;
+}
+
+.recap__row-value > .pb2-block__caption {
+  display: block;
+  margin-bottom: var(--ref-spacing-xs);
+}
+
 .recap__voice-langs {
   display: flex;
   align-items: center;
