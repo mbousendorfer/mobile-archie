@@ -139,11 +139,6 @@
   text-align: left;
 }
 
-.vw-option__sub {
-  color: var(--ref-color-grey-80);
-  font-size: var(--ref-font-size-sm);
-}
-
 /* Archie's picks wear his olive mark — what he chose, not a decoration. */
 .vw-option__archie {
   display: inline-flex;
