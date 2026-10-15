@@ -138,11 +138,12 @@
 }
 
 /* ── The lines card ──────────────────────────────────────────────────────
-   One white card, grey-20 edge. Every row shares the same five columns —
-   handle / + · rank · line · Archie's mark · action — so the glyphs, the text
-   and the marks of all rows fall on the same verticals. Your lines first
-   (white, a hairline between them), then his suggestions on the page's grey,
-   then your own line as the card's footer row. */
+   One white card, grey-20 edge. Every row shares the same columns — handle
+   / + (20) · rank (44: the 20px badge sits at its right, 8px from the text)
+   · line · action (36) — so glyphs and text of all rows fall on the same
+   verticals. Your lines first (white, a hairline between them), then his
+   suggestions on the page's grey under one label, then your own line as the
+   card's footer row. */
 .vw-list {
   overflow: hidden;
   border: 1px solid var(--ref-color-grey-20);
@@ -156,7 +157,7 @@
 }
 
 .vw-list__kept,
-.vw-list__suggest {
+.vw-list__suggest ul {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -164,8 +165,8 @@
 
 .vw-row {
   display: grid;
-  grid-template-columns: 20px 16px minmax(0, 1fr) 16px 36px;
-  column-gap: var(--ref-spacing-sm);
+  grid-template-columns: 20px 44px minmax(0, 1fr) 36px;
+  column-gap: 0;
   align-items: center;
   box-sizing: border-box;
   width: 100%;
@@ -196,29 +197,46 @@
   justify-self: center;
 }
 
-/* The rank IS the preference: 1 = the line used most. */
+/* The rank IS the preference: 1 = the line used most. A 20px outlined badge
+   — the stepper's — against the line it numbers, not afloat in a column. */
 .vw-row__rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: end;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  margin-right: var(--ref-spacing-xxs);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: 24px;
   color: var(--ref-color-grey-80);
   font-size: var(--ref-font-size-sm);
   font-weight: var(--sys-text-style-body-bold-weight);
-  text-align: center;
+  line-height: 1;
 }
 
 .vw-row__text {
   min-width: 0;
-}
-
-.vw-row > .vw-option__archie {
-  justify-self: center;
-  margin: 0;
+  padding-right: var(--ref-spacing-xs);
 }
 
 /* His other suggestions: a grey band under your lines, the whole row a
    button; body ink until you reach for it. */
 .vw-list__suggest {
-  padding: var(--ref-spacing-xxxs) 0;
+  padding: var(--ref-spacing-xs) 0 var(--ref-spacing-xxxs);
   border-top: 1px solid var(--ref-color-grey-20);
   background: var(--app-surface-subtle);
+}
+
+/* "My suggestions" — said once for the band, on the text's vertical
+   (row inset + handle + rank columns + the row's 1px edge). */
+.vw-list__suggest-head {
+  margin: 0 0 var(--ref-spacing-xxxs);
+  padding-left: calc(1px + var(--ref-spacing-sm) + 20px + 44px);
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--sys-text-style-body-bold-weight);
 }
 
 .vw-row--suggest {
