@@ -30,10 +30,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1842";
-import { bindReorder } from "../drag-reorder.js?v=1842";
-import { escapeHtml as esc } from "../utils.js?v=1842";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1842";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1844";
+import { bindReorder } from "../drag-reorder.js?v=1844";
+import { escapeHtml as esc } from "../utils.js?v=1844";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1844";
 import {
   networkFields,
   isNewPart,
@@ -43,7 +43,7 @@ import {
   networkEntry,
   resolvedVoice,
   progressRingHtml,
-} from "../network-voice.js?v=1842";
+} from "../network-voice.js?v=1844";
 
 const MODAL_ID = "voiceWizard";
 
@@ -98,7 +98,8 @@ let initialized = false;
 // { data, net, base, opts, fields, step, parts: { [field]: part }, initial, startParts, leaving, onSave }
 //   list part: { lines: string[] } — the lines you keep, in preference
 //     order; Archie's options not in it follow, as suggestions
-//   text part: { choice: null | 0 | 1 | "own", own } — null = nothing picked
+//   text part: { choice: null | 0 | 1 | "own", own, before } — null = nothing
+//     picked; before = the suggestion picked when you started typing your own
 //     to come back to when you leave "default"
 let w = null;
 
@@ -361,9 +362,9 @@ function renderDefaultNote(field) {
   const what = `${networkLabel(w.base)} ${PARTS[field].noun}`;
   // Said while nothing is picked; going back to the base is the footer's
   // "Use default voice".
-  return valueOf(field) === undefined
-    ? `<p class="vw-default">Until you pick one, ${esc(networkLabel(w.net))} uses your ${esc(what)}.</p>`
-    : "";
+  return `<p class="vw-default"${valueOf(field) === undefined ? "" : " hidden"}>Until you pick one, ${esc(
+    networkLabel(w.net),
+  )} uses your ${esc(what)}.</p>`;
 }
 
 function renderPart(field) {
@@ -420,8 +421,9 @@ function renderPart(field) {
   }
   // Every option is one of Archie's suggestions, so a card IS its text — no
   // "Archie's pick" / "Another way" titles. The one he recommends wears his
-  // status (the butter .ap-status). "Write my own" is not his: it sits in its
-  // own section, "Your own", under them — still the same radio group.
+  // status (the butter .ap-status). Your own is not his: its own section,
+  // "Your own", a field always open — typing in it makes it the choice (the
+  // suggestions untick), picking a suggestion sets it aside (its text kept).
   const radio = (value, inner) => `
     <label class="ap-radio-card card vw-radio">
       <input type="radio" name="vw-choice" data-vw-choice="${value}" ${String(p.choice) === String(value) ? "checked" : ""} />
@@ -443,15 +445,8 @@ function renderPart(field) {
     </div>
     </section>
     <section class="vw-section">
-    <div class="vw-list-head"><span class="vw-list-head__title">Your own</span></div>
-    <div class="vw-options">
-      ${radio("own", `<span class="ap-radio-card-title">Write my own</span>`)}
-      ${
-        p.choice === "own"
-          ? `<div class="ap-textarea-field resizable vw-own"><textarea data-vw-own rows="3" placeholder="${esc(P.add)}" aria-label="${esc(P.add)}">${esc(p.own)}</textarea></div>`
-          : ""
-      }
-    </div>
+    <div class="vw-list-head"><label class="vw-list-head__title" for="vwOwn">Your own</label></div>
+    <div class="ap-textarea-field resizable vw-own${p.choice === "own" ? " is-picked" : ""}"><textarea id="vwOwn" data-vw-own rows="3" placeholder="${esc(P.add)}">${esc(p.own)}</textarea></div>
     ${renderDefaultNote(field)}
     </section>`;
 }
@@ -600,9 +595,8 @@ function onChange(event) {
   const p = w.parts[field];
   if (t.matches("[data-vw-choice]")) {
     const v = t.dataset.vwChoice;
-    p.choice = v === "own" ? v : Number(v);
+    p.choice = Number(v);
     paint();
-    if (v === "own") bodyEl.querySelector("[data-vw-own]")?.focus();
   }
 }
 
@@ -610,10 +604,19 @@ function onChange(event) {
 function onInput(event) {
   if (!w || !event.target.matches("[data-vw-own]")) return;
   const field = w.fields[w.step];
-  w.parts[field].own = event.target.value;
-  // The note under the choices follows (empty text = still the base voice).
+  const p = w.parts[field];
+  p.own = event.target.value;
+  // Typing makes your own text the choice. No repaint (the field keeps focus): the radios, the field's
+  // picked edge and the note follow in place.
+  // Emptying it gives back the suggestion picked before you typed, if any.
+  if (p.own.trim()) {
+    if (p.choice !== "own") p.before = p.choice;
+    p.choice = "own";
+  } else if (p.choice === "own") p.choice = p.before ?? null;
+  bodyEl.querySelectorAll("[data-vw-choice]").forEach((r) => (r.checked = String(p.choice) === r.dataset.vwChoice));
+  event.target.closest(".vw-own")?.classList.toggle("is-picked", p.choice === "own");
   const note = bodyEl.querySelector(".vw-default");
-  if (note) note.outerHTML = renderDefaultNote(field);
+  if (note) note.hidden = valueOf(field) !== undefined;
 }
 
 function onKeydown(event) {

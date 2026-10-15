@@ -270,6 +270,11 @@
   width: 100%;
 }
 
+/* Your own text is the choice: the picked edge of the radio cards above. */
+.vw-own.is-picked textarea {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
 /* ── The review ──────────────────────────────────────────────────────────
    The voice as it will read: the network's band (ring + one sentence — the
    Voice tab's .pb2-nv-progress), then the tab's own blocks (.pb2-block), two
