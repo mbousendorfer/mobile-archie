@@ -13,31 +13,31 @@
 // tones, contentStyle, objective, contentAction, ctaLinks, language, color,
 // suggestions, editingId, onComplete }.
 
-import * as inlineQuestion from "./inline-question.js?v=1850";
-import { connectableNetworkCards, accountIdsForNetwork } from "./connect-profiles-flow.js?v=1850";
-import { open as openConnectAccountModal } from "./components/connect-account-modal.js?v=1850";
-import { open as openSkipConnectModal } from "./components/skip-connect-modal.js?v=1850";
-import { showToast } from "./components/toast.js?v=1850";
-import { recordReasons } from "./feedback-store.js?v=1850";
-import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=1850";
-import { addContext, updateContext, getContextById } from "./contexts-store.js?v=1850";
-import { isWorkspaceMode, setActivePlaybook } from "./active-playbook.js?v=1850";
-import { analyzeWebsite, analyzeBrandFiles, analyzeNetworkVoices } from "./context-mock-analysis.js?v=1850";
+import * as inlineQuestion from "./inline-question.js?v=1851";
+import { connectableNetworkCards, accountIdsForNetwork } from "./connect-profiles-flow.js?v=1851";
+import { open as openConnectAccountModal } from "./components/connect-account-modal.js?v=1851";
+import { open as openSkipConnectModal } from "./components/skip-connect-modal.js?v=1851";
+import { showToast } from "./components/toast.js?v=1851";
+import { recordReasons } from "./feedback-store.js?v=1851";
+import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=1851";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=1851";
+import { isWorkspaceMode, setActivePlaybook } from "./active-playbook.js?v=1851";
+import { analyzeWebsite, analyzeBrandFiles, analyzeNetworkVoices } from "./context-mock-analysis.js?v=1851";
 import {
   networkVoicesOn,
   cloneVoiceByNetwork,
   networkLabel,
   networkIcon,
   voiceNetworks,
-} from "./network-voice.js?v=1850";
-import { connectors as connectorMocks } from "./mocks.js?v=1850";
+} from "./network-voice.js?v=1851";
+import { connectors as connectorMocks } from "./mocks.js?v=1851";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
   PROFILE_SEARCH_THRESHOLD,
-} from "./social-profiles.js?v=1850";
-import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1850";
-import { isFlagOn } from "./feature-flags.js?v=1850";
+} from "./social-profiles.js?v=1851";
+import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1851";
+import { isFlagOn } from "./feature-flags.js?v=1851";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -336,8 +336,6 @@ function askAltPrevious(sessionId, stepId) {
   const d = drafts.get(sessionId);
   if (prev === "language") askAltLanguage(sessionId);
   else if (prev === "profile") askAltProfile(sessionId);
-  // One connected network: the step was said, not asked — Back goes past it.
-  else if (prev === "network" && new Set(d?.connectedSocials || []).size === 1) askAltProfile(sessionId);
   else if (prev === "network") askAltBaseNetwork(sessionId);
   else if (prev === "documents") askAltDocuments(sessionId);
   else askAltUrl(sessionId, d?.sourceUrl || d?.websiteUrl || "");
@@ -720,27 +718,19 @@ function afterAltProfile(sessionId) {
 }
 
 // Which network the main voice is built for — the base every other network
-// starts from (voiceBaseNetwork). Asked, never guessed: the networks connected
-// (2 or more), or every network when none is (the brand still publishes
-// somewhere). One connected network IS the answer: said, not asked. Either
-// way Archie says where the rest happens — each other network is tuned in the
-// Playbook (Voice tab, Optimize). Skip keeps the default (the first connected).
+// starts from (voiceBaseNetwork). Always asked, however many accounts are
+// connected (2026-10-15: "indépendamment du nombre de profils connectés"):
+// every network, the connected ones first ("Connected"). Archie says where
+// the rest happens — each other network is tuned in the Playbook (Voice tab,
+// Optimize). Skip keeps the default (the first connected, else LinkedIn).
 function askAltBaseNetwork(sessionId) {
   const d = drafts.get(sessionId);
   if (!d) return;
   const connected = [...new Set(d.connectedSocials || [])];
-  if (connected.length === 1) {
-    d.voiceBaseNetwork = connected[0];
-    postAssistantMessage(
-      sessionId,
-      `I'll build your main voice for ${networkLabel(connected[0])}. You'll tune it for any other network in your Playbook.`,
-    );
-    askAltDocuments(sessionId);
-    return;
-  }
-  // The connect step's card look (glyph tile + name), for networks already
-  // connected — connectableNetworkCards() lists only the ones still to connect.
-  const items = (connected.length ? connected : voiceNetworks({})).map((n) => ({
+  // The connect step's card look (glyph tile + name) — connectableNetworkCards()
+  // lists only the networks still to connect.
+  const order = [...new Set([...connected, ...voiceNetworks({})])];
+  const items = order.map((n) => ({
     value: n,
     label: networkLabel(n),
     caption: connected.includes(n) ? "Connected" : "",

@@ -30,10 +30,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1850";
-import { bindReorder } from "../drag-reorder.js?v=1850";
-import { escapeHtml as esc } from "../utils.js?v=1850";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1850";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1851";
+import { bindReorder } from "../drag-reorder.js?v=1851";
+import { escapeHtml as esc } from "../utils.js?v=1851";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1851";
 import {
   networkFields,
   isNewPart,
@@ -43,7 +43,7 @@ import {
   networkEntry,
   resolvedVoice,
   progressRingHtml,
-} from "../network-voice.js?v=1850";
+} from "../network-voice.js?v=1851";
 
 const MODAL_ID = "voiceWizard";
 
