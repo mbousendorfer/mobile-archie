@@ -19,13 +19,13 @@
 // id used to apply the focus pulse animation when navigating in via
 // `?focusPost=<id>`.
 
-import { html, raw, formatClock, escapeText, escapeAttr } from "../utils.js?v=1924";
-import { isPortraitFormat } from "../clip-formats.js?v=1924";
-import { presetById } from "../clip-captions.js?v=1924";
-import { renderFeedbackControl } from "./feedback-control.js?v=1924";
-import { networkMeta } from "../social-profiles.js?v=1924";
-import { REVEAL_MS } from "../archie-pixels.js?v=1924";
-import { installMoreMenu } from "./more-menu.js?v=1924";
+import { html, raw, formatClock, escapeText, escapeAttr } from "../utils.js?v=1927";
+import { isPortraitFormat } from "../clip-formats.js?v=1927";
+import { presetById } from "../clip-captions.js?v=1927";
+import { renderFeedbackControl } from "./feedback-control.js?v=1927";
+import { networkMeta } from "../social-profiles.js?v=1927";
+import { REVEAL_MS } from "../archie-pixels.js?v=1927";
+import { installMoreMenu } from "./more-menu.js?v=1927";
 
 // A draft's ⋯ menu (mobile fork) — toggle, outside tap and Escape; an item
 // closes it once its action (handled by right-panel.js) has run.

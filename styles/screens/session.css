@@ -1780,7 +1780,7 @@ body.playbook-revoked .session__composer-card {
   }
 }
 
-/* "ADMIN MODE: DISPLAY IN CHAT" — the prototype's catalogue of chat elements, a link in the
+/* "Admin: display in chat" — the prototype's catalogue of chat elements, a link in the
    composer hint row whose DS action dropdown opens upward (chat-gallery.js). */
 .chat-gallery {
   position: relative;
@@ -1791,7 +1791,6 @@ body.playbook-revoked .session__composer-card {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxxs);
-  font-size: inherit;
 }
 
 .chat-gallery__menu {
@@ -1836,6 +1835,18 @@ body.playbook-revoked .session__composer-card {
   min-width: 0;
 }
 
+/* The static indicator (an active chat) is a tag at its name's width, not a
+   field across the toolbar; the name truncates past what the row leaves. */
+.session__composer-toolbar .composer-playbook--static {
+  flex: 0 1 auto;
+  justify-content: flex-start;
+}
+
+.composer-playbook--static > span:last-child {
+  max-width: none;
+  min-width: 0;
+}
+
 .session__composer-toolbar .composer-playbook__trigger {
   width: 100%;
   min-width: 0;
@@ -1850,7 +1861,12 @@ body.playbook-revoked .session__composer-card {
   max-width: none;
 }
 
+/* The link is centred in the hint row: the menu centres on it, so it stays
+   on screen whatever the label's width (anchored right, it ran off the left). */
 .chat-gallery__menu {
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
   width: min(300px, calc(100vw - 2 * var(--ref-spacing-md)));
 }
 

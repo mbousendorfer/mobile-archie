@@ -1,8 +1,5 @@
 /* Contexts library — standalone page (Lot 8.1).
-   Header → search → grid of ContextCards. Each card has a colored swatch
-   strip on its top edge (palette derived from the context's `color`
-   field), a brand + brief preview, a tone chip row, and Do/Don't
-   summaries side-by-side. */
+   Header → search → grid of ContextCards (see § ContextCard below). */
 
 .contexts-view {
   display: flex;
@@ -199,11 +196,12 @@
 
 /* ── ContextCard ───────────────────────────────────────────────────
    Summary card that lets a user spot which context is which at a
-   glance. Modelled on the Claude Projects pattern: color stripe on
-   top, title, voice headline, multi-line summary, footer counters +
+   glance. Modelled on the Claude Projects pattern: colour dot +
+   title, voice headline, multi-line summary, the counts in words +
    brand palette dots, "Updated X ago" timestamp. Secondary actions
-   (Edit / Duplicate / Delete) hide by default and reveal on hover
-   so the card stays uncluttered. */
+   (Share / Edit / Duplicate / Delete) sit in the row's ⋯ — always
+   visible: a phone has no hover. No colour strip on the top edge
+   (an edge accent, out by the house rules): the colour is the dot. */
 
 .contexts-card {
   position: relative;
@@ -211,11 +209,10 @@
   flex-direction: column;
   gap: var(--ref-spacing-xs);
   padding: var(--ref-spacing-md);
-  padding-top: var(--ref-spacing-md);
   background: var(--app-surface);
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
-  overflow: hidden;
+  /* No overflow: hidden — the ⋯ menu drops out of the card. */
   cursor: pointer;
   transition: border-color var(--ref-animation-short) var(--app-ease-out);
 }
@@ -228,87 +225,18 @@
   border-color: var(--ref-color-electric-blue-100);
 }
 
-/* Swatch strip — top edge, full-width, colored per ctx.color. */
-.contexts-card__swatch {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-}
-
-/* The brand's colour, declared once per modifier and read by both shapes —
-   the grid card's top strip and the row's dot. It used to be six rules that
-   each set the strip's background, which is how a second shape ends up with a
-   fifth colour nobody updated. */
-.contexts-card--orange {
-  --card-accent: var(--ref-color-orange-100);
-}
-.contexts-card--blue {
-  --card-accent: var(--ref-color-electric-blue-100);
-}
-.contexts-card--green {
-  --card-accent: var(--ref-color-green-100);
-}
-.contexts-card--purple {
-  --card-accent: var(--ref-color-purple-100);
-}
-.contexts-card--red {
-  --card-accent: var(--ref-color-red-100);
-}
-.contexts-card--yellow {
-  --card-accent: var(--ref-color-yellow-100);
-}
-
-.contexts-card__swatch {
-  background: var(--card-accent, var(--ref-color-grey-40));
-}
-
-/* Hover-reveal action toolbar — sits in the top-right corner, hidden
-   by default. Matches Claude / Linear / Notion's "actions appear on
-   hover" pattern so the card body stays clean to scan. */
-.contexts-card__actions {
-  position: absolute;
-  top: calc(var(--ref-spacing-xs) + 4px); /* +4 = color-strip height */
-  right: var(--ref-spacing-xs);
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  padding: 2px;
-  border-radius: var(--ref-border-radius-sm);
-  background: var(--ref-color-white);
-  border: 1px solid var(--app-border);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--ref-animation-short) var(--app-ease-out);
-}
-
-.contexts-card:hover .contexts-card__actions,
-.contexts-card:focus-within .contexts-card__actions {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.contexts-card__actions .ap-icon-button {
-  width: 28px;
-  height: 28px;
-}
-
 .contexts-card__head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--ref-spacing-xs);
-  /* Reserve horizontal space for the hover-reveal action toolbar so
-     long names don't crash into it on hover. */
-  padding-right: 100px;
 }
 
 .contexts-card__name {
   margin: 0;
   display: inline-flex;
   align-items: center;
+  min-width: 0;
   gap: var(--ref-spacing-xxs);
   font-size: var(--sys-text-style-h3-size);
   line-height: var(--sys-text-style-h3-line-height);
@@ -405,24 +333,20 @@
   padding-top: var(--ref-spacing-xs);
 }
 
-.contexts-card__counters {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-sm);
+/* The counts are a sentence now: they take the foot's first line, the
+   metadata corner (owner, palette) the next — side by side at 375px the
+   owner tag shrank to "Sha…". */
+.contexts-card__foot {
+  flex-wrap: wrap;
 }
 
-.contexts-card__counter {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
+.contexts-card__counters {
+  flex: 1 1 100%;
+  margin: 0;
+  min-width: 0;
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   font-weight: var(--sys-text-style-caption-weight);
-  color: var(--ref-color-grey-80);
-}
-
-.contexts-card__counter > i {
-  font-size: var(--sys-icon-css-sm);
   color: var(--ref-color-grey-80);
 }
 

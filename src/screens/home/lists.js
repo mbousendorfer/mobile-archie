@@ -11,16 +11,16 @@ import {
   canManageSharing,
   canDelete,
   canView,
-} from "../../playbook-access.js?v=1924";
-import { isFlagOn } from "../../feature-flags.js?v=1924";
-import { escapeAttr, escapeText } from "../../utils.js?v=1924";
-import { isWorkspaceMode, getActivePlaybookId } from "../../active-playbook.js?v=1924";
-import { getSessions } from "../../sessions-store.js?v=1924";
-import { renderEmptyState } from "../../components/empty-state.js?v=1924";
-import { getSources, getIdeas } from "../../library.js?v=1924";
-import { getPosts } from "../../posts-store.js?v=1924";
-import { getContextById } from "../../contexts-store.js?v=1924";
-import { pageState } from "../home.js?v=1924";
+} from "../../playbook-access.js?v=1927";
+import { isFlagOn } from "../../feature-flags.js?v=1927";
+import { escapeAttr, escapeText } from "../../utils.js?v=1927";
+import { isWorkspaceMode, getActivePlaybookId } from "../../active-playbook.js?v=1927";
+import { getSessions } from "../../sessions-store.js?v=1927";
+import { renderEmptyState } from "../../components/empty-state.js?v=1927";
+import { getSources, getIdeas } from "../../library.js?v=1927";
+import { getPosts } from "../../posts-store.js?v=1927";
+import { getContextById } from "../../contexts-store.js?v=1927";
+import { pageState } from "../home.js?v=1927";
 
 // The Playbooks tab — a TABLE, the same shape as the Chats tab beside it.
 //
@@ -306,8 +306,8 @@ export function renderContextsEmpty(allContexts, pageState) {
 
 // Claude-Projects-style summary card. The card is the primary
 // "what is this context" affordance — readable at a glance, with
-// secondary actions tucked into a hover-reveal toolbar in the
-// top-right corner. DO/DON'T lists and the tones chip row moved
+// secondary actions tucked into the ⋯ in the top-right corner
+// (the row's menu, playbookMoreMenu). DO/DON'T lists and the tones chip row moved
 // out: they bloated the card without helping identification, and
 // they live in the read panel where they belong.
 // Trailing "ghost" card — visually invites a new Playbook from the grid
@@ -362,28 +362,6 @@ export function renderContextCard(ctx) {
         <span>${escapeText(access)}</span>
       </span>`
     : "";
-  // Only the actions I can actually take. For a Playbook someone shared with
-  // me that's Duplicate alone — the one move that turns reading into having.
-  const actions = [
-    canManageSharing(ctx)
-      ? `<button type="button" class="ap-icon-button transparent" data-contexts-share="${ctx.id}" title="Share" aria-label="Share">
-          <i class="ap-icon-share"></i>
-        </button>`
-      : "",
-    canEdit(ctx)
-      ? `<button type="button" class="ap-icon-button transparent" data-contexts-edit="${ctx.id}" title="Edit" aria-label="Edit">
-          <i class="ap-icon-pen"></i>
-        </button>`
-      : "",
-    `<button type="button" class="ap-icon-button transparent" data-contexts-duplicate="${ctx.id}" title="Duplicate" aria-label="Duplicate">
-      <i class="ap-icon-copy"></i>
-    </button>`,
-    canDelete(ctx)
-      ? `<button type="button" class="ap-icon-button transparent" data-contexts-delete="${ctx.id}" title="Delete" aria-label="Delete">
-          <i class="ap-icon-trash"></i>
-        </button>`
-      : "",
-  ].join("");
   // ── On the home, a card IS the workspace ────────────────────────────────
   //
   // Clicking it switches to that brand and opens a fresh chat in it: on a page
@@ -415,38 +393,17 @@ export function renderContextCard(ctx) {
   const briefHtml = summary
     ? `<p class="contexts-card__brief">${escapeText(summary)}</p>`
     : `<p class="contexts-card__brief contexts-card__brief--empty">${escapeText(playbookBrief(ctx))}</p>`;
-  const countersHtml = `
-    <div class="contexts-card__counters">
-      <span class="contexts-card__counter" title="${usedIn} ${usedIn === 1 ? "chat uses this Playbook" : "chats use this Playbook"}">
-        <i class="ap-icon-single-chat-bubble"></i>
-        <span>${usedIn}</span>
-      </span>
-      ${
-        audienceCount
-          ? `<span class="contexts-card__counter" title="${audienceCount} ${audienceCount === 1 ? "audience" : "audiences"}">
-              <i class="ap-icon-target"></i>
-              <span>${audienceCount}</span>
-            </span>`
-          : ""
-      }
-      ${
-        competitorCount
-          ? `<span class="contexts-card__counter" title="${competitorCount} ${competitorCount === 1 ? "competitor" : "competitors"}">
-              <i class="ap-icon-buildings"></i>
-              <span>${competitorCount}</span>
-            </span>`
-          : ""
-      }
-      ${
-        influencerCount
-          ? `<span class="contexts-card__counter" title="${influencerCount} ${influencerCount === 1 ? "influencer" : "influencers"}">
-              <i class="ap-icon-star"></i>
-              <span>${influencerCount}</span>
-            </span>`
-          : ""
-      }
-    </div>
-  `;
+  // Each count says what it counts, in words (a metric is named in text — an
+  // icon beside a number never identifies it). Zeroes are left out, except the
+  // chats, which is the one a reader looks for.
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const counters = [
+    plural(usedIn, "chat", "chats"),
+    audienceCount ? plural(audienceCount, "audience", "audiences") : "",
+    competitorCount ? plural(competitorCount, "competitor", "competitors") : "",
+    influencerCount ? plural(influencerCount, "influencer", "influencers") : "",
+  ].filter(Boolean);
+  const countersHtml = `<p class="contexts-card__counters">${escapeText(counters.join(" · "))}</p>`;
   const openAttrs = `
       data-contexts-card="${ctx.id}"
       role="button"
@@ -454,22 +411,22 @@ export function renderContextCard(ctx) {
       ${cardTitle ? `title="${escapeAttr(cardTitle)}" aria-label="${escapeAttr(cardTitle)}"` : ""}`;
 
   // ── The tile ────────────────────────────────────────────────────────────
-  // The catalogue's own shape, flag OFF: a colour strip, the voice chip, three
-  // counters, the palette, the hover toolbar. A Playbook is an OBJECT you
+  // The catalogue's own shape, flag OFF: the colour dot, the voice chip, the
+  // counts, the palette, the ⋯. Mobile fork: the colour was a strip along the
+  // top edge (an edge accent — out) and the verbs a hover-only toolbar; the
+  // colour is now the row's dot before the name, the verbs the row's ⋯. A Playbook is an OBJECT you
   // browse here. On the home the same Playbook is a row you pick from
   // (renderPlaybookRow), which is why the two shapes differ in everything but
   // the words they say.
   return `
-    <article class="contexts-card contexts-card--${color}"${openAttrs}>
-      <span class="contexts-card__swatch" aria-hidden="true"></span>
-
-      <div class="contexts-card__actions" data-contexts-card-actions>${actions}</div>
-
+    <article class="contexts-card"${openAttrs}>
       <header class="contexts-card__head">
         <h3 class="contexts-card__name">
-          ${escapeText(ctx.name)}
+          <span class="app-sidebar__row-color-dot app-sidebar__row-color-dot--${escapeAttr(color)}" aria-hidden="true"></span>
+          <span class="contexts-card__name-text">${escapeText(ctx.name)}</span>
           ${isDefaultBadge}
         </h3>
+        ${playbookMoreMenu(ctx)}
       </header>
 
       ${voiceHtml} ${briefHtml}

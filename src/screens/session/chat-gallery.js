@@ -1,4 +1,4 @@
-// "ADMIN MODE: DISPLAY IN CHAT" — a prototype shortcut under the composer that lists every
+// "Admin: display in chat" — a prototype shortcut under the composer that lists every
 // element a conversation can display and every trigger that produces one, and
 // plays any of them in the current chat.
 //
@@ -14,8 +14,8 @@
 // ponytail: the catalogue is a hand-kept list — a new turn variant or route has
 // to be added here too, or it won't show in the menu.
 
-import { escapeHtml } from "../../utils.js?v=1924";
-import { isFlagOn } from "../../feature-flags.js?v=1924";
+import { escapeHtml } from "../../utils.js?v=1927";
+import { isFlagOn } from "../../feature-flags.js?v=1927";
 import {
   postAssistantMessage,
   postUserTurn,
@@ -34,22 +34,22 @@ import {
   reportDraftFailure,
   getThread,
   refreshThread,
-} from "../../assistant.js?v=1924";
-import { getSources, getIdeas } from "../../library.js?v=1924";
-import { getPosts } from "../../posts-store.js?v=1924";
-import { getTopPosts } from "../../top-posts-store.js?v=1924";
-import { getConnectedProfiles } from "../../social-profiles.js?v=1924";
-import { extractClipsForSource, updateSourceClips } from "../../sources-stream.js?v=1924";
-import { getConnectedConnectors } from "../../connectors-store.js?v=1924";
-import { detectUrlService } from "../../url-services.js?v=1924";
-import { propose, getSuggestions } from "../../voice-coach-store.js?v=1924";
-import * as inlineQuestion from "../../inline-question.js?v=1924";
-import { startTopPostsInline } from "../../top-posts-flow.js?v=1924";
-import { startTopicPickerInline } from "../../topic-flow.js?v=1924";
-import { askConnector } from "../../connector-ask.js?v=1924";
-import { coachAfterDraft, coachingTarget } from "../../voice-coach.js?v=1924";
-import { requireConnectedProfiles } from "../../connect-profiles-flow.js?v=1924";
-import { startIdeaDraft, askVideoIntake } from "./draft-questions.js?v=1924";
+} from "../../assistant.js?v=1927";
+import { getSources, getIdeas } from "../../library.js?v=1927";
+import { getPosts } from "../../posts-store.js?v=1927";
+import { getTopPosts } from "../../top-posts-store.js?v=1927";
+import { getConnectedProfiles } from "../../social-profiles.js?v=1927";
+import { extractClipsForSource, updateSourceClips } from "../../sources-stream.js?v=1927";
+import { getConnectedConnectors } from "../../connectors-store.js?v=1927";
+import { detectUrlService } from "../../url-services.js?v=1927";
+import { propose, getSuggestions } from "../../voice-coach-store.js?v=1927";
+import * as inlineQuestion from "../../inline-question.js?v=1927";
+import { startTopPostsInline } from "../../top-posts-flow.js?v=1927";
+import { startTopicPickerInline } from "../../topic-flow.js?v=1927";
+import { askConnector } from "../../connector-ask.js?v=1927";
+import { coachAfterDraft, coachingTarget } from "../../voice-coach.js?v=1927";
+import { requireConnectedProfiles } from "../../connect-profiles-flow.js?v=1927";
+import { startIdeaDraft, askVideoIntake } from "./draft-questions.js?v=1927";
 
 // The intake sample plays the real lifecycle — loading, then ready — under a
 // sample id no source owns, so intake-lifecycle leaves it alone.
@@ -397,12 +397,14 @@ const GROUPS = [
 const ALL = GROUPS.flatMap((g) => g.items);
 
 // The link + an empty menu; the items are built on open, so their availability
-// reads the chat as it is at that moment.
+// reads the chat as it is at that moment. Prototype chrome, so it stays small and
+// quiet: sentence case (upstream wrote "ADMIN MODE: DISPLAY IN CHAT" — no uppercase
+// labels), the `small` link, no chevron (aria-haspopup says it opens a menu).
 export function renderChatGallery() {
   return `
     <span class="chat-gallery">
-      <button type="button" class="ap-link chat-gallery__toggle" data-chat-gallery-toggle aria-haspopup="menu" aria-expanded="false">
-        <i class="ap-icon-illuminati" aria-hidden="true"></i> ADMIN MODE: DISPLAY IN CHAT <i class="ap-icon-chevron-down" aria-hidden="true"></i>
+      <button type="button" class="ap-link small chat-gallery__toggle" data-chat-gallery-toggle aria-haspopup="menu" aria-expanded="false">
+        <i class="ap-icon-illuminati" aria-hidden="true"></i> Admin: display in chat
       </button>
       <div class="ap-action-dropdown chat-gallery__menu" data-chat-gallery-menu role="menu" hidden></div>
     </span>
