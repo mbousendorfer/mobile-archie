@@ -848,32 +848,131 @@
   font-weight: var(--sys-text-style-body-bold-weight);
 }
 
-.pb2-nv-row__net {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-}
-
-.pb2-nv-row__note {
-  color: var(--ref-color-grey-80);
-}
-
 .pb2-nv-row__action {
   display: flex;
   justify-content: flex-end;
+}
+
+/* A network's head: its ring, where it stands (16, then one line of 14), and
+   the offer on the right. The part rows follow under a hairline. */
+.pb2-nv-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-md);
+  padding-bottom: var(--ref-spacing-md);
+  border-bottom: 1px solid var(--ref-color-grey-20);
+}
+
+.pb2-nv-summary__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+}
+
+.pb2-nv-summary__count {
+  margin: 0;
+  color: var(--ref-color-grey-100);
+  font-size: var(--ref-font-size-md);
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.pb2-nv-summary__sub {
+  margin: 0;
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
+}
+
+.pb2-nv-summary__action {
+  flex-shrink: 0;
+}
+
+/* "All networks": one tile per network, straight on the page. A tile is a
+   card that opens its network — hover = the blue border (house rule), no lift. */
+.pb2-nv-intro {
+  margin: 0 0 var(--ref-spacing-md);
+  color: var(--ref-color-grey-80);
+}
+
+.pb2-nv-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ref-spacing-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pb2-nv-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-lg);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--app-radius-card);
+  background: var(--ref-color-white);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.pb2-nv-tile:hover,
+.pb2-nv-tile:has(.pb2-nv-tile__name:focus-visible) {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.pb2-nv-tile > .nv-ring {
+  margin-bottom: var(--ref-spacing-sm);
+}
+
+/* The name is the tile's keyboard handle; the tile's border shows its focus. */
+.pb2-nv-tile__name {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ref-color-grey-100);
+  font: inherit;
+  font-size: var(--ref-font-size-md);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  text-align: left;
+  cursor: pointer;
+}
+
+.pb2-nv-tile__name:focus-visible {
+  outline: none;
+}
+
+.pb2-nv-tile__state {
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
+}
+
+.pb2-nv-tile__action {
+  margin-top: auto;
+  padding-top: var(--ref-spacing-md);
+}
+
+@media (max-width: 1100px) {
+  .pb2-nv-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .pb2-nv-tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pb2-nv-summary {
+    flex-wrap: wrap;
+  }
 }
 
 /* A part's state in its block head, on the right where the caption sat. */
 .pb2-nv-status {
   flex-shrink: 0;
   margin-left: auto;
-}
-
-/* The network-wide offer under the mini check — hug-width, never stretched,
-   with the same air above it as between two rows. */
-.pb2-nv-offer {
-  display: flex;
-  margin-top: var(--ref-spacing-md);
 }
 
 /* "Adapt for X" / "Use the base voice" sit under the field they switch. */

@@ -2,28 +2,28 @@
 // date buckets, the rows, and their pin / rename / delete. Moved out of
 // sidebar.js, unchanged.
 
-import { isWorkspaceMode, scopeSessions } from "../../active-playbook.js?v=1776";
+import { isWorkspaceMode, scopeSessions } from "../../active-playbook.js?v=1778";
 import {
   getSessions,
   getSessionById,
   togglePin as togglePinSession,
   updateSession,
   deleteSession,
-} from "../../sessions-store.js?v=1776";
-import { isNewUser } from "../../user-mode.js?v=1776";
-import { escapeHtml } from "../../utils.js?v=1776";
-import { getContextById } from "../../contexts-store.js?v=1776";
-import { canView } from "../../playbook-access.js?v=1776";
-import { showToast } from "../toast.js?v=1776";
-import { open as openRenameModal } from "../rename-modal.js?v=1776";
-import { open as openConfirmModal } from "../confirm-modal.js?v=1776";
-import { clearSession as clearAssistantSession } from "../../assistant.js?v=1776";
-import { clearSession as clearPostsSession } from "../../posts-store.js?v=1776";
-import { clearSession as clearLibrarySession } from "../../library.js?v=1776";
-import { clearSession as clearSourcesSession } from "../../sources-stream.js?v=1776";
-import { getPath, navigate } from "../../router.js?v=1776";
-import { closePanel as closeRightPanel } from "../right-panel.js?v=1776";
-import { getOrganizePrefs } from "../sidebar.js?v=1776";
+} from "../../sessions-store.js?v=1778";
+import { isNewUser } from "../../user-mode.js?v=1778";
+import { escapeHtml } from "../../utils.js?v=1778";
+import { getContextById } from "../../contexts-store.js?v=1778";
+import { canView } from "../../playbook-access.js?v=1778";
+import { showToast } from "../toast.js?v=1778";
+import { open as openRenameModal } from "../rename-modal.js?v=1778";
+import { open as openConfirmModal } from "../confirm-modal.js?v=1778";
+import { clearSession as clearAssistantSession } from "../../assistant.js?v=1778";
+import { clearSession as clearPostsSession } from "../../posts-store.js?v=1778";
+import { clearSession as clearLibrarySession } from "../../library.js?v=1778";
+import { clearSession as clearSourcesSession } from "../../sources-stream.js?v=1778";
+import { getPath, navigate } from "../../router.js?v=1778";
+import { closePanel as closeRightPanel } from "../right-panel.js?v=1778";
+import { getOrganizePrefs } from "../sidebar.js?v=1778";
 
 // "Sort & group" control — options for the two rows. Grouping is limited to the
 // dimensions the session record supports: Playbook (contextId) and Date

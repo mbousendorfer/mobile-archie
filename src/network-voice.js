@@ -21,9 +21,9 @@
 // ON an overridden hook is written in one language. Per-language × per-network
 // examples when a brand actually publishes in two languages on one network.
 
-import { isFlagOn } from "./feature-flags.js?v=1776";
-import { escapeHtml } from "./utils.js?v=1776";
-import { NETWORKS, normalizeNetwork, getConnectedProfileById } from "./social-profiles.js?v=1776";
+import { isFlagOn } from "./feature-flags.js?v=1778";
+import { escapeHtml } from "./utils.js?v=1778";
+import { NETWORKS, normalizeNetwork, getConnectedProfileById } from "./social-profiles.js?v=1778";
 
 export const NETWORK_FIELDS = ["signatureHooks", "closingPatterns", "formattingStyle", "visualStyle"];
 const LIST_FIELDS = new Set(["signatureHooks", "closingPatterns"]);
@@ -185,6 +185,32 @@ export function memoryCardHtml(s, { attr, value, undo = true, evidence = "", rew
     </div>
     ${answer}
   </div>`;
+}
+
+// Which of the four parts a network has made its own, in NETWORK_FIELDS order.
+export function partsDone(ctx, n) {
+  return NETWORK_FIELDS.map((f) => isOverridden(ctx, n, f));
+}
+
+// The progress ring: four arcs around the network's logo, one per part of its
+// voice — green once that part is optimized, grey-20 while it follows the base.
+// The base's ring is all grey-100: it is the reference, not a score. `current`
+// thickens one arc (the wizard's step); `fresh` arcs play their fill once, to
+// show what an action just changed. Decorative: the state is always said in
+// text beside it (styles/components/voice-coach.css).
+export function progressRingHtml(n, { done = [], base = false, current = -1, fresh = [], size = 56 } = {}) {
+  const arcs = NETWORK_FIELDS.map((_, i) => {
+    const cls = [
+      "nv-ring__arc",
+      base ? "is-base" : done[i] ? "is-done" : "",
+      i === current ? "is-current" : "",
+      fresh.includes(i) ? "is-fresh" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    return `<circle class="${cls}" cx="18" cy="18" r="15" pathLength="100" stroke-dasharray="17 83" stroke-dashoffset="${-(25 * i + 4)}" />`;
+  }).join("");
+  return `<span class="nv-ring" style="--nv-ring:${size}px" aria-hidden="true"><svg viewBox="0 0 36 36" focusable="false">${arcs}</svg><i class="${networkIcon(n)}"></i></span>`;
 }
 
 export function cloneVoiceByNetwork(v) {

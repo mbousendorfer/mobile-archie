@@ -155,3 +155,71 @@ i.memory-mark {
   padding: 0;
   list-style: none;
 }
+
+/* ── The progress ring (voice per network) ───────────────────────────────
+   Four arcs around a network's logo, one per part of its voice: green once
+   optimized, grey-20 while it follows the base; the base's ring is grey-100
+   (the reference). network-voice.js progressRingHtml. */
+.nv-ring {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--nv-ring, 56px);
+  height: var(--nv-ring, 56px);
+}
+
+.nv-ring > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform: rotate(-90deg);
+}
+
+.nv-ring__arc {
+  fill: none;
+  stroke: var(--ref-color-grey-20);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.nv-ring__arc.is-done {
+  stroke: var(--ref-color-green-100);
+}
+
+.nv-ring__arc.is-base {
+  stroke: var(--ref-color-grey-100);
+}
+
+/* The wizard's step: the same arc, heavier — a weight change, not a colour. */
+.nv-ring__arc.is-current {
+  stroke-width: 4;
+}
+
+/* The network's official mark, scaled to the ring (an image, not a mask). */
+.nv-ring > i {
+  width: calc(var(--nv-ring, 56px) * 0.38);
+  height: calc(var(--nv-ring, 56px) * 0.38);
+  background-size: contain;
+}
+
+/* An arc an action just completed fills once — motion that answers the user. */
+.nv-ring__arc.is-fresh {
+  animation: nv-arc-fill 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes nv-arc-fill {
+  from {
+    stroke: var(--ref-color-grey-20);
+    stroke-dasharray: 0 100;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nv-ring__arc.is-fresh {
+    animation: none;
+  }
+}

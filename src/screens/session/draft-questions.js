@@ -4,10 +4,10 @@
 // Moved out of session.js, unchanged; askAngleQuestion is also the right
 // panel's entry point (it imports this module, not the whole screen).
 
-import { getSessionById } from "../../sessions-store.js?v=1776";
-import { getContextById } from "../../contexts-store.js?v=1776";
-import { playbookForNewWork } from "../../active-playbook.js?v=1776";
-import { isFlagOn } from "../../feature-flags.js?v=1776";
+import { getSessionById } from "../../sessions-store.js?v=1778";
+import { getContextById } from "../../contexts-store.js?v=1778";
+import { playbookForNewWork } from "../../active-playbook.js?v=1778";
+import { isFlagOn } from "../../feature-flags.js?v=1778";
 import {
   postAssistantMessage,
   postSelectionEcho,
@@ -18,24 +18,24 @@ import {
   postActivity,
   postExtractionResult,
   postClipExtractionTurn,
-} from "../../assistant.js?v=1776";
-import * as inlineQuestion from "../../inline-question.js?v=1776";
-import { getIdeas, extractVideoIdeas } from "../../library.js?v=1776";
+} from "../../assistant.js?v=1778";
+import * as inlineQuestion from "../../inline-question.js?v=1778";
+import { getIdeas, extractVideoIdeas } from "../../library.js?v=1778";
 import {
   getSources as getStreamSources,
   setSourceIdeaCount,
   extractClipsForSource,
-} from "../../sources-stream.js?v=1776";
+} from "../../sources-stream.js?v=1778";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
   PROFILE_SEARCH_THRESHOLD,
   getConnectedProfileById,
   normalizeNetwork,
-} from "../../social-profiles.js?v=1776";
-import { requireConnectedProfiles } from "../../connect-profiles-flow.js?v=1776";
-import { executeDraftBatch, startDraftFlow, getAnglesForIdea } from "../../draft-flow.js?v=1776";
-import * as topPostsFlow from "../../top-posts-flow.js?v=1776";
+} from "../../social-profiles.js?v=1778";
+import { requireConnectedProfiles } from "../../connect-profiles-flow.js?v=1778";
+import { executeDraftBatch, startDraftFlow, getAnglesForIdea } from "../../draft-flow.js?v=1778";
+import * as topPostsFlow from "../../top-posts-flow.js?v=1778";
 
 // Build + show the "Which profile?" question, reached from every Draft Post
 // entry point. The chosen profile's platform becomes the draft's network so
