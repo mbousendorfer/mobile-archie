@@ -15,32 +15,32 @@
 //     after — the chosen variation LARGE, its actions beside it, the four as a
 //       filmstrip, earlier runs underneath
 
-import { html, raw, toString } from "../lib/html.js?v=1890";
-import { delegate } from "../lib/delegate.js?v=1890";
-import { hashString } from "../lib/prng.js?v=1890";
-import { renderEmpty } from "../ui/empty.js?v=1890";
-import { preserveFocus } from "../ui/fields.js?v=1890";
-import { toast } from "../ui/toast.js?v=1890";
-import { assetImg, hydrateAssets } from "../ui/asset.js?v=1890";
-import { styleThumb } from "../ui/style-thumb.js?v=1890";
-import { openDialog } from "../ui/dialog.js?v=1890";
-import { menu } from "../ui/menu.js?v=1890";
-import { variationCanvas, variationSvg, layersFor } from "../ui/variation.js?v=1890";
-import { QUICK_PRESETS, STYLE_PRESETS } from "../config/style-presets.js?v=1890";
-import { formatById, shapeForFormat, shapesFor, shapesForBrand } from "../config/formats.js?v=1890";
-import { networkById } from "../config/networks.js?v=1890";
-import { copyService, imageGenerationService } from "../services/index.js?v=1890";
-import { unbranded, getPlaybookReferences } from "../state/playbook-brand.js?v=1890";
-import { resolveLayers } from "../render/layout.js?v=1890";
-import { svgToDataUrl } from "../render/visual.js?v=1890";
-import { REVEAL_MS } from "../../../archie-pixels.js?v=1890";
-import { splitVisual } from "../render/split.js?v=1890";
-import { bakeDoc } from "../render/edit-export.js?v=1890";
-import { subjectKindFor } from "../render/subjects.js?v=1890";
-import { docSignature, entryOf, findLayer, generatedDoc, isBase, photoDoc } from "../state/edit-doc.js?v=1890";
-import { createEditor } from "./edit/editor.js?v=1890";
-import { mount as mountStyleCreator } from "./style-creator.js?v=1890";
-import { toPngBlob, downloadBlob, slug } from "../render/export.js?v=1890";
+import { html, raw, toString } from "../lib/html.js?v=1902";
+import { delegate } from "../lib/delegate.js?v=1902";
+import { hashString } from "../lib/prng.js?v=1902";
+import { renderEmpty } from "../ui/empty.js?v=1902";
+import { preserveFocus } from "../ui/fields.js?v=1902";
+import { toast } from "../ui/toast.js?v=1902";
+import { assetImg, hydrateAssets } from "../ui/asset.js?v=1902";
+import { styleThumb } from "../ui/style-thumb.js?v=1902";
+import { openDialog } from "../ui/dialog.js?v=1902";
+import { menu } from "../ui/menu.js?v=1902";
+import { variationCanvas, variationSvg, layersFor } from "../ui/variation.js?v=1902";
+import { QUICK_PRESETS, STYLE_PRESETS } from "../config/style-presets.js?v=1902";
+import { formatById, shapeForFormat, shapesFor, shapesForBrand } from "../config/formats.js?v=1902";
+import { networkById } from "../config/networks.js?v=1902";
+import { copyService, imageGenerationService } from "../services/index.js?v=1902";
+import { unbranded, getPlaybookReferences } from "../state/playbook-brand.js?v=1902";
+import { resolveLayers } from "../render/layout.js?v=1902";
+import { svgToDataUrl } from "../render/visual.js?v=1902";
+import { REVEAL_MS } from "../../../archie-pixels.js?v=1902";
+import { splitVisual } from "../render/split.js?v=1902";
+import { bakeDoc } from "../render/edit-export.js?v=1902";
+import { subjectKindFor } from "../render/subjects.js?v=1902";
+import { docSignature, entryOf, findLayer, generatedDoc, isBase, photoDoc } from "../state/edit-doc.js?v=1902";
+import { createEditor } from "./edit/editor.js?v=1902";
+import { mount as mountStyleCreator } from "./style-creator.js?v=1902";
+import { toPngBlob, downloadBlob, slug } from "../render/export.js?v=1902";
 import {
   canEditBrand,
   forgetOneOffStyle,
@@ -51,15 +51,15 @@ import {
   getStylesForBrand,
   registerOneOffStyle,
   subscribe,
-} from "../state/store.js?v=1890";
-import { discardOneOff, oneOffStyleFrom } from "../state/style-actions.js?v=1890";
+} from "../state/store.js?v=1902";
+import { discardOneOff, oneOffStyleFrom } from "../state/style-actions.js?v=1902";
 import {
   addBatch,
   appendVariations,
   deleteCreation,
   replaceVariation,
   startCreation,
-} from "../state/creation-actions.js?v=1890";
+} from "../state/creation-actions.js?v=1902";
 
 const variationsLabel = (n) => (n === 1 ? "1 variation" : `${n} variations`);
 
@@ -496,21 +496,13 @@ export function mountStudio(
     target.removeEventListener("scroll", placeNewStyle, true);
     window.removeEventListener("resize", placeNewStyle);
   }
-  // Beside the New style tile, its top level with the tile's, kept inside the studio.
+  // Mobile fork: a sheet across the bottom of the studio (imst-studio.css), not a
+  // popover beside the tile — there is no "beside" on a phone. Only the parent
+  // is kept right: a repaint of the studio would otherwise drop the panel.
   function placeNewStyle() {
     const studio = target.querySelector(".imst-studio");
-    const tile = target.querySelector('[data-imst-action="new-style"]');
-    if (!creatorPanel || !studio || !tile) return;
+    if (!creatorPanel || !studio) return;
     if (creatorPanel.parentNode !== studio) studio.append(creatorPanel);
-    const sr = studio.getBoundingClientRect();
-    const tr = tile.getBoundingClientRect();
-    const gap = 12;
-    const h = creatorPanel.offsetHeight;
-    const top = Math.max(0, Math.min(tr.top - sr.top, sr.height - h));
-    creatorPanel.style.left = `${tr.right - sr.left + gap}px`;
-    creatorPanel.style.top = `${top}px`;
-    // The caret stays on the tile even when the panel had to move up.
-    creatorPanel.style.setProperty("--imst-caret-top", `${Math.max(16, tr.top - sr.top - top + tr.height / 2)}px`);
   }
 
   // "Best for" + the network's icon; its name goes in title / aria-label.

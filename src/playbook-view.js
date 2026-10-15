@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1890";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1902";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -26,11 +26,11 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1890";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1890";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1890";
-import { isFlagOn } from "./feature-flags.js?v=1890";
-import { parseHashParams } from "./url-state.js?v=1890";
+} from "./playbook-brand-kit.js?v=1902";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1902";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1902";
+import { isFlagOn } from "./feature-flags.js?v=1902";
+import { parseHashParams } from "./url-state.js?v=1902";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -47,16 +47,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1890";
+} from "./network-voice.js?v=1902";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1890";
-import { showToast } from "./components/toast.js?v=1890";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1890";
-import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1890";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1890";
+} from "./voice-coach-store.js?v=1902";
+import { showToast } from "./components/toast.js?v=1902";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1902";
+import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1902";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1902";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2972,6 +2972,14 @@ function paint() {
   // The edit bar sticks right under the tabs, so it needs their height.
   const tabsEl = mountTarget.querySelector(".pb2-tabs");
   if (tabsEl) mountTarget.querySelector(".pb2")?.style.setProperty("--pb2-tabs-h", `${tabsEl.offsetHeight}px`);
+  // Mobile fork: the tabs scroll sideways — keep the open one in sight. The nav
+  // is the only thing scrolled (scrollLeft), never the page.
+  const nav = tabsEl?.querySelector(".ap-tabs-nav");
+  const on = nav?.querySelector(".ap-tabs-tab.active");
+  if (nav && on) {
+    const delta = on.getBoundingClientRect().left - nav.getBoundingClientRect().left;
+    nav.scrollLeft += delta - (nav.clientWidth - on.offsetWidth) / 2;
+  }
   watchTabHeadStuck();
   portalModal();
 }

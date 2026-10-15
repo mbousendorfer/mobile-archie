@@ -270,3 +270,68 @@
 .imst-edit .imst-refine--edit {
   box-shadow: var(--sys-elevation-floating);
 }
+
+/* ── Mobile fork ────────────────────────────────────────────────────────────
+   The editor at a phone's width: the image takes the width; the tool palette
+   is a toolbar along the bottom (its sheets open UP from it, not to the
+   right); the layers panel is a strip along the top. The body reserves both
+   bands instead of the two 210px sides. */
+.imst-edit .isv2-stage-body.has-palette {
+  padding: calc(var(--ref-spacing-xxl) + var(--ref-spacing-xs)) var(--ref-spacing-xs);
+}
+
+/* Above the layers strip (same z otherwise, and later in the DOM). */
+.imst-edit .isv2-stage-body > .image-studio__palette {
+  top: auto;
+  bottom: var(--ref-spacing-xxs);
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: row;
+  z-index: 5;
+}
+
+/* The anchors go static, so a tool's sheet is placed against the WHOLE toolbar:
+   the toolbar's width, rising above it — never off the side of a phone. */
+.imst-edit .image-studio__palette .ap-button {
+  width: auto;
+}
+
+.imst-edit .image-studio__palette-anchor {
+  position: static;
+  width: auto;
+}
+
+.imst-edit .isv2-sheet {
+  top: auto;
+  bottom: calc(100% + var(--ref-spacing-xs));
+  left: 0;
+  right: 0;
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  max-height: 50dvh;
+  overflow-y: auto;
+  transform: none;
+  transform-origin: center bottom;
+  animation: none;
+}
+
+.imst-layers {
+  top: var(--ref-spacing-xxs);
+  right: var(--ref-spacing-xs);
+  left: var(--ref-spacing-xs);
+  width: auto;
+  transform: none;
+  flex-direction: row;
+  align-items: center;
+}
+
+.imst-layers__title {
+  display: none;
+}
+
+.imst-layers__list {
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: hidden;
+}

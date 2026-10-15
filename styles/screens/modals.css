@@ -402,24 +402,6 @@ body.has-modal {
   color: var(--ref-color-grey-40);
 }
 
-.search-modal__kbd {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  height: 18px;
-  padding: 0 var(--ref-spacing-xxxs);
-  border-radius: var(--app-radius-sm);
-  background: var(--ref-color-grey-05);
-  border: 1px solid var(--app-border);
-  font-family: inherit;
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-80);
-  flex-shrink: 0;
-}
-
 .search-modal__group-heading {
   margin: 0;
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm) var(--ref-spacing-xxxs);
@@ -468,38 +450,6 @@ body.has-modal {
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
-}
-
-/* Per-row meta only shows on the highlighted row — keeps the rest of the
-   list visually quiet (Raycast / Linear pattern). The ⏎ keycap signals
-   "Enter opens this" so keyboard users know what's about to happen. */
-.search-modal__result-meta {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity var(--ref-animation-short) var(--app-ease-out);
-}
-
-.search-modal__result.is-highlighted .search-modal__result-meta {
-  opacity: 1;
-}
-
-.search-modal__result-kbd {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 18px;
-  padding: 0 var(--ref-spacing-xxxs);
-  border-radius: var(--app-radius-sm);
-  background: var(--ref-color-white);
-  border: 1px solid var(--app-border);
-  font-family: inherit;
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  font-weight: var(--sys-text-style-caption-weight);
-  color: var(--ref-color-grey-80);
 }
 
 .search-modal__empty {
@@ -1602,4 +1552,10 @@ body.has-modal {
 
 .skip-connect__note {
   margin: 0;
+}
+
+/* Mobile fork: the result rows' highlight drew 4px past the list's edge and
+   made it scroll sideways. */
+.search-modal__results {
+  overflow-x: hidden;
 }

@@ -724,3 +724,26 @@ button.imst-style-card {
   align-items: center;
   gap: var(--ref-spacing-xxs);
 }
+
+/* ── Mobile fork ────────────────────────────────────────────────────────────
+   The Playbook's image formats: the network's name over its shape picker
+   rather than beside it, and the three shapes sharing the row (name + ratio;
+   the frame glyph goes — the name already says it). */
+.imst-images-format {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--ref-spacing-xxs);
+}
+
+.imst-seg--compact {
+  justify-self: stretch;
+}
+
+.imst-seg--compact .imst-seg__opt {
+  flex: 1 1 0;
+  min-width: 0;
+  justify-content: center;
+}
+
+.imst-seg--compact .imst-seg__box {
+  display: none;
+}

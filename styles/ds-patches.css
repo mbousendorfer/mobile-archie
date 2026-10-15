@@ -1156,7 +1156,13 @@ select,
   padding: var(--ref-spacing-sm) var(--ref-spacing-md);
 }
 
+/* The right group sizes from its content (basis auto — the DS's flex: 1 has a
+   zero basis, which squeezed Cancel above Save instead of moving the group), so
+   under a left-hand action it wraps WHOLE onto its own line; alone and still
+   too wide (three CTAs), its buttons wrap inside it, right-aligned. */
 .ap-dialog .ap-dialog-footer-right {
+  flex: 1 1 auto;
   flex-wrap: wrap;
+  justify-content: flex-end;
   margin-left: auto;
 }

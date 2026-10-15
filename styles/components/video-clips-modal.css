@@ -1550,3 +1550,59 @@
   outline: 2px solid var(--app-vc-accent);
   outline-offset: 2px;
 }
+
+/* ── Mobile fork ────────────────────────────────────────────────────────────
+   The clip editor at a phone's width, one column, pushed full screen:
+   the preview on top, its timeline (the trim keeps its pointer events), the
+   tools as a row of tabs, then the form, which scrolls. The browse grid is one
+   column; the fullscreen toggle goes (the dialog already is the screen). */
+.vc-rows {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.video-clips-modal .ap-dialog-close.video-clips-modal__expand {
+  display: none;
+}
+
+.vc-editor--veed {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-areas:
+    "stage"
+    "timeline"
+    "rail"
+    "panel";
+  min-height: 0;
+}
+
+.vc-stage {
+  height: 24dvh;
+  padding: var(--ref-spacing-xs);
+}
+
+.vc-rail {
+  flex-direction: row;
+  border-right: 0;
+  border-bottom: 1px solid var(--app-vc-border);
+}
+
+.vc-rail__item {
+  flex: 1 1 0;
+  height: 48px;
+}
+
+.vc-panel {
+  border-right: 0;
+}
+
+.vc-editor--veed > .vc-editor__timeline {
+  padding-left: var(--ref-spacing-sm);
+  padding-right: var(--ref-spacing-sm);
+}
+
+/* The header's one line has room for the title and the source tag only: the
+   "· N clips worth posting · mm:ss of footage" meta was being clipped
+   invisibly, so it goes (the footer counts the selection). */
+.video-clips-modal__sub-meta {
+  display: none;
+}

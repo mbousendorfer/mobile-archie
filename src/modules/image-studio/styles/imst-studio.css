@@ -1560,3 +1560,50 @@
   background: none;
   cursor: pointer;
 }
+
+/* ── Mobile fork ────────────────────────────────────────────────────────────
+   One column: the canvas on top in a fixed band (it stays in view — the
+   controls under it are what scroll), the controls below. "Create a style"
+   is a sheet across the bottom of the studio, not a popover beside its tile. */
+.imst-studio {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 50dvh minmax(0, 1fr);
+  gap: var(--ref-spacing-xs);
+}
+
+.imst-canvas-col,
+.imst-draft-host .imst-canvas-col {
+  order: -1;
+  padding: var(--ref-spacing-xxs);
+}
+
+/* Inside the band the image fits what the result bar and the filmstrip leave
+   (its 384px floor would push it out of the band); "Variation 1 of 4" goes —
+   the filmstrip under the image already says which one is on screen. */
+.imst-canvas-col .imst-stage2 {
+  min-height: 0;
+}
+
+.imst-canvas-col .imst-result-bar__what {
+  display: none;
+}
+
+.imst-stylepop {
+  top: auto;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: auto;
+  max-height: 85%;
+  border-radius: var(--app-radius-modal) var(--app-radius-modal) 0 0;
+  transform-origin: center bottom;
+}
+
+.imst-stylepop::before {
+  display: none;
+}
+
+.imst-dialog--studio .imst-dialog__content {
+  padding-left: var(--ref-spacing-sm);
+  padding-right: var(--ref-spacing-sm);
+}
