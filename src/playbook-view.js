@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1786";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1787";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -26,11 +26,11 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1786";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1786";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1786";
-import { isFlagOn } from "./feature-flags.js?v=1786";
-import { parseHashParams } from "./url-state.js?v=1786";
+} from "./playbook-brand-kit.js?v=1787";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1787";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1787";
+import { isFlagOn } from "./feature-flags.js?v=1787";
+import { parseHashParams } from "./url-state.js?v=1787";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -44,16 +44,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1786";
+} from "./network-voice.js?v=1787";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1786";
-import { showToast } from "./components/toast.js?v=1786";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1786";
-import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1786";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1786";
+} from "./voice-coach-store.js?v=1787";
+import { showToast } from "./components/toast.js?v=1787";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1787";
+import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1787";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1787";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2561,58 +2561,28 @@ function nvAllTiles(data) {
     <ul class="pb2-nv-tiles">${tiles}</ul>`;
 }
 
-// A part this network inherits, in one line: what the base says, shortened.
-function nvInheritedPreview(data, field) {
-  const v = nvFieldValue(data, baseNetwork(data), field);
-  if (Array.isArray(v)) {
-    const list = v.filter(Boolean);
-    if (!list.length) return "Not set yet";
-    return `“${list[0]}”${list.length > 1 ? ` and ${list.length - 1} more` : ""}`;
-  }
-  return v || "Not set yet";
-}
-
 // Another network: the difference is the content. What it adapted reads in
 // full; what it inherits folds into one block that names it and points at the
 // base — repeating the base word for word made every network look the same.
 function nvNetworkReadBlocks(data, net) {
-  const adapted = NV_FIELDS.filter(([f]) => isOverridden(data, net, f));
-  const inherited = NV_FIELDS.filter(([f]) => !isOverridden(data, net, f));
-  const base = networkLabel(baseNetwork(data));
-  let i = 3;
+  // The same four blocks as the base, in the same order and size. A part not
+  // optimized yet shows the base's version inside, as a placeholder (lines
+  // unfilled, grey-80) under its "Same as LinkedIn" pill — never merged away.
+  const parts = NV_FIELDS.map(([field, title], n) => {
+    const own = isOverridden(data, net, field);
+    const value = nvFieldValue(data, net, field);
+    const body = field === "signatureHooks" || field === "closingPatterns" ? pb2Lines(value) : pb2Text(value);
+    return pb2Block(title, own ? body : `<div class="pb2-nv-placeholder">${body}</div>`, {
+      index: 3 + n,
+      aside: nvSourceBadge(data, net, field),
+    });
+  });
   return [
     nvIdentityBlock(data, net),
     nvSuggestionsBlock(data, net, 1),
     nvRulesBlock(data, net, 2),
-    ...adapted.map(([field, title], n) =>
-      pb2Block(
-        title,
-        field === "signatureHooks" || field === "closingPatterns"
-          ? pb2Lines(nvFieldValue(data, net, field))
-          : pb2Text(nvFieldValue(data, net, field)),
-        // An odd last block spans the row rather than leave half of it empty.
-        {
-          index: i++,
-          aside: nvSourceBadge(data, net, field),
-          wide: n === adapted.length - 1 && adapted.length % 2 === 1,
-        },
-      ),
-    ),
-    inherited.length
-      ? pb2Block(
-          `Same as your ${base} voice`,
-          `<ul class="pb2-nv-inherited">${inherited
-            .map(
-              ([field, title]) => `<li class="pb2-nv-inherited__row">
-                <span class="pb2-nv-inherited__label">${esc(title)}</span>
-                <span class="pb2-nv-inherited__value">${esc(nvInheritedPreview(data, field))}</span>
-              </li>`,
-            )
-            .join("")}</ul>`,
-          { wide: true, index: i++, icon: networkIcon(baseNetwork(data)) },
-        )
-      : "",
-    pb2AvoidBlock(data, i, "Every network"),
+    ...parts,
+    pb2AvoidBlock(data, 7, "Every network"),
   ].filter(Boolean);
 }
 

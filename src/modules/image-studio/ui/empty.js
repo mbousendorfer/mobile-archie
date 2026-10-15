@@ -4,7 +4,7 @@
 // a bounded region's H3 title and one Body sentence, 420px at most — then one
 // hug-width primary blue CTA. Gaps: icon↔text lg, title↔body xxxs, text↔action md.
 
-import { html } from "../lib/html.js?v=1786";
+import { html } from "../lib/html.js?v=1787";
 
 export function renderEmpty({ icon, title, body, action }) {
   return html`

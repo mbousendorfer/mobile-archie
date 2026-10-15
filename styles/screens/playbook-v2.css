@@ -785,36 +785,6 @@
   scrollbar-width: none;
 }
 
-/* The parts a network inherits, one line each: the part, then what the base
-   says, cut to the line — the full text lives on the base tab. */
-.pb2-nv-inherited {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.pb2-nv-inherited__row {
-  display: grid;
-  grid-template-columns: 140px minmax(0, 1fr);
-  gap: var(--ref-spacing-sm);
-  align-items: baseline;
-}
-
-.pb2-nv-inherited__label {
-  color: var(--ref-color-grey-100);
-  font-weight: var(--sys-text-style-body-bold-weight);
-}
-
-.pb2-nv-inherited__value {
-  overflow: hidden;
-  color: var(--ref-color-grey-80);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* ── Optimized or not (voice per network) ──────────────────────────────
    State is the DS status pill (.ap-status), in the network's mini check, in
    "All networks" and in each part's block head. Logos stay in colour. */
@@ -1057,6 +1027,19 @@ button.pb2-nv-part__hit:focus-visible {
   .pb2-nv-tiles {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* A part not optimized yet: the base's version, as a placeholder — the lines
+   lose their fill (a hairline instead), the ink drops to grey-80. What the
+   network made its own stays filled, in grey-100. */
+.pb2-nv-placeholder .pb2-line {
+  border: 1px solid var(--ref-color-grey-20);
+  background: transparent;
+  color: var(--ref-color-grey-80);
+}
+
+.pb2-nv-placeholder .pb2-prose {
+  color: var(--ref-color-grey-80);
 }
 
 /* A part's state in its block head, on the right where the caption sat. */
