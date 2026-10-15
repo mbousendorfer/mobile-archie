@@ -24,10 +24,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1823";
-import { bindReorder } from "../drag-reorder.js?v=1823";
-import { escapeHtml as esc } from "../utils.js?v=1823";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1823";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1824";
+import { bindReorder } from "../drag-reorder.js?v=1824";
+import { escapeHtml as esc } from "../utils.js?v=1824";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1824";
 import {
   networkFields,
   isNewPart,
@@ -36,7 +36,7 @@ import {
   baseNetwork,
   networkEntry,
   resolvedVoice,
-} from "../network-voice.js?v=1823";
+} from "../network-voice.js?v=1824";
 
 const MODAL_ID = "voiceWizard";
 
@@ -152,7 +152,7 @@ export function open({ data, network, part = null, onSave }) {
   const parts = {};
   // The parts on screen when it opens (a flag can add one — voiceParts()).
   const fields = networkFields().filter((f) => opts[f]);
-  for (const field of fields) parts[field] = initialPart(field, own(entry[field]), opts[field]);
+  for (const field of fields) parts[field] = initialPart(field, own(entry[field]), opts[field], isBase);
   const firstLeft = isBase ? -1 : fields.findIndex((f) => entry[f] === undefined);
   const asked = part ? fields.indexOf(part) : -1;
   w = {
@@ -202,15 +202,25 @@ function own(value) {
   return value ? value : undefined;
 }
 
-// What a part starts as: its own value when the network already has one,
-// Archie's picks otherwise (the first two lines, the first option).
-function initialPart(field, value, options) {
+// What a part starts as: its own value when the network already has one;
+// otherwise as it is on the page — Leave as default. Archie's picks are
+// suggestions to choose, never pre-selected: a Next must not optimize a part
+// behind your back (2026-10-15 usability audit). The base has no default to
+// leave: an empty base part starts empty.
+function initialPart(field, value, options, isBase) {
   if (PARTS[field].list) {
-    return { keep: false, lines: value === undefined ? options.slice(0, 2) : [...value] };
+    if (value !== undefined) return { keep: false, lines: [...value] };
+    return { keep: !isBase, lines: [] };
   }
-  if (value === undefined) return { choice: 0, own: "" };
+  if (value === undefined) return { choice: isBase ? null : "keep", own: "" };
   const i = options.indexOf(value);
   return i >= 0 ? { choice: i, own: "" } : { choice: "own", own: value };
+}
+
+// Archie's picks for a part — what "Use all of Archie's picks" writes: the
+// first two lines, or the first option.
+function archiePart(field, options) {
+  return PARTS[field].list ? { keep: false, lines: options.slice(0, 2) } : { choice: 0, own: "" };
 }
 
 // A part's final value — undefined = it follows the base voice.
@@ -242,7 +252,7 @@ function archieAll() {
     const had = w.isBase ? own(w.data[field]) : networkEntry(w.data, w.net)?.[field];
     if (had !== undefined) continue;
     if (JSON.stringify(w.parts[field]) !== w.startParts[field]) continue;
-    w.parts[field] = initialPart(field, undefined, w.opts[field]);
+    w.parts[field] = archiePart(field, w.opts[field]);
   }
 }
 
