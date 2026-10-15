@@ -13,25 +13,31 @@
 // tones, contentStyle, objective, contentAction, ctaLinks, language, color,
 // suggestions, editingId, onComplete }.
 
-import * as inlineQuestion from "./inline-question.js?v=1846";
-import { connectableNetworkCards, accountIdsForNetwork } from "./connect-profiles-flow.js?v=1846";
-import { open as openConnectAccountModal } from "./components/connect-account-modal.js?v=1846";
-import { open as openSkipConnectModal } from "./components/skip-connect-modal.js?v=1846";
-import { showToast } from "./components/toast.js?v=1846";
-import { recordReasons } from "./feedback-store.js?v=1846";
-import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=1846";
-import { addContext, updateContext, getContextById } from "./contexts-store.js?v=1846";
-import { isWorkspaceMode, setActivePlaybook } from "./active-playbook.js?v=1846";
-import { analyzeWebsite, analyzeBrandFiles, analyzeNetworkVoices } from "./context-mock-analysis.js?v=1846";
-import { networkVoicesOn, cloneVoiceByNetwork, networkLabel } from "./network-voice.js?v=1846";
-import { connectors as connectorMocks } from "./mocks.js?v=1846";
+import * as inlineQuestion from "./inline-question.js?v=1849";
+import { connectableNetworkCards, accountIdsForNetwork } from "./connect-profiles-flow.js?v=1849";
+import { open as openConnectAccountModal } from "./components/connect-account-modal.js?v=1849";
+import { open as openSkipConnectModal } from "./components/skip-connect-modal.js?v=1849";
+import { showToast } from "./components/toast.js?v=1849";
+import { recordReasons } from "./feedback-store.js?v=1849";
+import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=1849";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=1849";
+import { isWorkspaceMode, setActivePlaybook } from "./active-playbook.js?v=1849";
+import { analyzeWebsite, analyzeBrandFiles, analyzeNetworkVoices } from "./context-mock-analysis.js?v=1849";
+import {
+  networkVoicesOn,
+  cloneVoiceByNetwork,
+  networkLabel,
+  networkIcon,
+  voiceNetworks,
+} from "./network-voice.js?v=1849";
+import { connectors as connectorMocks } from "./mocks.js?v=1849";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
   PROFILE_SEARCH_THRESHOLD,
-} from "./social-profiles.js?v=1846";
-import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1846";
-import { isFlagOn } from "./feature-flags.js?v=1846";
+} from "./social-profiles.js?v=1849";
+import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1849";
+import { isFlagOn } from "./feature-flags.js?v=1849";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -311,7 +317,10 @@ export function startAlt(sessionId, { onComplete, prefilledUrl = "" } = {}) {
 function altSteps() {
   const steps = ["url"];
   if (isFlagOn("multilingualPlaybook")) steps.push("language");
-  steps.push("profile", "documents");
+  steps.push("profile");
+  // Voice per network: which network the main (base) voice is built for.
+  if (networkVoicesOn()) steps.push("network");
+  steps.push("documents");
   return steps;
 }
 function altTotalSteps() {
@@ -327,6 +336,9 @@ function askAltPrevious(sessionId, stepId) {
   const d = drafts.get(sessionId);
   if (prev === "language") askAltLanguage(sessionId);
   else if (prev === "profile") askAltProfile(sessionId);
+  // One connected network: the step was said, not asked — Back goes past it.
+  else if (prev === "network" && new Set(d?.connectedSocials || []).size === 1) askAltProfile(sessionId);
+  else if (prev === "network") askAltBaseNetwork(sessionId);
   else if (prev === "documents") askAltDocuments(sessionId);
   else askAltUrl(sessionId, d?.sourceUrl || d?.websiteUrl || "");
 }
@@ -553,7 +565,7 @@ function askAltProfile(sessionId, { announce = true } = {}) {
             inlineQuestion.exit(sessionId);
             notify(sessionId);
             if (networkVoicesOn()) askAltMoreNetworks(sessionId);
-            else askAltDocuments(sessionId);
+            else afterAltProfile(sessionId);
           },
           // Backing out of the dialog puts the grid back, not a dead end.
           onDismiss: () => askAltProfile(sessionId, { announce: false }),
@@ -571,7 +583,7 @@ function askAltProfile(sessionId, { announce = true } = {}) {
             showToast("Noted — I'll ask again when I write your first draft.");
             inlineQuestion.exit(sessionId);
             notify(sessionId);
-            askAltDocuments(sessionId);
+            afterAltProfile(sessionId);
           },
           onDismiss: () => askAltProfile(sessionId, { announce: false }),
         });
@@ -592,7 +604,7 @@ function askAltProfile(sessionId, { announce = true } = {}) {
     if (announce) {
       postAssistantMessage(
         sessionId,
-        "Pick the profiles this Playbook will publish from. I'll learn your voice from the first one, then adapt it for each network.",
+        "Pick the profiles this Playbook will publish from. I'll adapt your voice for each network.",
       );
     }
     inlineQuestion.ask(sessionId, {
@@ -608,13 +620,13 @@ function askAltProfile(sessionId, { announce = true } = {}) {
         if (picked.length) commitAltProfiles(sessionId, picked);
         inlineQuestion.exit(sessionId);
         notify(sessionId);
-        askAltDocuments(sessionId);
+        afterAltProfile(sessionId);
       },
       skipLabel: "Skip",
       onSkip: () => {
         inlineQuestion.exit(sessionId);
         notify(sessionId);
-        askAltDocuments(sessionId);
+        afterAltProfile(sessionId);
       },
       onBack: () => askAltPrevious(sessionId, "profile"),
     });
@@ -637,13 +649,13 @@ function askAltProfile(sessionId, { announce = true } = {}) {
       if (profile) commitAltProfiles(sessionId, [profile]);
       inlineQuestion.exit(sessionId);
       notify(sessionId);
-      askAltDocuments(sessionId);
+      afterAltProfile(sessionId);
     },
     skipLabel: "Skip",
     onSkip: () => {
       inlineQuestion.exit(sessionId);
       notify(sessionId);
-      askAltDocuments(sessionId);
+      afterAltProfile(sessionId);
     },
     // Back to the language picker (multilingual on) or the URL question — and
     // askAltPrevious re-renders question 1 with whatever URL the draft holds.
@@ -660,13 +672,13 @@ function askAltMoreNetworks(sessionId, { announce = true } = {}) {
   const connected = d.connectedSocials || [];
   const items = connectableNetworkCards().filter((c) => !connected.includes(c.value));
   if (!items.length) {
-    askAltDocuments(sessionId);
+    afterAltProfile(sessionId);
     return;
   }
   if (announce) {
     postAssistantMessage(
       sessionId,
-      `I'll learn your voice from ${networkLabel(d.voiceBaseNetwork)}. Publishing somewhere else too? Connect it and I'll adapt your voice for it.`,
+      "Publishing somewhere else too? Connect it — each network gets its own version of your voice.",
     );
   }
   inlineQuestion.ask(sessionId, {
@@ -695,8 +707,74 @@ function askAltMoreNetworks(sessionId, { announce = true } = {}) {
     onSkip: () => {
       inlineQuestion.exit(sessionId);
       notify(sessionId);
+      afterAltProfile(sessionId);
+    },
+  });
+}
+
+// After the account step(s): the main network (flag networkVoices), else the
+// documents.
+function afterAltProfile(sessionId) {
+  if (networkVoicesOn()) askAltBaseNetwork(sessionId);
+  else askAltDocuments(sessionId);
+}
+
+// Which network the main voice is built for — the base every other network
+// starts from (voiceBaseNetwork). Asked, never guessed: the networks connected
+// (2 or more), or every network when none is (the brand still publishes
+// somewhere). One connected network IS the answer: said, not asked. Either
+// way Archie says where the rest happens — each other network is tuned in the
+// Playbook (Voice tab, Optimize). Skip keeps the default (the first connected).
+function askAltBaseNetwork(sessionId) {
+  const d = drafts.get(sessionId);
+  if (!d) return;
+  const connected = [...new Set(d.connectedSocials || [])];
+  if (connected.length === 1) {
+    d.voiceBaseNetwork = connected[0];
+    postAssistantMessage(
+      sessionId,
+      `I'll build your main voice for ${networkLabel(connected[0])}. You'll tune it for any other network in your Playbook.`,
+    );
+    askAltDocuments(sessionId);
+    return;
+  }
+  // The connect step's card look (glyph tile + name), for networks already
+  // connected — connectableNetworkCards() lists only the ones still to connect.
+  const items = (connected.length ? connected : voiceNetworks({})).map((n) => ({
+    value: n,
+    label: networkLabel(n),
+    caption: connected.includes(n) ? "Connected" : "",
+    preview: `<span class="connect-card__glyph"><i class="${networkIcon(n)}" aria-hidden="true"></i></span>`,
+  }));
+  postAssistantMessage(
+    sessionId,
+    "Which network matters most to you? I'll build your main voice for it. Your other networks start from it — you'll tune each one in your Playbook.",
+  );
+  inlineQuestion.ask(sessionId, {
+    title: "Your main network",
+    subtitle: "The others start from this voice. You can tune each one in your Playbook.",
+    stepLabel: altStepLabel("network"),
+    variant: "cards",
+    cardCols: 4,
+    items,
+    skipLabel: "Skip",
+    onPick: (platform) => {
+      const dd = drafts.get(sessionId);
+      if (!dd) return;
+      dd.voiceBaseNetwork = platform;
+      // The other networks' first adaptations, around the new base.
+      dd.voiceByNetwork = analyzeNetworkVoices(dd.connectedSocials || [], platform);
+      postUserTurn(sessionId, networkLabel(platform));
+      inlineQuestion.exit(sessionId);
+      notify(sessionId);
       askAltDocuments(sessionId);
     },
+    onSkip: () => {
+      inlineQuestion.exit(sessionId);
+      notify(sessionId);
+      askAltDocuments(sessionId);
+    },
+    onBack: () => askAltPrevious(sessionId, "network"),
   });
 }
 
