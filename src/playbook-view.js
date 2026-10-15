@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1812";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1814";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -26,11 +26,11 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1812";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1812";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1812";
-import { isFlagOn } from "./feature-flags.js?v=1812";
-import { parseHashParams } from "./url-state.js?v=1812";
+} from "./playbook-brand-kit.js?v=1814";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1814";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1814";
+import { isFlagOn } from "./feature-flags.js?v=1814";
+import { parseHashParams } from "./url-state.js?v=1814";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -47,16 +47,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1812";
+} from "./network-voice.js?v=1814";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1812";
-import { showToast } from "./components/toast.js?v=1812";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1812";
-import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1812";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1812";
+} from "./voice-coach-store.js?v=1814";
+import { showToast } from "./components/toast.js?v=1814";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1814";
+import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1814";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1814";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2423,6 +2423,14 @@ function nvOptimizeButton(data, net, { tone = "primary orange", short = false } 
   return `<button type="button" class="ap-button ${tone}" data-nv-optimize="${net}"${aria}><i class="ap-icon-sparkles" aria-hidden="true"></i><span>${esc(label)}</span></button>`;
 }
 
+// Once a voice is done — every part of a network written for it, or the base
+// itself — the way back into the assistant stays: Re-optimize, secondary.
+function nvReoptimizeButton(data, net) {
+  if (!canEditView() || editScope) return "";
+  if (net !== baseNetwork(data) && nvOptimizedCount(data, net) < nvFields().length) return "";
+  return `<button type="button" class="ap-button stroked blue" data-nv-optimize="${net}" aria-label="Re-optimize your ${esc(networkLabel(net))} voice"><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Re-optimize</span></button>`;
+}
+
 // A rule already in the voice — plain text beside the olive mark
 // (styles/components/voice-coach.css). Proposals are memory cards.
 const MEMORY_MARK = "ap-icon-sparkles memory-mark";
@@ -2469,6 +2477,7 @@ function nvBaseBlocks(data, ve) {
       index: 0,
       icon: "ap-icon-quote",
       caption: `${maturity(data, net).detail} Other networks start from it.`,
+      aside: nvReoptimizeButton(data, net),
     }),
     nvRulesBlock(data, net, 2),
     ...pb2VoiceFieldBlocks(data, ve, 3),
@@ -2526,7 +2535,7 @@ function nvIdentityBlock(data, net) {
   const label = networkLabel(net);
   const done = nvOptimizedCount(data, net);
   const fresh = nvNewTitles(data, net);
-  const offer = nvOptimizeButton(data, net);
+  const offer = nvOptimizeButton(data, net) || nvReoptimizeButton(data, net);
   const sub = fresh.length
     ? `New in your voice: ${fresh.join(", ")}.`
     : done === nvFields().length
@@ -2699,6 +2708,22 @@ function onNetworkVoiceClick(event) {
       network: net,
       part: optimize.dataset.nvOptimizePart || null,
       onSave: ({ values, drafted }) => {
+        // The base: the assistant rewrote the base voice itself.
+        // Hooks and closings live per language (voiceEntry) — the one the tab
+        // shows gets them, and the flat field mirrors it.
+        if (net === baseNetwork(data)) {
+          const ve = voiceEntry(data);
+          for (const [field] of nvFields()) {
+            if (!(field in values)) continue;
+            const v = values[field];
+            data[field] = Array.isArray(v) ? v.slice() : v === undefined ? (Array.isArray(data[field]) ? [] : "") : v;
+            if (field === "signatureHooks" || field === "closingPatterns") ve[field] = data[field].slice();
+          }
+          cfg.commit?.();
+          showToast(`${networkLabel(net)} voice saved. Every network that follows it changes too.`);
+          repaint();
+          return;
+        }
         const before = partsDone(data, net);
         const entry = nvWritableEntry(data, net);
         for (const [field] of nvFields()) {

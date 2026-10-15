@@ -23,10 +23,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1812";
-import { bindReorder } from "../drag-reorder.js?v=1812";
-import { escapeHtml as esc } from "../utils.js?v=1812";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1812";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1814";
+import { bindReorder } from "../drag-reorder.js?v=1814";
+import { escapeHtml as esc } from "../utils.js?v=1814";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1814";
 import {
   networkFields,
   isNewPart,
@@ -35,7 +35,7 @@ import {
   baseNetwork,
   networkEntry,
   resolvedVoice,
-} from "../network-voice.js?v=1812";
+} from "../network-voice.js?v=1814";
 
 const MODAL_ID = "voiceWizard";
 
@@ -144,17 +144,21 @@ export function open({ data, network, part = null, onSave }) {
   const opts = networkVoiceOptions(network);
   if (!data || !opts) return;
   requestOpen(MODAL_ID, close);
-  const entry = networkEntry(data, network) || {};
+  // The base network has no "default" to fall back on: the assistant works on
+  // the base voice itself (the Playbook's own fields).
+  const isBase = network === baseNetwork(data);
+  const entry = isBase ? data : networkEntry(data, network) || {};
   const parts = {};
   // The parts on screen when it opens (a flag can add one — voiceParts()).
   const fields = networkFields().filter((f) => opts[f]);
-  for (const field of fields) parts[field] = initialPart(field, entry[field], opts[field]);
-  const firstLeft = fields.findIndex((f) => entry[f] === undefined);
+  for (const field of fields) parts[field] = initialPart(field, own(entry[field]), opts[field]);
+  const firstLeft = isBase ? -1 : fields.findIndex((f) => entry[f] === undefined);
   const asked = part ? fields.indexOf(part) : -1;
   w = {
     data,
     net: network,
     base: baseNetwork(data),
+    isBase,
     opts,
     fields,
     parts,
@@ -190,6 +194,12 @@ function requestClose() {
 }
 
 // ── The draft ────────────────────────────────────────────────────────────────
+
+// A value worth starting from — an empty list or text counts as none.
+function own(value) {
+  if (Array.isArray(value)) return value.length ? value : undefined;
+  return value ? value : undefined;
+}
 
 // What a part starts as: its own value when the network already has one,
 // Archie's picks otherwise (the first two lines, the first option).
@@ -228,7 +238,8 @@ function snapshot() {
 // network already had, not the ones changed in this wizard.
 function archieAll() {
   for (const field of w.fields) {
-    if (networkEntry(w.data, w.net)?.[field] !== undefined) continue;
+    const had = w.isBase ? own(w.data[field]) : networkEntry(w.data, w.net)?.[field];
+    if (had !== undefined) continue;
     if (JSON.stringify(w.parts[field]) !== w.startParts[field]) continue;
     w.parts[field] = initialPart(field, undefined, w.opts[field]);
   }
@@ -347,11 +358,11 @@ function renderMode(field, isDefault) {
 function renderPart(field) {
   const P = PARTS[field];
   const p = w.parts[field];
-  const isDefault = P.list ? p.keep : p.choice === "keep";
+  const isDefault = !w.isBase && (P.list ? p.keep : p.choice === "keep");
   const head = `<h3 class="vw__ask">${esc(P.ask(networkLabel(w.net)))}${
     isNewPart(field) ? ` <span class="ap-status orange vw__new">New in your voice</span>` : ""
   }</h3>
-    ${renderMode(field, isDefault)}`;
+    ${w.isBase ? "" : renderMode(field, isDefault)}`;
   if (isDefault) return head;
   if (P.list) {
     const n = p.lines.length;
@@ -426,14 +437,22 @@ function renderReview() {
       const v = valueOf(field);
       const shown =
         v === undefined
-          ? baseSummary(field)
+          ? w.isBase
+            ? "Not set yet"
+            : baseSummary(field)
           : Array.isArray(v)
             ? `“${v[0]}”${v.length > 1 ? ` and ${v.length - 1} more` : ""}`
             : v;
       return `<li class="pb2-nv-row vw-review__row">
       <span class="pb2-nv-row__name">${esc(PARTS[field].title)}</span>
       <span class="vw-review__value">
-        ${v === undefined ? `<span class="ap-status grey">Same as ${esc(baseLabel)}</span>` : `<span class="ap-status green">Optimized</span>`}
+        ${
+          w.isBase
+            ? "" // the base is the reference — nothing to be "the same as"
+            : v === undefined
+              ? `<span class="ap-status grey">Same as ${esc(baseLabel)}</span>`
+              : `<span class="ap-status green">Optimized</span>`
+        }
         <span class="vw-review__text">${esc(shown)}</span>
       </span>
       <span class="pb2-nv-row__action"><button type="button" class="ap-button ghost blue" data-vw-goto="${i}">Change</button></span>
@@ -442,7 +461,11 @@ function renderReview() {
     .join("");
   const n = w.fields.filter((f) => valueOf(f) !== undefined).length;
   return `<h3 class="vw__ask">Your ${esc(label)} voice</h3>
-    <p class="vw__hint">${n} of ${review()} parts optimized for ${esc(label)}. The others follow your ${esc(baseLabel)} voice.</p>
+    <p class="vw__hint">${
+      w.isBase
+        ? `Every network that follows your ${esc(label)} voice picks up these changes.`
+        : `${n} of ${review()} parts optimized for ${esc(label)}. The others follow your ${esc(baseLabel)} voice.`
+    }</p>
     <ul class="pb2-nv-rows vw-review">${rows}</ul>`;
 }
 
