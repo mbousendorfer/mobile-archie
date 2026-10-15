@@ -33,21 +33,20 @@
 // `insights-read.css` and `read.js` say they are deletable as a block the day
 // one reading wins; that day is closer than it was.
 
-import { escapeHtml as esc } from "../../utils.js?v=1877";
-import * as cockpit from "./layouts/cockpit.js?v=1877";
-import * as mobIndex from "./layouts/mob_index.js?v=1877";
-import * as mobSide from "./layouts/mob_side.js?v=1877";
+import { escapeHtml as esc } from "../../utils.js?v=1890";
+import * as cockpit from "./layouts/cockpit.js?v=1890";
+import * as mobIndex from "./layouts/mob_index.js?v=1890";
+import * as mobSide from "./layouts/mob_side.js?v=1890";
 
 export const LAYOUTS = [cockpit, mobIndex, mobSide];
 
 /** localStorage — which layout the reader last chose. */
 const INSIGHTS_LAYOUT_KEY = "archie-insights-layout";
 
-// Cockpit is what a first visit opens on: every objective is visible at once,
-// so "what needs me" is answered before anything is clicked, and the pane's
-// structure is the clearer read. The other layouts are one switch away and
-// the choice sticks.
-export const DEFAULT_LAYOUT = "cockpit";
+// Mobile fork: Mob · Index is what a first visit opens on — an index, then the
+// objective pushed over it (`?objective=`), the one reading built for a phone.
+// Cockpit and Side are one switch away and fall back to the same stack.
+export const DEFAULT_LAYOUT = "mob_index";
 
 export function readLayoutId() {
   try {

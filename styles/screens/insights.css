@@ -214,10 +214,18 @@
   transform: rotate(180deg);
 }
 
+/* Mobile fork: anchored to the trigger's LEFT — right-aligned, its 220px ran
+   off the left edge from where the compact switch sits in the topbar. */
 .ins-viewswitch__menu {
-  left: auto;
-  right: 0;
+  left: 0;
+  right: auto;
   min-width: 220px;
+}
+
+/* Mobile fork: in the topbar the switch is its icon and its chevron — the
+   layout's name lives in the menu (and the trigger's aria-label says "View"). */
+.ins-viewswitch__trigger > span {
+  display: none;
 }
 
 /* ── The Playbook title — the heading IS the scope ──────────────────────────

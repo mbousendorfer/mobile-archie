@@ -246,11 +246,23 @@
 
 /* Left-aligned to its trigger: the button now sits near the left of a page-wide
    toolbar, so a 420px panel opens inward with room to spare. */
-.topics-view__filter-panel {
-  position: absolute;
-  top: calc(100% + var(--ref-spacing-xxxs));
+/* Mobile fork: the three grouped controls in a SHEET from the bottom edge — a
+   420px panel under its trigger ran past the screen. */
+.topics-view__filter-panel.ap-filter-dropdown {
+  position: fixed;
+  top: auto;
+  right: 0;
+  bottom: 0;
   left: 0;
-  z-index: 30;
+  width: auto;
+  max-width: none;
+  max-height: calc(100dvh - var(--app-safe-top) - 16px);
+  overflow-y: auto;
+  padding-bottom: var(--app-safe-bottom);
+  border-radius: var(--app-radius-modal) var(--app-radius-modal) 0 0;
+  box-shadow: var(--app-shadow-popover-lg);
+  z-index: var(--app-z-modal);
+  animation: app-sheet-up var(--ref-animation-normal) var(--app-ease-standard);
 }
 
 /* The list itself — one of the two scrollports. */
@@ -1333,4 +1345,43 @@
 .topics-view__ms .ap-select-option > .ap-tag {
   margin-left: auto;
   flex-shrink: 0;
+}
+
+/* ── Mobile fork: the article is a LEVEL, pushed over the list ─────────────
+   The list is the screen. Opening a Topic pushes `?topic=` (screens/topics.js)
+   and its article covers the content area as a layer (fixed: the list under it
+   may be scrolled anywhere), with the back in the topbar; Back closes it.
+   Nothing open → no pane at all (no placeholder, no skeleton). The verbs
+   (Use in chat · Ignore) ride the bottom of the layer, above the home indicator. */
+.topics-view__pane--blank,
+.topics-view__pane--waiting {
+  display: none;
+}
+
+.topics-view__split > .topics-view__pane:not(.topics-view__pane--blank, .topics-view__pane--waiting) {
+  position: fixed;
+  inset: calc(var(--app-topbar-height) + var(--app-safe-top)) 0 0 0;
+  z-index: 3;
+  margin: 0;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.topics-view__split > .topics-view__pane .topics-view__pane-body {
+  overflow-y: auto;
+}
+
+/* The action band is wider than a phone with its three pieces on one line:
+   justified to the end, it overflowed to the LEFT and cut the toggle's label.
+   It wraps instead — the toggle on its own line, the verbs under it, right. */
+.topics-view__pane-body .topic-article__actionbar {
+  flex-wrap: wrap;
+  row-gap: var(--ref-spacing-xs);
+  padding-bottom: calc(var(--ref-spacing-xs) + var(--app-safe-bottom));
+}
+
+.topics-view__pane-body .topic-article__posts-toggle {
+  flex: 1 0 100%;
+  justify-content: flex-start;
 }

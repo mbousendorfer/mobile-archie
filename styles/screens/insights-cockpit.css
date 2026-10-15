@@ -283,7 +283,8 @@
 
 @media (max-width: 1000px) {
   .ins-cockpit {
-    grid-template-columns: 1fr;
+    /* minmax(0, …): a bare 1fr floored at the pane's min-content (1272px). */
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
   }
   .ins-cockpit-rail {
@@ -305,4 +306,13 @@
   .ins-cockpit-pane__head {
     flex-direction: column;
   }
+}
+
+/* Mobile fork: the posts table keeps its columns and scrolls sideways inside
+   its card (a data table, the one place a phone scrolls horizontally) — it
+   used to push the whole pane to 633px. */
+.ins-cockpit-table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
 }

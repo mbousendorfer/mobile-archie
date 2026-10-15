@@ -31,25 +31,25 @@
 // host is never repainted without `destroyChartsIn(host)` first — the one rule
 // that keeps a brand switch from leaking a chart per repaint.
 
-import { html, raw } from "../../utils.js?v=1877";
-import { renderTopbar, setTopbarActions, renderIconBack } from "../../components/topbar.js?v=1877";
-import { subscribe as subscribeContexts, updateContext } from "../../contexts-store.js?v=1877";
+import { html, raw } from "../../utils.js?v=1890";
+import { renderTopbar, setTopbarActions, renderIconBack } from "../../components/topbar.js?v=1890";
+import { subscribe as subscribeContexts, updateContext } from "../../contexts-store.js?v=1890";
 import {
   subscribe as subscribeScope,
   getActivePlaybook,
   getActivePlaybookId,
   setActivePlaybook,
-} from "../../active-playbook.js?v=1877";
-import { getPath, navigate } from "../../router.js?v=1877";
-import { isFlagOn } from "../../feature-flags.js?v=1877";
-import { parseHashParams, setHashQuery } from "../../url-state.js?v=1877";
-import { open as openObjectiveModal } from "../../components/objective-modal.js?v=1877";
-import { openObjectiveInChat, repurposePostInChat } from "../../objective-flow.js?v=1877";
-import { renderEmptyState } from "../../components/empty-state.js?v=1877";
-import { playbookTitle, objectiveTopbarActions } from "./pieces.js?v=1877";
-import { objectiveEntries, playbookRollup, entryByKey } from "./model.js?v=1877";
-import { destroyChartsIn, reflowChartsIn } from "./charts.js?v=1877";
-import { DEFAULT_LAYOUT, readLayoutId, writeLayoutId, layoutById, viewSwitch } from "./views.js?v=1877";
+} from "../../active-playbook.js?v=1890";
+import { getPath, navigate } from "../../router.js?v=1890";
+import { isFlagOn } from "../../feature-flags.js?v=1890";
+import { parseHashParams, setHashQuery } from "../../url-state.js?v=1890";
+import { open as openObjectiveModal } from "../../components/objective-modal.js?v=1890";
+import { openObjectiveInChat, repurposePostInChat } from "../../objective-flow.js?v=1890";
+import { renderEmptyState } from "../../components/empty-state.js?v=1890";
+import { playbookTitle, objectiveTopbarActions } from "./pieces.js?v=1890";
+import { objectiveEntries, playbookRollup, entryByKey } from "./model.js?v=1890";
+import { destroyChartsIn, reflowChartsIn } from "./charts.js?v=1890";
+import { DEFAULT_LAYOUT, readLayoutId, writeLayoutId, layoutById } from "./views.js?v=1890";
 
 // ── Module state ──────────────────────────────────────────────────────────
 
@@ -128,7 +128,9 @@ function syncTopbar(fiche) {
   if (fiche) {
     setTopbarActions(
       getPath(),
-      `<div class="ins-topbar-actions">${viewSwitch(layoutId)}${objectiveTopbarActions(fiche)}</div>`,
+      // Mobile fork: no View switch on the fiche — a phone's topbar holds the
+      // back and the objective's two doors, and the switch changes the INDEX.
+      `<div class="ins-topbar-actions">${objectiveTopbarActions(fiche)}</div>`,
       { left: renderIconBack("/insights", "Back to objectives") },
     );
     ficheTopbar = true;

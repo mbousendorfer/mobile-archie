@@ -64,7 +64,7 @@
    one when the panel or a narrow window takes the space. */
 .ins-mob_index__list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
   gap: var(--ref-spacing-sm);
   /* The cards measure THEMSELVES, not the viewport: the app's rail collapses
      and the right panel overlays, so viewport width never tells you content

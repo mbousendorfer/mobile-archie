@@ -967,3 +967,15 @@
   align-self: flex-start;
   margin-top: var(--ref-spacing-xs);
 }
+
+/* Mobile fork: a tab's head (lead · actions) wraps — the actions go under the
+   lead, right-aligned, instead of running past the screen's edge. */
+.pb2-tabhead {
+  flex-wrap: wrap;
+  row-gap: var(--ref-spacing-xs);
+}
+
+.pb2-tabhead__actions {
+  flex-wrap: wrap;
+  margin-left: auto;
+}

@@ -321,3 +321,14 @@
   gap: var(--ref-spacing-xxs);
   flex-wrap: wrap;
 }
+
+/* Mobile fork: a coming-soon source's head (name · Coming soon · Need this
+   source? · switch) is wider than a phone — it wraps, the name keeping a
+   readable floor instead of being overlapped. */
+.topics-src__head {
+  flex-wrap: wrap;
+}
+
+.topics-src__name {
+  flex: 1 1 140px;
+}

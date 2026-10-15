@@ -174,10 +174,22 @@
   margin: 0;
 }
 
+/* Mobile fork: the search takes the row, Create keeps its own width beside it. */
 .home-toolbar__actions {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+.home-toolbar__actions > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.home-toolbar__actions > .ap-button {
+  flex: 0 0 auto;
 }
 
 /* ── The workflows ─────────────────────────────────────────────────────────

@@ -32,15 +32,15 @@
 // view. There is an explicit Load more too, and both do exactly the same thing —
 // an infinite list with no button is unusable by keyboard.
 
-import { html, raw, escapeAttr } from "../utils.js?v=1877";
-import { navigate, getPath } from "../router.js?v=1877";
-import { parseHashParams, setHashQuery } from "../url-state.js?v=1877";
-import { renderTopbar } from "../components/topbar.js?v=1877";
-import { showToast } from "../components/toast.js?v=1877";
-import { renderEmptyState } from "../components/empty-state.js?v=1877";
-import { getContexts, getContextById, getDefaultContext } from "../contexts-store.js?v=1877";
-import { getActivePlaybook, isWorkspaceMode, subscribe as subscribeScope } from "../active-playbook.js?v=1877";
-import { getFeedForPlaybook, subscribe as subscribeFeeds } from "../topic-feeds-store.js?v=1877";
+import { html, raw, escapeAttr } from "../utils.js?v=1890";
+import { navigate, getPath } from "../router.js?v=1890";
+import { parseHashParams, setHashQuery } from "../url-state.js?v=1890";
+import { renderTopbar } from "../components/topbar.js?v=1890";
+import { showToast } from "../components/toast.js?v=1890";
+import { renderEmptyState } from "../components/empty-state.js?v=1890";
+import { getContexts, getContextById, getDefaultContext } from "../contexts-store.js?v=1890";
+import { getActivePlaybook, isWorkspaceMode, subscribe as subscribeScope } from "../active-playbook.js?v=1890";
+import { getFeedForPlaybook, subscribe as subscribeFeeds } from "../topic-feeds-store.js?v=1890";
 import {
   getTopicsForFeed,
   groupTopicsByAge,
@@ -51,7 +51,7 @@ import {
   ignoreTopic,
   unignoreTopic,
   subscribe as subscribeTopics,
-} from "../topics-store.js?v=1877";
+} from "../topics-store.js?v=1890";
 import {
   TOPIC_SOURCES,
   TOPIC_KINDS,
@@ -60,13 +60,13 @@ import {
   findTopicSource,
   findCadence,
   isLiveSource,
-} from "../topics-catalog.js?v=1877";
-import { renderTopicCard } from "../components/topic-card.js?v=1877";
-import { renderTopicArticle, renderTopicHeader, renderTopicActions } from "../topic-article.js?v=1877";
-import { openIgnoreReason } from "../components/topic-ignore-modal.js?v=1877";
-import { openTopicHistory } from "../components/topic-history-modal.js?v=1877";
-import { useTopicInChat } from "../topic-flow.js?v=1877";
-import { canEdit } from "../playbook-access.js?v=1877";
+} from "../topics-catalog.js?v=1890";
+import { renderTopicCard } from "../components/topic-card.js?v=1890";
+import { renderTopicArticle, renderTopicHeader, renderTopicActions } from "../topic-article.js?v=1890";
+import { openIgnoreReason } from "../components/topic-ignore-modal.js?v=1890";
+import { openTopicHistory } from "../components/topic-history-modal.js?v=1890";
+import { useTopicInChat } from "../topic-flow.js?v=1890";
+import { canEdit } from "../playbook-access.js?v=1890";
 
 const PAGE = 10;
 // Long enough to read the scanning line, short enough that nobody waits for it
@@ -153,11 +153,31 @@ export function renderTopics(_params, target) {
   // status filter widens to EVERY state for that visit. An ignored Topic is not
   // in the default view, so without this the article would open onto a card the
   // list does not show.
-  const deepTopicId = parseHashParams().get("topic");
+  const params = parseHashParams();
+  const deepTopicId = params.get("topic");
   const deepTopic = deepTopicId ? getTopicById(deepTopicId) : null;
 
+  // Mobile fork: an open article is a LEVEL — `?topic=` (or `?invite=1`) pushed
+  // on the history, so the browser's Back and the topbar's back close it. Only
+  // that parameter changed? Then it is the same visit: keep the view (filters,
+  // page, scroll) the router's teardown just parked, and only re-point what is open.
+  const key = visitKey(pb, params);
+  const resumed = parked && parked.key === key ? parked.view : null;
+  parked = null;
   teardown();
+  if (resumed) {
+    view = resumed;
+    view.menuTopicId = null;
+    view.paneMenuOpen = false;
+    view.openTopicId = deepTopic ? deepTopic.id : null;
+    view.inviteOpen = params.has("invite");
+    paint(target, pb);
+    bind(target);
+    lastKey = key;
+    return wireStores(target);
+  }
   view = freshView();
+  view.inviteOpen = params.has("invite");
   if (deepTopic) {
     view.openTopicId = deepTopic.id;
     view.autoOpened = true;
@@ -172,6 +192,7 @@ export function renderTopics(_params, target) {
 
   paint(target, pb);
   bind(target);
+  lastKey = key;
 
   if (view.scanning) {
     window.setTimeout(() => {
@@ -180,7 +201,10 @@ export function renderTopics(_params, target) {
       paint(target, scopedPlaybook());
     }, SCAN_MS);
   }
+  return wireStores(target);
+}
 
+function wireStores(target) {
   unsubscribe = subscribeTopics(() => paint(target, scopedPlaybook()));
   unsubscribeFeeds = subscribeFeeds(() => paint(target, scopedPlaybook()));
   // Switching brand in the rail re-points this screen in place (there is no
@@ -196,7 +220,32 @@ export function renderTopics(_params, target) {
   return teardown;
 }
 
+// What identifies a visit to the feed: its scope and every hash parameter but the
+// open level (`topic`, `invite`). Same key → same visit (see renderTopics).
+let parked = null;
+let lastKey = null;
+function visitKey(pb, params) {
+  const rest = new URLSearchParams(params);
+  rest.delete("topic");
+  rest.delete("invite");
+  return `${pb?.id || ""}|${rest.toString()}`;
+}
+
+// Open / close a level by URL, so it is a history entry (mobile fork).
+function setOpenLevel(level) {
+  const params = parseHashParams();
+  params.delete("topic");
+  params.delete("invite");
+  if (level?.topic) params.set("topic", level.topic);
+  if (level?.invite) params.set("invite", "1");
+  setHashQuery(getPath(), Object.fromEntries(params));
+}
+
 function teardown() {
+  // Parked for the next render when the router is staying on the feed (the hash
+  // has already changed when it tears down) — renderTopics then compares keys.
+  // Leaving the feed parks nothing, so a later visit starts fresh.
+  if (view && lastKey && getPath() === "/topics") parked = { key: lastKey, view };
   if (unsubscribe) (unsubscribe(), (unsubscribe = null));
   if (unsubscribeFeeds) (unsubscribeFeeds(), (unsubscribeFeeds = null));
   if (unsubscribeScope) (unsubscribeScope(), (unsubscribeScope = null));
@@ -292,15 +341,8 @@ function renderPage(pb) {
   // second control that could disagree with the filter no longer exists.
   const all = feed ? getTopicsForFeed(feed.id, view.filters) : [];
 
-  // The first Topic's article opens by itself, ONCE per visit: the reader lands
-  // on a master–detail screen and an empty right-hand half is a screen that
-  // looks unfinished. The latch is what makes it once — closing it must not be
-  // undone by the next repaint, and there are many (a filter change, a triage,
-  // a store notification).
-  if (!view.scanning && !view.autoOpened && all.length) {
-    view.autoOpened = true;
-    view.openTopicId = all[0].id;
-  }
+  // No article opens by itself on a phone: the list is the screen, an article is
+  // a level pushed over it (mobile fork). `autoOpened` stays for the deep link.
 
   // Unfiltered, so "the filter is hiding everything" can be told apart from
   // "this feed has not found anything yet". Two different states, two different
@@ -1064,18 +1106,15 @@ function bind(target) {
     }
 
     if (event.target.closest("[data-topic-invite-open]")) {
-      view.inviteOpen = !view.inviteOpen;
-      if (view.inviteOpen) view.openTopicId = null;
-      view.revealPane = view.inviteOpen;
-      paint(target, scopedPlaybook());
+      setOpenLevel(view.inviteOpen ? null : { invite: true });
       return;
     }
 
     if (event.target.closest("[data-topic-invite-dismiss]")) {
       const pb = scopedPlaybook();
       if (pb) dismissedInvites.add(pb.id);
-      view.inviteOpen = false;
-      paint(target, scopedPlaybook());
+      if (view.inviteOpen) setOpenLevel(null);
+      else paint(target, scopedPlaybook());
       return;
     }
 
@@ -1099,11 +1138,7 @@ function bind(target) {
     const read = event.target.closest("[data-topic-read]");
     if (read) {
       const id = read.dataset.topicRead;
-      const opening = view.openTopicId !== id;
-      view.openTopicId = opening ? id : null;
-      view.inviteOpen = false;
-      view.revealPane = opening;
-      paint(target, scopedPlaybook());
+      if (view.openTopicId !== id) setOpenLevel({ topic: id });
       return;
     }
 
@@ -1182,9 +1217,7 @@ function bind(target) {
       return;
     }
     if (!view.openTopicId && !view.inviteOpen) return;
-    view.openTopicId = null;
-    view.inviteOpen = false;
-    paint(target, scopedPlaybook());
+    setOpenLevel(null);
   };
   document.addEventListener("keydown", boundKeydown);
 }
