@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1820";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1823";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -26,11 +26,11 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1820";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1820";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1820";
-import { isFlagOn } from "./feature-flags.js?v=1820";
-import { parseHashParams } from "./url-state.js?v=1820";
+} from "./playbook-brand-kit.js?v=1823";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1823";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1823";
+import { isFlagOn } from "./feature-flags.js?v=1823";
+import { parseHashParams } from "./url-state.js?v=1823";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -47,16 +47,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1820";
+} from "./network-voice.js?v=1823";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1820";
-import { showToast } from "./components/toast.js?v=1820";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1820";
-import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1820";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1820";
+} from "./voice-coach-store.js?v=1823";
+import { showToast } from "./components/toast.js?v=1823";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1823";
+import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1823";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1823";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2581,7 +2581,8 @@ function nvAllMatrix(data) {
       const complete = !isBase && nvOptimizedCount(data, n) === fields.length;
       const fresh = partsNew(data, n);
       const state = isBase ? "Base voice — every network starts from it" : nvProgressText(data, n);
-      const action = isBase || complete ? "" : nvOptimizeButton(data, n, { tone: "stroked blue", short: true });
+      // Ghost: six stroked buttons stacked down the list read as a wall.
+      const action = isBase || complete ? "" : nvOptimizeButton(data, n, { tone: "ghost blue", short: true });
       return `<li class="pb2-nv-line${isBase ? " is-base" : ""}">
         <button type="button" class="pb2-nv-line__open" data-nv-net="${n}" aria-label="Open your ${esc(label)} voice">
           <i class="${networkIcon(n)}" aria-hidden="true"></i><span class="pb2-nv-line__name">${esc(label)}</span>

@@ -24,10 +24,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1820";
-import { bindReorder } from "../drag-reorder.js?v=1820";
-import { escapeHtml as esc } from "../utils.js?v=1820";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1820";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1823";
+import { bindReorder } from "../drag-reorder.js?v=1823";
+import { escapeHtml as esc } from "../utils.js?v=1823";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1823";
 import {
   networkFields,
   isNewPart,
@@ -36,7 +36,7 @@ import {
   baseNetwork,
   networkEntry,
   resolvedVoice,
-} from "../network-voice.js?v=1820";
+} from "../network-voice.js?v=1823";
 
 const MODAL_ID = "voiceWizard";
 
@@ -70,7 +70,7 @@ const PARTS = {
   visualStyle: {
     title: "Emoji & casing",
     list: false,
-    ask: (n) => `Emoji, casing and hashtags on ${n}?`,
+    ask: (n) => `How do you use emoji and capitals on ${n}?`,
     add: "Emoji, capitalisation, hashtags, links…",
   },
 };
@@ -366,11 +366,14 @@ function renderPart(field) {
   const P = PARTS[field];
   const p = w.parts[field];
   const isDefault = !w.isBase && (P.list ? p.keep : p.choice === "keep");
-  const head = `<h3 class="vw__ask">${esc(P.ask(networkLabel(w.net)))}${
+  const ask = `<h3 class="vw__ask">${esc(P.ask(networkLabel(w.net)))}${
     isNewPart(field) ? ` <span class="ap-status orange vw__new">New in your voice</span>` : ""
-  }</h3>
-    ${w.isBase ? "" : renderMode(field, isDefault)}`;
-  if (isDefault) return head;
+  }</h3>`;
+  // Lines: first Leave as default / Make it X's, then the list. A one-value
+  // part needs no such switch — "Leave as default" is simply its first choice
+  // (two radio groups stacked read as a decision inside a decision).
+  const head = `${ask}${w.isBase || !P.list ? "" : renderMode(field, isDefault)}`;
+  if (P.list && isDefault) return head;
   if (P.list) {
     const n = p.lines.length;
     const kept = p.lines
@@ -419,12 +422,12 @@ function renderPart(field) {
       <input type="radio" name="vw-choice" data-vw-choice="${value}" ${String(p.choice) === String(value) ? "checked" : ""} />
       <div class="vw-radio__body">
         <span class="ap-radio-card-title">${esc(title)}${archie ? ARCHIE_MARK : ""}</span>
-        ${text ? `<span class="vw-radio__text">${esc(text)}</span>` : ""}
+        ${text ? `<span class="vw-radio__text" title="${esc(text)}">${esc(text)}</span>` : ""}
       </div>
     </label>`;
   return `${head}
-    <div class="vw-list-head"><span class="vw-list-head__title">Pick one</span></div>
     <div class="vw-options">
+      ${w.isBase ? "" : radio("keep", "Leave as default", `As on ${networkLabel(w.base)}: ${baseSummary(field)}`)}
       ${radio(0, "Archie's pick", w.opts[field][0], true)}
       ${radio(1, "Another way", w.opts[field][1])}
       ${radio("own", "Write my own", "")}
@@ -471,7 +474,11 @@ function renderReview() {
     <p class="vw__hint">${
       w.isBase
         ? `Every network that follows your ${esc(label)} voice picks up these changes.`
-        : `${n} of ${review()} parts optimized for ${esc(label)}. The others follow your ${esc(baseLabel)} voice.`
+        : n === review()
+          ? `Every part is written for ${esc(label)}.`
+          : n === 0
+            ? `Every part follows your ${esc(baseLabel)} voice.`
+            : `${n} of ${review()} parts written for ${esc(label)}. The others follow your ${esc(baseLabel)} voice.`
     }</p>
     <ul class="pb2-nv-rows vw-review">${rows}</ul>`;
 }

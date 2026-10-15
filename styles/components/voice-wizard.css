@@ -14,7 +14,9 @@
   display: flex;
   flex-direction: column;
   width: min(960px, 100%);
-  max-height: min(calc(100vh - 48px), 760px);
+  /* One height for every step — a dialog that resized per step jumped on
+     screen at each Next. The content scrolls inside. */
+  height: min(calc(100vh - 48px), 680px);
   box-shadow: var(--app-shadow-popover-lg);
 }
 
@@ -45,8 +47,11 @@
   outline-offset: 2px;
 }
 
+/* Fills the fixed-height dialog, so the footer sits at the bottom. */
 .vw__content {
   display: grid;
+  flex: 1;
+  align-content: start;
   grid-template-columns: minmax(0, 1fr) 360px;
   gap: var(--ref-spacing-lg);
   min-height: 0;
@@ -87,7 +92,8 @@
 
 /* The two cards stay a pair: the base's version is cut at two lines (whole
    in the title), so a long LinkedIn layout doesn't stretch them. */
-.vw-mode .vw-radio__text {
+.vw-mode .vw-radio__text,
+.vw-radio:has([data-vw-choice="keep"]) .vw-radio__text {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
@@ -203,7 +209,10 @@
   align-items: center;
   gap: var(--ref-spacing-xs);
   width: 100%;
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  /* Right inset = a kept row's remove button + gap, so the olive marks of
+     both kinds of rows sit in one column. */
+  padding: var(--ref-spacing-xxs) calc(var(--ref-spacing-xxs) + 36px + var(--ref-spacing-xs)) var(--ref-spacing-xxs)
+    var(--ref-spacing-sm);
   border: 1px solid transparent;
   border-radius: var(--ref-border-radius-md);
   background: none;
