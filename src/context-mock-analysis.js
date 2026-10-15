@@ -412,7 +412,7 @@ export function analyzeNetworkVoices(networks = [], base = "") {
   const out = {};
   for (const n of new Set(networks)) {
     if (n === base || !NETWORK_ADAPTATIONS[n]) continue;
-    out[n] = { ...clone(NETWORK_ADAPTATIONS[n]), rules: [] };
+    out[n] = { ...clone(NETWORK_ADAPTATIONS[n]), rules: [], drafted: true };
   }
   return out;
 }

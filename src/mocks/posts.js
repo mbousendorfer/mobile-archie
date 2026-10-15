@@ -75,14 +75,16 @@ export const postsBySession = {
     {
       id: "post-acme-1",
       author: AUTHOR_MC,
-      network: "linkedin",
+      // The chat asked for LinkedIn AND X: this is the X one (voice per
+      // network — the coaching question needs a draft off the base network).
+      network: "twitter",
       status: "ready",
       timeLabel: "3h",
       text: [
-        "Your Q2 plan isn't a plan, it's a wish list — unless every objective names the single signal you'll watch weekly to prove it.",
-        "Teams who track one weekly proof point ship on cadence. Teams who wait for quarterly wrap-ups publish less, and ship less.",
+        "Your Q2 plan isn't a plan, it's a wish list — unless every objective names the single signal you'll watch weekly.",
+        "Teams who track one weekly proof point ship on cadence.",
       ],
-      hashtags: ["Q2Planning", "ContentOps"],
+      hashtags: ["Q2Planning"],
       cta: "",
       stats: { likes: 147, comments: 8, reposts: 11 },
       hasImage: true,

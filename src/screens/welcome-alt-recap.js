@@ -4,11 +4,12 @@
 // staged loader, reload-rehydration, and the "Enter Archie" finish. The
 // actual rendering + per-card edit machine lives in ../playbook-view.js.
 
-import { navigate } from "../router.js?v=1758";
-import { catalogueRoute } from "../active-playbook.js?v=1758";
-import { getDraft, isAnalysisReady, save, patchDraft, restoreDraft } from "../context-builder.js?v=1758";
-import { mount } from "../playbook-view.js?v=1758";
-import { open as openRenameModal } from "../components/rename-modal.js?v=1758";
+import { navigate } from "../router.js?v=1760";
+import { catalogueRoute } from "../active-playbook.js?v=1760";
+import { getDraft, isAnalysisReady, save, patchDraft, restoreDraft } from "../context-builder.js?v=1760";
+import { mount } from "../playbook-view.js?v=1760";
+import { open as openRenameModal } from "../components/rename-modal.js?v=1760";
+import { networkLabel } from "../network-voice.js?v=1760";
 
 const WELCOME_ALT_KEY = "welcomeAltSessionId";
 const WELCOME_ALT_DRAFT_KEY = "welcomeAltDraft";
@@ -30,6 +31,17 @@ const FILE_LOADING_STAGES = [
   { title: "Mapping your audience", sub: "Working out who you're for — and what moves them." },
   { title: "Building your Playbook", sub: "Turning it all into a brief every post draws from." },
 ];
+
+// Voice per network: when Archie adapted the voice for other networks, the
+// loader says so right after learning it — the work the reveal then shows.
+function withNetworkStage(stages, draft) {
+  const nets = Object.keys(draft?.voiceByNetwork || {}).map(networkLabel);
+  if (!nets.length) return stages;
+  const list = nets.length === 1 ? nets[0] : `${nets.slice(0, -1).join(", ")} and ${nets[nets.length - 1]}`;
+  const at = stages.findIndex((st) => st.title === "Learning your voice");
+  const stage = { title: "Adapting your voice", sub: `Tuning it for ${list} — each network gets its own version.` };
+  return at < 0 ? stages : [...stages.slice(0, at + 1), stage, ...stages.slice(at + 1)];
+}
 
 let introDoneSid = null; // sid whose intro loader has already played
 
@@ -73,7 +85,7 @@ export function renderWelcomeAltRecap(_params, target) {
     onPaint: () => {
       if (isAnalysisReady(sid)) persistDraft(sid);
     },
-    loader: source === "documents" ? FILE_LOADING_STAGES : LOADING_STAGES,
+    loader: source === "documents" ? FILE_LOADING_STAGES : withNetworkStage(LOADING_STAGES, getDraft(sid)),
     skipLoader,
     onIntroDone: () => {
       introDoneSid = sid;

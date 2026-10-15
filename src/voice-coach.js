@@ -13,16 +13,16 @@
 // ponytail: the edit heuristics are a mock reading of one before/after pair.
 // The real thing compares many drafts per network before proposing.
 
-import { getSessionById } from "./sessions-store.js?v=1758";
-import { getContextById } from "./contexts-store.js?v=1758";
-import { playbookForNewWork } from "./active-playbook.js?v=1758";
-import { getPosts } from "./posts-store.js?v=1758";
-import { postVoiceSuggestion, postSelectionEcho, postAssistantMessage } from "./assistant.js?v=1758";
-import { startRewrite } from "./draft-rewrite.js?v=1758";
-import { escapeHtml } from "./utils.js?v=1758";
-import { ask, isActive } from "./inline-question.js?v=1758";
-import { propose, accept } from "./voice-coach-store.js?v=1758";
-import { normalizeNetwork } from "./social-profiles.js?v=1758";
+import { getSessionById } from "./sessions-store.js?v=1760";
+import { getContextById } from "./contexts-store.js?v=1760";
+import { playbookForNewWork } from "./active-playbook.js?v=1760";
+import { getPosts } from "./posts-store.js?v=1760";
+import { postVoiceSuggestion, postSelectionEcho, postAssistantMessage } from "./assistant.js?v=1760";
+import { startRewrite } from "./draft-rewrite.js?v=1760";
+import { escapeHtml } from "./utils.js?v=1760";
+import { ask, isActive } from "./inline-question.js?v=1760";
+import { propose, accept } from "./voice-coach-store.js?v=1760";
+import { normalizeNetwork } from "./social-profiles.js?v=1760";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -30,7 +30,7 @@ import {
   networkLabel,
   networkIcon,
   followRules,
-} from "./network-voice.js?v=1758";
+} from "./network-voice.js?v=1760";
 
 function sessionPlaybook(sessionId) {
   const session = getSessionById(sessionId);
@@ -92,32 +92,49 @@ export function noticeDraftEdit(sessionId, postId, before, after) {
 }
 
 // Only the reasons that are about HOW it sounds. Off-topic / inaccurate are
-// about the content: nothing for the voice to learn.
+// about the content: nothing for the voice to learn. Each reason has a default
+// rule and a version per network where the default would be wrong — "short
+// paragraphs" means nothing on X, where a post is one line.
 const REASON_RULES = {
   formatting: {
-    text: "Short paragraphs, one idea each, a line break between them.",
     why: "You flagged this draft's formatting.",
+    default: "Short paragraphs, one idea each, a line break between them.",
+    x: "One idea per post, no line breaks. A thread only when there are steps.",
+    instagram: "The hook in the first line, short paragraphs, the hashtags in one block at the end.",
+    facebook: "Two or three short paragraphs, then a question to open the comments.",
+    tiktok: "One caption line that says the hook again in words.",
+    youtube: "The title carries the hook; the description opens with what the video answers.",
   },
   "too-generic": {
-    text: "Open on a specific number, name or example, not a general statement.",
     why: "You marked this draft as too generic.",
+    default: "Open on a specific number, name or example, not a general statement.",
+    x: "Lead with the number or the name. No setup line.",
+    instagram: "Open on one concrete moment someone can picture.",
   },
   "wrong-tone": {
-    text: "Write like you'd talk to a peer: plain words, no hype.",
     why: "You said this draft's tone was off.",
+    default: "Write like you'd talk to a peer: plain words, no hype.",
+    x: "Say it like a reply to a friend: short, dry, no hype.",
+    instagram: "Talk to one person, warmly. Nothing that sounds like an ad.",
   },
 };
+
+function reasonRule(reason, network) {
+  const r = REASON_RULES[reason];
+  return r ? { text: r[network] || r.default, why: r.why } : null;
+}
 
 export function noticeDraftFeedback(targetId, reasons = []) {
   if (!networkVoicesOn() || !String(targetId).startsWith("draft:")) return;
   const sessionId = sessionFromHash();
   const ctx = sessionId && sessionPlaybook(sessionId);
   const post = ctx && getPosts(sessionId).find((p) => p.id === targetId.slice("draft:".length));
-  const rule = post && reasons.map((r) => REASON_RULES[r]).find(Boolean);
+  const network = post && normalizeNetwork(post.network);
+  const rule = post && reasons.map((r) => reasonRule(r, network)).find(Boolean);
   if (rule)
     suggest(sessionId, ctx, {
       ...rule,
-      network: normalizeNetwork(post.network),
+      network,
       source: "feedback",
       postIds: [post.id],
     });
@@ -136,15 +153,26 @@ const CLOSINGS = {
 
 const asked = new Set(); // `${contextId}:${network}` — one question per network voice per visit
 
+// The network a closing question would be about, or why there is none — one
+// reading for the question itself and for the admin gallery, which says why
+// it's off instead of doing nothing.
+export function coachingTarget(sessionId, drafts = []) {
+  const ctx = sessionPlaybook(sessionId);
+  if (!ctx) return { reason: "Needs a Playbook on this chat" };
+  const base = baseNetwork(ctx);
+  const others = [...new Set(drafts.map((d) => normalizeNetwork(d.network)))].filter((n) => n !== base && CLOSINGS[n]);
+  if (!others.length) return { reason: `Needs a draft on a network other than ${networkLabel(base)}` };
+  const open = others.filter((n) => !isOverridden(ctx, n, "closingPatterns"));
+  if (!open.length) return { reason: "Every network here already has its own closing" };
+  const net = open.find((n) => !asked.has(`${ctx.id}:${n}`));
+  return net ? { ctx, net } : { reason: "Already asked during this visit" };
+}
+
 export function coachAfterDraft(sessionId, drafts = []) {
   if (!networkVoicesOn() || isActive(sessionId)) return;
-  const ctx = sessionPlaybook(sessionId);
-  if (!ctx) return;
-  const base = baseNetwork(ctx);
-  const net = drafts
-    .map((d) => normalizeNetwork(d.network))
-    .find((n) => n !== base && CLOSINGS[n] && !isOverridden(ctx, n, "closingPatterns") && !asked.has(`${ctx.id}:${n}`));
+  const { ctx, net } = coachingTarget(sessionId, drafts);
   if (!net) return;
+  const base = baseNetwork(ctx);
   asked.add(`${ctx.id}:${net}`);
   const label = networkLabel(net);
   const commit = (text) => {

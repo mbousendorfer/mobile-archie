@@ -133,9 +133,9 @@ export const threadsBySession = {
       drafts: [
         {
           id: "post-acme-1",
-          network: "linkedin",
+          network: "twitter",
           preview:
-            "Your Q2 plan isn't a plan, it's a wish list — unless every objective names the single signal you'll watch weekly to prove it.",
+            "Your Q2 plan isn't a plan, it's a wish list — unless every objective names the single signal you'll watch weekly.",
         },
         {
           id: "post-acme-2",

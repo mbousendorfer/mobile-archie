@@ -7,7 +7,9 @@
 //                     the others get an adaptation drafted then, see
 //                     analyzeNetworkVoices).
 //   voiceByNetwork    { [network]: { signatureHooks?, closingPatterns?,
-//                     formattingStyle?, visualStyle?, rules: string[] } }
+//                     formattingStyle?, visualStyle?, rules: string[],
+//                     drafted?: true } } — drafted: written by Archie (at
+//                     creation, Learn from, Optimize) and untouched since
 //
 // A network entry holds ONLY what differs from the base: an absent field
 // inherits the base voice. `rules` are what Archie learned and the user
@@ -19,9 +21,9 @@
 // ON an overridden hook is written in one language. Per-language × per-network
 // examples when a brand actually publishes in two languages on one network.
 
-import { isFlagOn } from "./feature-flags.js?v=1758";
-import { escapeHtml } from "./utils.js?v=1758";
-import { NETWORKS, normalizeNetwork, getConnectedProfileById } from "./social-profiles.js?v=1758";
+import { isFlagOn } from "./feature-flags.js?v=1760";
+import { escapeHtml } from "./utils.js?v=1760";
+import { NETWORKS, normalizeNetwork, getConnectedProfileById } from "./social-profiles.js?v=1760";
 
 export const NETWORK_FIELDS = ["signatureHooks", "closingPatterns", "formattingStyle", "visualStyle"];
 const LIST_FIELDS = new Set(["signatureHooks", "closingPatterns"]);
@@ -79,6 +81,16 @@ export function maturity(ctx, n) {
   const e = networkEntry(ctx, n) || {};
   const adapted = NETWORK_FIELDS.filter((f) => e[f] !== undefined).length;
   const rules = (e.rules || []).length;
+  // Written by Archie (at creation, by Learn from, by Optimize) and not
+  // touched since: nothing has been learned from use yet, so it can't claim a
+  // level that only use earns. `drafted` drops at the first edit or Remember.
+  if (e.drafted && !rules) {
+    return {
+      level: "drafted",
+      label: "Optimized by Archie",
+      detail: `${adapted} of ${NETWORK_FIELDS.length} parts adapted to how posts work on ${networkLabel(n)}. It moves on as you edit it and I learn.`,
+    };
+  }
   const score = adapted + rules;
   const level = score === 0 ? "new" : score <= 2 ? "learning" : score <= 4 ? "shaping" : "tuned";
   const label = { new: "Same as base", learning: "Learning", shaping: "Taking shape", tuned: "Tuned" }[level];
@@ -103,6 +115,7 @@ export function withSuggestion(ctx, s) {
   const all = structuredClone(ctx.voiceByNetwork || {});
   const e = all[net] || { rules: [] };
   if (!Array.isArray(e.rules)) e.rules = [];
+  delete e.drafted; // a Remember is use
   if (s.field && LIST_FIELDS.has(s.field)) {
     const list = e[s.field] !== undefined ? e[s.field] : (ctx[s.field] || []).slice();
     if (!list.includes(s.text)) list.unshift(s.text);
@@ -174,6 +187,7 @@ export function cloneVoiceByNetwork(v) {
   for (const [net, e] of Object.entries(v)) {
     if (!known(net) || !e || typeof e !== "object") continue;
     const entry = { rules: Array.isArray(e.rules) ? e.rules.filter(Boolean) : [] };
+    if (e.drafted) entry.drafted = true;
     for (const f of NETWORK_FIELDS) {
       if (e[f] === undefined) continue;
       entry[f] = LIST_FIELDS.has(f) ? (Array.isArray(e[f]) ? e[f].slice() : []) : String(e[f] ?? "");

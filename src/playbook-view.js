@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1758";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1760";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -27,16 +27,16 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1758";
+} from "./playbook-brand-kit.js?v=1760";
 import {
   analyzeWebsite,
   discoverCompetitors,
   competitorKey,
   analyzeNetworkVoices,
-} from "./context-mock-analysis.js?v=1758";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1758";
-import { isFlagOn } from "./feature-flags.js?v=1758";
-import { parseHashParams } from "./url-state.js?v=1758";
+} from "./context-mock-analysis.js?v=1760";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1760";
+import { isFlagOn } from "./feature-flags.js?v=1760";
+import { parseHashParams } from "./url-state.js?v=1760";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -47,16 +47,16 @@ import {
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1758";
+} from "./network-voice.js?v=1760";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1758";
-import { NETWORKS } from "./social-profiles.js?v=1758";
-import { showToast } from "./components/toast.js?v=1758";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1758";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1758";
+} from "./voice-coach-store.js?v=1760";
+import { NETWORKS } from "./social-profiles.js?v=1760";
+import { showToast } from "./components/toast.js?v=1760";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1760";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1760";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2585,6 +2585,9 @@ function nvWritableEntry(data, net) {
   if (!data.voiceByNetwork || typeof data.voiceByNetwork !== "object") data.voiceByNetwork = {};
   if (!data.voiceByNetwork[net]) data.voiceByNetwork[net] = { rules: [] };
   if (!Array.isArray(data.voiceByNetwork[net].rules)) data.voiceByNetwork[net].rules = [];
+  // Every write goes through here from a click or a keystroke: the voice is
+  // now yours, no longer only what Archie drafted.
+  delete data.voiceByNetwork[net].drafted;
   return data.voiceByNetwork[net];
 }
 
