@@ -193,15 +193,21 @@
   --app-chart-data-9: var(--ref-color-data-emerald-100);
   --app-chart-data-10: var(--ref-color-data-navy-100);
 
-  /* ── App chrome sizing ────────────────────────────────────────────── */
+  /* ── App chrome sizing (mobile fork) ──────────────────────────────── */
   --app-topbar-height: 56px;
 
-  /* Sidebar widths — handoff: 260px expanded ↔ 56px collapsed. */
-  --app-sidebar-width: 260px;
-  --app-sidebar-width-collapsed: 56px;
+  /* The sidebar is a drawer over the content (layout.css). */
+  --app-drawer-width: min(85vw, 320px);
 
-  /* Right panel widths — handoff: 460px default, 420 below 1300px, 380 below 1100px. */
-  --app-right-panel-width: 460px;
+  /* Safe areas — the notch, the home indicator. viewport-fit=cover (index.html)
+     lets the app paint under them; these keep content out of them. */
+  --app-safe-top: env(safe-area-inset-top, 0px);
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-safe-left: env(safe-area-inset-left, 0px);
+  --app-safe-right: env(safe-area-inset-right, 0px);
+
+  /* Room the toasts leave for the composer under them. */
+  --app-composer-clearance: 128px;
 
   /* Typography is sourced exclusively from the DS text styles
      (--sys-text-style-*: h0/h1/h2/h3/h4/subtitle/body/caption + bold).

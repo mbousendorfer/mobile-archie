@@ -1076,3 +1076,20 @@ select,
 [contenteditable="true"] {
   font-size: 16px !important;
 }
+
+/* ── .ap-snackbar-thread on a phone — the mobile fork ─────────────────────
+   The DS pins the thread top-right at a fixed width, which on a phone covers
+   the topbar's controls. Here it spans the screen (16px gutters) and sits at
+   the bottom, above the composer and the home indicator. */
+.ap-snackbar-thread {
+  top: auto;
+  left: var(--ref-spacing-md);
+  right: var(--ref-spacing-md);
+  bottom: calc(var(--app-composer-clearance) + var(--app-safe-bottom));
+  width: auto;
+}
+
+/* Over a sheet there's no composer to clear. */
+.app-shell.is-right-panel-open ~ .ap-snackbar-thread {
+  bottom: calc(var(--ref-spacing-md) + var(--app-safe-bottom));
+}

@@ -55,3 +55,19 @@ export function formatClock(seconds, { round = false } = {}) {
   const s = Math.max(0, round ? Math.round(n) : Math.floor(n));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
+
+// A `position: fixed` popover placed by JS from its trigger's rect can land past
+// the edge of a phone screen. Call after setting left/top: shifts it back inside
+// the viewport (an 8px gutter), and flips it above its anchor when it overflows
+// the bottom. `anchorTop` = the trigger's rect.top, for the flip.
+export function clampToViewport(el, anchorTop = null, gutter = 8) {
+  const r = el.getBoundingClientRect();
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  if (r.right > vw - gutter) el.style.left = `${Math.max(gutter, vw - gutter - r.width)}px`;
+  if (r.left < gutter) el.style.left = `${gutter}px`;
+  if (r.bottom > vh - gutter) {
+    const above = anchorTop != null ? anchorTop - r.height - 4 : vh - gutter - r.height;
+    el.style.top = `${Math.max(gutter, above)}px`;
+  }
+}

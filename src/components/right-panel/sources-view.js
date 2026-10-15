@@ -3,13 +3,13 @@
 // the panel shell (open / close / resize / URL state / delegated listeners)
 // stays there.
 
-import { getSources as getStreamSources } from "../../sources-stream.js?v=1852";
-import { isFlagOn } from "../../feature-flags.js?v=1852";
-import { getConnectedConnectors } from "../../connectors-store.js?v=1852";
-import { escapeAttr, escapeText } from "../../utils.js?v=1852";
-import { renderConnectorLogo } from "../../connectors-view.js?v=1852";
-import { renderTopPostEcho } from "../top-post-card.js?v=1852";
-import { RPANEL_CLOSE_INLINE, activeSessionId, sessionIdeas } from "../right-panel.js?v=1852";
+import { getSources as getStreamSources } from "../../sources-stream.js?v=1854";
+import { isFlagOn } from "../../feature-flags.js?v=1854";
+import { getConnectedConnectors } from "../../connectors-store.js?v=1854";
+import { escapeAttr, escapeText } from "../../utils.js?v=1854";
+import { renderConnectorLogo } from "../../connectors-view.js?v=1854";
+import { renderTopPostEcho } from "../top-post-card.js?v=1854";
+import { activeSessionId, sessionIdeas } from "../right-panel.js?v=1854";
 
 // Sources mode view — list of source rows for the active session + a
 // trailing "+ Attach" button. Each row carries kind icon, filename,
@@ -38,7 +38,6 @@ export function renderSourcesView() {
         <div class="rpanel-sources__sub muted">These sources feed this chat's ideas.</div>
       </div>
       ${renderAttachMenu("stroked grey", "Attach source")}
-      ${RPANEL_CLOSE_INLINE}
     </div>
   `;
   const liveBlock = renderLiveConnectors();

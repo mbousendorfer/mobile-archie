@@ -1,27 +1,27 @@
-import { html, raw } from "../utils.js?v=1852";
-import { navigate, getPath } from "../router.js?v=1852";
-import { open as openBugReportModal } from "./bug-report-modal.js?v=1852";
-import { open as openFeedbackModal } from "./feedback-modal.js?v=1852";
-import { open as openSearchModal } from "./search-modal.js?v=1852";
-import { renderAdminMenu, applyUserMode, applyOrgRole, toggleFlag } from "../admin-menu.js?v=1852";
-import { subscribe as subscribeSessions } from "../sessions-store.js?v=1852";
-import { isFlagOn } from "../feature-flags.js?v=1852";
-import { subscribe as subscribeContexts } from "../contexts-store.js?v=1852";
+import { html, raw, clampToViewport } from "../utils.js?v=1854";
+import { navigate, getPath } from "../router.js?v=1854";
+import { open as openBugReportModal } from "./bug-report-modal.js?v=1854";
+import { open as openFeedbackModal } from "./feedback-modal.js?v=1854";
+import { open as openSearchModal } from "./search-modal.js?v=1854";
+import { renderAdminMenu, applyUserMode, applyOrgRole, toggleFlag } from "../admin-menu.js?v=1854";
+import { subscribe as subscribeSessions } from "../sessions-store.js?v=1854";
+import { isFlagOn } from "../feature-flags.js?v=1854";
+import { subscribe as subscribeContexts } from "../contexts-store.js?v=1854";
 import {
   getActivePlaybook,
   isWorkspaceMode,
   playbookForNewWork,
   catalogueRoute,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=1852";
-import { setHandoff } from "../handoff.js?v=1852";
+} from "../active-playbook.js?v=1854";
+import { setHandoff } from "../handoff.js?v=1854";
 // A Playbook nobody shared with me must not surface here either — the store
 // still holds it (see playbook-access.js), the sidebar just doesn't name it.
-import { visibleContexts } from "../playbook-access.js?v=1852";
-import { getFeedForPlaybook } from "../topic-feeds-store.js?v=1852";
-import { countToReview, subscribe as subscribeTopics } from "../topics-store.js?v=1852";
-import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=1852";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=1852";
+import { visibleContexts } from "../playbook-access.js?v=1854";
+import { getFeedForPlaybook } from "../topic-feeds-store.js?v=1854";
+import { countToReview, subscribe as subscribeTopics } from "../topics-store.js?v=1854";
+import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=1854";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=1854";
 import {
   deleteSidebarSession,
   matchSessionId,
@@ -29,23 +29,20 @@ import {
   renderRecentLists,
   startRenameSidebar,
   togglePinSidebar,
-} from "./sidebar/recent-chats.js?v=1852";
-import { renderPlaybookSwitcher, switchPlaybook } from "./sidebar/playbook-switcher.js?v=1852";
+} from "./sidebar/recent-chats.js?v=1854";
+import { renderPlaybookSwitcher, switchPlaybook } from "./sidebar/playbook-switcher.js?v=1854";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the
 // active conversation row stays highlighted.
 //
-// Collapsed state — driven by the .is-sidebar-collapsed class on #appShell.
-// Toggle is exposed via the head button or Cmd/Ctrl+B (cf. initSidebar).
-// State persists across reloads via localStorage so the chrome stays predictable.
+// Mobile fork: the sidebar is a DRAWER. `is-sidebar-open` on #appShell slides
+// it in over the content, with a backdrop; the topbar's ☰ opens it, and any
+// navigation (hashchange), a tap on the backdrop or Escape closes it. There is
+// no collapsed rail and no ⌘B — see docs/reference/PANEL-SIDEBAR-RULES.md.
 //
-// Footer popmenu (Lot 11) — the user-row's trailing button is now a popmenu
-// trigger that exposes Send feedback / Report a bug / Keyboard shortcuts /
-// Settings. The topbar dropped these chrome buttons in Lot 11 ; the sidebar
-// foot is the single canonical place to reach them.
-
-const COLLAPSED_KEY = "archie-sidebar-collapsed";
+// Footer popmenu (Lot 11) — the user-row's trailing button is a popmenu
+// trigger that exposes Send feedback / Report a bug / the Admin controls.
 
 let menuOpen = false;
 
@@ -84,40 +81,29 @@ function setOrganizePref(key, value) {
 // (Earlier iteration tried inline title → input swap but the modal
 // pattern is friendlier for a name long enough to matter.)
 
-export function isSidebarCollapsed() {
-  return localStorage.getItem(COLLAPSED_KEY) === "1";
+export function isDrawerOpen() {
+  return !!document.getElementById("appShell")?.classList.contains("is-sidebar-open");
 }
 
-// Was the current collapsed state forced by the width-reactive logic
-// (panel open on a narrow viewport) rather than chosen by the user? Only an
-// auto-collapse may be auto-undone when the viewport grows back — a manual
-// collapse stays until the user re-opens it. Cleared on any manual toggle.
-let autoCollapsed = false;
-export function isAutoCollapsed() {
-  return autoCollapsed && isSidebarCollapsed();
-}
-
-// `auto: true` marks the change as width-driven (see isAutoCollapsed). A
-// manual call (default) hands control back to the user, so the auto flag is
-// dropped and the viewport logic won't fight their choice.
-export function setSidebarCollapsed(collapsed, { auto = false } = {}) {
+export function setDrawerOpen(open) {
   const shell = document.getElementById("appShell");
   if (!shell) return;
-  autoCollapsed = auto && collapsed;
-  shell.classList.toggle("is-sidebar-collapsed", collapsed);
-  if (collapsed) localStorage.setItem(COLLAPSED_KEY, "1");
-  else localStorage.removeItem(COLLAPSED_KEY);
-  // Re-render so the collapsed/expanded chrome swaps without leaving stale
-  // pieces (e.g. the brand wordmark) hidden under CSS-only rules.
-  renderSidebar();
+  shell.classList.toggle("is-sidebar-open", open);
+  const backdrop = document.getElementById("drawerBackdrop");
+  if (backdrop) {
+    backdrop.hidden = !open;
+    backdrop.classList.toggle("open", open); // modals.css shows a backdrop only when .open
+  }
+  const el = document.getElementById("sidebar");
+  if (el) el.inert = !open;
+  if (!open) {
+    setMenuOpen(false);
+    setOrganizeMenuOpen(false);
+  }
 }
 
 function closePlaybookSwitcher() {
   document.querySelector("[data-pb-switcher][open]")?.removeAttribute("open");
-}
-
-function toggleSidebar() {
-  setSidebarCollapsed(!isSidebarCollapsed());
 }
 
 function setMenuOpen(open) {
@@ -127,18 +113,12 @@ function setMenuOpen(open) {
   if (popmenu) popmenu.hidden = !open;
   if (trigger) trigger.setAttribute("aria-expanded", String(open));
   // The popmenu is position:fixed (the sidebar clips overflow), so anchor it
-  // to the cog's rect each time it opens. Collapsed rail → to the right of the
-  // icon, growing up from the cog's bottom. Expanded → above the cog, left-
-  // aligned so the wider panel opens rightward over the content.
+  // to the cog's rect each time it opens: above the cog, kept on screen.
   if (open && popmenu && trigger) {
     const rect = trigger.getBoundingClientRect();
-    if (popmenu.classList.contains("app-sidebar__foot-popmenu--collapsed")) {
-      popmenu.style.left = `${rect.right + 8}px`;
-      popmenu.style.bottom = `${window.innerHeight - rect.bottom}px`;
-    } else {
-      popmenu.style.left = `${rect.left}px`;
-      popmenu.style.bottom = `${window.innerHeight - rect.top + 8}px`;
-    }
+    popmenu.style.left = `${rect.left}px`;
+    popmenu.style.bottom = `${window.innerHeight - rect.top + 8}px`;
+    clampToViewport(popmenu);
   }
 }
 
@@ -156,6 +136,7 @@ function setOrganizeMenuOpen(open) {
     const rect = trigger.getBoundingClientRect();
     menu.style.left = `${rect.left}px`;
     menu.style.top = `${rect.bottom + 6}px`;
+    clampToViewport(menu, rect.top);
   }
 }
 
@@ -163,14 +144,21 @@ export function initSidebar() {
   const el = document.getElementById("sidebar");
   if (!el) return;
 
-  // Apply persisted collapse state before the first render so we don't flash
-  // the expanded layout on boot.
-  const shell = document.getElementById("appShell");
-  if (shell && isSidebarCollapsed()) shell.classList.add("is-sidebar-collapsed");
+  // The drawer's backdrop — the full-viewport scrim (ds-patches.css), a sibling
+  // of the drawer inside the shell. A tap on it closes the drawer.
+  el.insertAdjacentHTML(
+    "afterend",
+    '<div class="app-modal-backdrop app-drawer-backdrop" id="drawerBackdrop" hidden></div>',
+  );
+  document.getElementById("drawerBackdrop").addEventListener("click", () => setDrawerOpen(false));
+  // Closed at rest: out of the tab order and the accessibility tree.
+  el.inert = true;
+  // Every way out of the drawer is a navigation — a row, a nav item, New chat.
+  window.addEventListener("hashchange", () => setDrawerOpen(false));
 
   el.addEventListener("click", (event) => {
-    if (event.target.closest("[data-sidebar-toggle]")) {
-      toggleSidebar();
+    if (event.target.closest("[data-sidebar-close]")) {
+      setDrawerOpen(false);
       return;
     }
     // The wordmark, in workspace mode, is the door to the level ABOVE the
@@ -274,9 +262,11 @@ export function initSidebar() {
         if (!details?.open) return;
         const dropdown = details.querySelector(".app-sidebar__row-menu-dropdown");
         if (!dropdown) return;
+        // Under the ⋮, right-aligned to it — the drawer is the screen's width.
         const rect = summary.getBoundingClientRect();
-        dropdown.style.left = `${rect.right + 8}px`;
-        dropdown.style.top = `${rect.top}px`;
+        dropdown.style.left = `${rect.right - dropdown.offsetWidth}px`;
+        dropdown.style.top = `${rect.bottom + 4}px`;
+        clampToViewport(dropdown, rect.top);
       });
       return;
     }
@@ -412,30 +402,12 @@ export function initSidebar() {
     if (organizeOpen) setOrganizeMenuOpen(false);
   });
 
-  // Cmd/Ctrl+B toggles the sidebar — matches Claude.ai. Skip the binding when
-  // the user is typing into an input/textarea/contenteditable so it never
-  // hijacks composer input.
+  // Escape closes the innermost open thing: a menu, then the drawer itself.
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && menuOpen) {
-      setMenuOpen(false);
-      return;
-    }
-    if (event.key === "Escape" && organizeOpen) {
-      setOrganizeMenuOpen(false);
-      return;
-    }
-    if (event.key !== "b" && event.key !== "B") return;
-    if (!(event.metaKey || event.ctrlKey)) return;
-    const t = event.target;
-    if (
-      t instanceof HTMLElement &&
-      (t.matches("input, textarea, [contenteditable=true]") || t.closest("[contenteditable=true]"))
-    ) {
-      // Inside an editable surface — let the platform shortcut (e.g. bold) win.
-      return;
-    }
-    event.preventDefault();
-    toggleSidebar();
+    if (event.key !== "Escape") return;
+    if (menuOpen) setMenuOpen(false);
+    else if (organizeOpen) setOrganizeMenuOpen(false);
+    else if (isDrawerOpen()) setDrawerOpen(false);
   });
 }
 
@@ -448,35 +420,6 @@ export function renderSidebar() {
   organizeOpen = false;
   const path = getPath();
   const activeSessionId = matchSessionId(path);
-  const collapsed = isSidebarCollapsed();
-
-  if (collapsed) {
-    el.innerHTML = html`
-      <div class="app-sidebar__head app-sidebar__head--collapsed">
-        <button
-          type="button"
-          class="ap-icon-button transparent"
-          data-sidebar-toggle
-          aria-label="Expand sidebar"
-          title="Expand sidebar (⌘B)"
-        >
-          <i class="ap-icon-view-list"></i>
-        </button>
-      </div>
-
-      ${raw(renderPlaybookSwitcher({ collapsed: true }))}
-
-      <nav class="app-sidebar__nav" aria-label="Library">${raw(renderNav(path))}</nav>
-
-      <div class="app-sidebar__list-spacer"></div>
-
-      <div class="app-sidebar__foot app-sidebar__foot--collapsed">
-        <div class="ap-avatar size-32">MB</div>
-        ${raw(renderFootMenu({ collapsed: true }))}
-      </div>
-    `;
-    return;
-  }
 
   el.innerHTML = html`
     <div class="app-sidebar__head">
@@ -484,18 +427,12 @@ export function renderSidebar() {
         <h3 class="app-sidebar__brand-title">Archie</h3>
         <span class="app-sidebar__brand-beta ap-badge blue">BETA</span>
       </button>
-      <button
-        type="button"
-        class="ap-icon-button transparent"
-        data-sidebar-toggle
-        aria-label="Collapse sidebar"
-        title="Collapse sidebar (⌘B)"
-      >
-        <i class="ap-icon-chevron-left"></i>
+      <button type="button" class="ap-icon-button transparent" data-sidebar-close aria-label="Close menu">
+        <i class="ap-icon-close"></i>
       </button>
     </div>
 
-    ${raw(renderPlaybookSwitcher({ collapsed: false }))}
+    ${raw(renderPlaybookSwitcher())}
 
     <nav class="app-sidebar__nav" aria-label="Library">${raw(renderNav(path))}</nav>
 
@@ -510,26 +447,17 @@ export function renderSidebar() {
           <span class="app-sidebar__user-name">Matt Bousendorfer</span>
           <span class="app-sidebar__user-plan">Studio · Team</span>
         </div>
-        ${raw(renderFootMenu({ collapsed: false }))}
+        ${raw(renderFootMenu())}
       </div>
     </div>
   `;
 }
 
 // Footer popmenu — trigger button + popmenu list. The popmenu lives in the
-// DOM but is hidden until the user clicks the trigger. Items dispatch to
-// the existing modal/drawer/legend handlers at the top of initSidebar.
-//
-// Expanded mode also renders a sibling 💬 icon button as a direct,
-// always-visible entry point to Send feedback (the head-of-sidebar link
-// was demoted to this quieter footer slot). Collapsed mode skips the
-// dedicated button — the popmenu's `Send feedback` item is the
-// collapsed-mode fallback, otherwise the foot rail would carry two
-// stacked icon buttons in too-little horizontal space.
-function renderFootMenu({ collapsed }) {
-  const feedbackBtn = collapsed
-    ? ""
-    : `
+// DOM but is hidden until the user taps the trigger. A sibling 💬 icon button
+// is the direct, always-visible entry point to Send feedback.
+function renderFootMenu() {
+  const feedbackBtn = `
       <button
         type="button"
         class="ap-icon-button transparent app-sidebar__foot-feedback"
@@ -540,12 +468,6 @@ function renderFootMenu({ collapsed }) {
         <i class="ap-icon-single-chat-bubble"></i>
       </button>
     `;
-  // Pop the menu UPWARDS from the trigger so it doesn't get cut off by the
-  // viewport's bottom edge.
-  //
-  // The expanded form wraps both buttons in a `.app-sidebar__foot-tools`
-  // container with a subtle background so they read as a mini toolbar
-  // anchored to the user row, not as two floating icons.
   const inner = `
     ${feedbackBtn}
     <div class="app-sidebar__foot-popmenu-wrap">
@@ -561,7 +483,7 @@ function renderFootMenu({ collapsed }) {
         <i class="ap-icon-cog"></i>
       </button>
       <div
-        class="ap-action-dropdown app-sidebar__foot-popmenu ${collapsed ? "app-sidebar__foot-popmenu--collapsed" : ""}"
+        class="ap-action-dropdown app-sidebar__foot-popmenu"
         role="menu"
         data-sidebar-foot-menu
         hidden
@@ -587,10 +509,7 @@ function renderFootMenu({ collapsed }) {
       </div>
     </div>
   `;
-  // Collapsed mode keeps the icons stacked individually (vertical rail);
-  // expanded mode wraps them in a small bordered toolbar so the row reads
-  // as a grouped affordance next to the user meta.
-  return collapsed ? inner : `<div class="app-sidebar__foot-tools">${inner}</div>`;
+  return `<div class="app-sidebar__foot-tools">${inner}</div>`;
 }
 
 // Library nav — Playbooks / Connectors standalone views. `count` resolves

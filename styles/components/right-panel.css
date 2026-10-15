@@ -1,42 +1,64 @@
-/* Right Panel — Lot 17.d.
-   Now a grid cell on .app-shell (row 2, col 3 — appears only when the
-   .is-right-panel-open class is set on #appShell, which adds the column
-   to the grid template). The panel sits BELOW the topbar (which spans
-   cols 2 + 3) so the topbar pills stay visible above it.
-   Width follows handoff §2.5 — 460 / 420 / 380 — defined on the grid
-   column itself in layout.css, not on the panel element. */
+/* Right Panel — the mobile fork's BOTTOM SHEET.
+   Fixed over the chat, the whole height but a sliver at the top (so it reads as
+   a sheet, not a page), top corners rounded, sliding up on open. Its head holds
+   a grab handle, the Drafts · Ideas · Sources tabs and the close
+   (right-panel.js renderSheetHead). `?panel=` drives it, so Back closes it.
+
+   ponytail: no swipe-to-dismiss — Back, the close and Escape do it. A pointer
+   drag on the handle is the upgrade if the phone test asks for it. */
 
 .app-right-panel {
+  position: fixed;
+  inset: auto 0 0 0;
+  height: calc(100dvh - var(--app-safe-top) - 8px);
+  z-index: var(--app-z-modal);
   background: var(--ref-color-white);
-  border-left: 1px solid var(--app-border);
+  border-radius: var(--app-radius-modal) var(--app-radius-modal) 0 0;
+  box-shadow: var(--app-shadow-popover-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
-  /* Resize handle is positioned absolute against this container. */
-  position: relative;
+  padding-bottom: var(--app-safe-bottom);
+  animation: app-sheet-up var(--ref-animation-normal) var(--app-ease-standard);
 }
 
-/* Resize handle — 6px-wide vertical strip on the panel's left edge.
-   The actual hit area is wider (12px) for usability ; the visible
-   indicator is the 1px DS border on hover. Cursor switches to
-   col-resize so the affordance is obvious. */
-.app-right-panel__resize {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 6px;
-  margin-left: -3px;
-  z-index: 1;
-  cursor: col-resize;
-  background: transparent;
-  transition: background-color var(--ref-animation-short) var(--app-ease-out);
+@keyframes app-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
 }
 
-.app-right-panel__resize:hover,
-.app-right-panel__resize:active {
-  background: var(--ref-color-electric-blue-100);
+.app-right-panel__head {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs) 0;
+  border-bottom: 1px solid var(--app-border);
+}
+
+/* The grab handle — a cue that the surface is a sheet. */
+.app-right-panel__grip {
+  width: 36px;
+  height: 4px;
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-grey-20);
+  margin-bottom: var(--ref-spacing-xxs);
+}
+
+.app-right-panel__tabs {
+  flex-direction: row;
+  align-items: center;
+}
+
+.app-right-panel__tabs .ap-tabs-nav {
+  flex: 1 1 auto;
+  border-bottom: 0;
+}
+
+.app-right-panel__tabs .ap-tabs-tab {
+  flex: 1 1 0;
 }
 
 /* ── Body ─────────────────────────────────────────────────────────── */
@@ -652,14 +674,8 @@
   background: var(--ref-color-white);
 }
 
-/* Tabs nav grows; the inline close sits centred on the trailing edge. */
 .rpanel-outputs__tabs .ap-tabs-nav {
   flex: 1 1 auto;
-}
-
-/* Inline close shares the row's flex baseline — never shrinks. */
-.rpanel-row-close {
-  flex: 0 0 auto;
 }
 
 .rpanel-outputs__tabs .ap-tabs-nav {

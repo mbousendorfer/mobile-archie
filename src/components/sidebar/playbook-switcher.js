@@ -2,23 +2,11 @@
 // active brand, the list to switch to, and what a switch re-points (see
 // switchPlaybook). Moved out of sidebar.js, unchanged.
 
-import { isWorkspaceMode, getActivePlaybook, setActivePlaybook } from "../../active-playbook.js?v=1852";
-import { escapeHtml } from "../../utils.js?v=1852";
-import { visibleContexts } from "../../playbook-access.js?v=1852";
-import { getPath, navigate } from "../../router.js?v=1852";
-import { closePanel as closeRightPanel } from "../right-panel.js?v=1852";
-
-// Initials for the collapsed rail. Playbooks are named "Brand · framing", so
-// the part before the separator is the identity — "Acme · Q2 marketing" is an
-// A, not an AQ. Two letters at most, from the first two words of that part.
-function playbookInitials(name) {
-  const brand = String(name || "").split("·")[0];
-  const words = brand.split(/\s+/).filter(Boolean);
-  return words
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("");
-}
+import { isWorkspaceMode, getActivePlaybook, setActivePlaybook } from "../../active-playbook.js?v=1854";
+import { escapeHtml } from "../../utils.js?v=1854";
+import { visibleContexts } from "../../playbook-access.js?v=1854";
+import { getPath, navigate } from "../../router.js?v=1854";
+import { closePanel as closeRightPanel } from "../right-panel.js?v=1854";
 
 // ── The Playbook switcher — the scope, worn at the top of the rail ─────────
 //
@@ -33,37 +21,10 @@ function playbookInitials(name) {
 // the brand named in it. Same DS `.ap-select` as the composer control it
 // replaces, inline label included: a scope that hides is only safe while it is
 // legible, and the label is what says WHAT is being switched.
-//
-// Collapsed rail: the dot alone can't be legible, so the button doesn't try to
-// switch — it re-opens the rail, where the name is.
-export function renderPlaybookSwitcher({ collapsed }) {
+export function renderPlaybookSwitcher() {
   if (!isWorkspaceMode()) return "";
   const active = getActivePlaybook();
   const dotClass = `app-sidebar__row-color-dot app-sidebar__row-color-dot--${active?.color || "grey"}`;
-
-  if (collapsed) {
-    if (!active) return "";
-    // The brand's initials in a DS square avatar — the same "identity in a
-    // small box" the user row wears at the bottom of the rail, and what every
-    // collapsed workspace switcher shows. An 8px dot alone was tried and read
-    // as a stray marker rather than a control: at this width the letters are
-    // the only thing that still names the brand.
-    return `
-      <div class="app-sidebar__pb app-sidebar__pb--collapsed">
-        <button
-          type="button"
-          class="app-sidebar__pb-chip"
-          data-sidebar-toggle
-          aria-label="Playbook: ${escapeHtml(active.name)} — expand to switch"
-          title="Playbook: ${escapeHtml(active.name)} — expand to switch"
-        >
-          <span class="ap-avatar square size-24">
-            <span class="ap-avatar-initials">${escapeHtml(playbookInitials(active.name))}</span>
-          </span>
-        </button>
-      </div>
-    `;
-  }
 
   // No Playbook at all (new-alt mode, first run): the switcher has nothing to
   // switch between, so it becomes the one thing that helps — the offer to make

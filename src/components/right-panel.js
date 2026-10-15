@@ -1,31 +1,30 @@
-import { html, raw } from "../utils.js?v=1852";
-import { subscribe as subscribeThread } from "../assistant.js?v=1852";
-import { isFlagOn } from "../feature-flags.js?v=1852";
-import { getPath, navigate } from "../router.js?v=1852";
-import { parseHashParams, setHashQuery } from "../url-state.js?v=1852";
+import { html, raw } from "../utils.js?v=1854";
+import { subscribe as subscribeThread } from "../assistant.js?v=1854";
+import { isFlagOn } from "../feature-flags.js?v=1854";
+import { getPath, navigate } from "../router.js?v=1854";
+import { parseHashParams, setHashQuery } from "../url-state.js?v=1854";
 import {
   getPosts,
   attachImageToDraft,
   updatePostClip,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=1852";
-import { onFeedbackClick } from "./feedback-control.js?v=1852";
+} from "../posts-store.js?v=1854";
+import { onFeedbackClick } from "./feedback-control.js?v=1854";
 // Shared compact idea card — same component the standalone Ideas page uses.
-import { open as openVideoClipsModal } from "./video-clips-modal.js?v=1852";
-import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=1852";
+import { open as openVideoClipsModal } from "./video-clips-modal.js?v=1854";
 import {
   getSources as getStreamSources,
   subscribeSources,
   updateSourceClips,
   removeSources,
   renameSource,
-} from "../sources-stream.js?v=1852";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=1852";
-import { open as openRenameModal } from "./rename-modal.js?v=1852";
-import { askConnector } from "../connector-ask.js?v=1852";
-import { open as openConnectorsModal } from "./connectors-modal.js?v=1852";
-import { addMention as addComposerMention } from "../composer-mentions.js?v=1852";
-import { getIdeas, removeIdeasForSources } from "../library.js?v=1852";
+} from "../sources-stream.js?v=1854";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=1854";
+import { open as openRenameModal } from "./rename-modal.js?v=1854";
+import { askConnector } from "../connector-ask.js?v=1854";
+import { open as openConnectorsModal } from "./connectors-modal.js?v=1854";
+import { addMention as addComposerMention } from "../composer-mentions.js?v=1854";
+import { getIdeas, removeIdeasForSources } from "../library.js?v=1854";
 
 // The ideas of the chat the panel is looking at.
 //
@@ -40,16 +39,16 @@ export function sessionIdeas() {
   const sid = activeSessionId();
   return sid ? getIdeas(sid) : [];
 }
-import { open as openConfirmModal } from "./confirm-modal.js?v=1852";
-import { showToast } from "./toast.js?v=1852";
-import { closeAllSourceMenus, renderSourcesView } from "./right-panel/sources-view.js?v=1852";
+import { open as openConfirmModal } from "./confirm-modal.js?v=1854";
+import { showToast } from "./toast.js?v=1854";
+import { closeAllSourceMenus, renderSourcesView } from "./right-panel/sources-view.js?v=1854";
 import {
   collectAllClips,
   renderIdeasView,
   toggleClipWhyInPlace,
   toggleIdeaFeedback,
   toggleWhyOpen,
-} from "./right-panel/ideas-view.js?v=1852";
+} from "./right-panel/ideas-view.js?v=1854";
 import {
   cancelEdit,
   closeAllRewriteMenus,
@@ -75,10 +74,11 @@ import {
   setNetworkSelection,
   startEdit,
   visibleNetworkPosts,
-} from "./right-panel/drafts-view.js?v=1852";
+} from "./right-panel/drafts-view.js?v=1854";
 
-// Global Right Panel — slides in from the right edge of the viewport, overlays
-// the session workspace, hosts two modes:
+// Global Right Panel — on mobile a full-height BOTTOM SHEET over the chat, with
+// its own tabs Drafts · Ideas · Sources (renderSheetHead). `?panel=` is the
+// source of truth: the browser's Back closes it. Modes:
 //   • 'drafts' — the AI's batch result (editable BatchCards, network-grouped,
 //                Schedule N posts CTA).
 //   • 'ideas'  — compact searchable Ideas library that injects a chosen idea
@@ -94,12 +94,6 @@ import {
 
 const PANEL_ID = "rightPanel";
 
-// Resize-handle bounds. The width is now driven by the (viewport −
-// sidebar) / 2 formula in layout.css ; the runtime override is only
-// set transiently while the user drags the handle and is reset on
-// every panel open so the formula reasserts as the canonical default.
-const PANEL_MIN_WIDTH = 380;
-const PANEL_MAX_RIGHT_GAP = 400; // leave at least this much for sidebar+content
 const DRAFT_INLINE_EDIT_FLAG = "draftInlineEdit";
 
 // Ideas-mode local UI state — filter chip + search query + sort axis +
@@ -130,12 +124,21 @@ let state = {
 // deep-links work.
 const VALID_URL_MODES = new Set(["drafts", "ideas", "sources"]);
 
+// Opening the sheet PUSHES a history entry, so the browser's Back closes it
+// (hashchange → syncFromUrl). Switching tabs inside an open sheet REPLACES it:
+// Back must close the sheet, not walk back through the tabs.
 function writeUrlPanel(mode) {
   const params = parseHashParams();
+  const wasOpen = VALID_URL_MODES.has(params.get("panel"));
   if (mode && VALID_URL_MODES.has(mode)) {
     params.set("panel", mode);
   } else {
     params.delete("panel");
+  }
+  if (wasOpen && mode) {
+    const qs = new URLSearchParams(params).toString();
+    location.replace(`#${getPath()}${qs ? `?${qs}` : ""}`);
+    return;
   }
   setHashQuery(getPath(), Object.fromEntries(params));
 }
@@ -196,63 +199,6 @@ export function subscribe(fn) {
   return () => subs.delete(fn);
 }
 
-// Minimum comfortable width for the chat column. Only when opening the
-// panel alongside an expanded sidebar would squeeze the conversation below
-// this floor do we auto-collapse the sidebar to claw back room. On a wide
-// viewport there's plenty of space, so the sidebar stays put.
-const CHAT_MIN_WIDTH_PX = 560;
-// Floor of the panel-width formula in layout.css (max(610px, …)). Mirrored
-// here so the predicted chat width matches the rendered grid.
-const PANEL_FORMULA_FLOOR_PX = 610;
-
-// Predict the chat column's width *if the sidebar were to stay expanded*
-// while the panel is open, mirroring the layout.css grid formula:
-//   chat = viewport − sidebar(expanded) − panel
-// where panel = the user's drag override if set, else
-//   max(PANEL_FORMULA_FLOOR, (viewport − sidebar) / 3).
-// Computed (not measured) so it's immune to the grid-template-columns
-// transition still being mid-flight when we're called on open.
-function predictedChatWidthWithSidebarExpanded() {
-  const shell = document.getElementById("appShell");
-  const vw = window.innerWidth;
-  const css = getComputedStyle(document.documentElement);
-  const sidebar = parseFloat(css.getPropertyValue("--app-sidebar-width")) || 260;
-  const override = shell?.style.getPropertyValue("--app-right-panel-width-runtime");
-  const panel = override ? parseFloat(override) : Math.max(PANEL_FORMULA_FLOOR_PX, (vw - sidebar) / 3);
-  return vw - sidebar - panel;
-}
-
-// Auto-collapse the sidebar only when the chat column would otherwise dip
-// below CHAT_MIN_WIDTH_PX. Marked `auto` so a later widen can undo it (see
-// syncSidebarToWidth). We don't run on mode swaps inside an already-open
-// panel — only on the closed → open transition (and on resize).
-function maybeCollapseSidebar() {
-  if (!state.mode) return;
-  if (isSidebarCollapsed()) return;
-  if (predictedChatWidthWithSidebarExpanded() >= CHAT_MIN_WIDTH_PX) return;
-  setSidebarCollapsed(true, { auto: true });
-}
-
-// Keep the sidebar in step with the viewport while a panel is open: collapse
-// when the chat would get cramped, and re-expand when there's room again —
-// but only if *we* collapsed it (isAutoCollapsed). A sidebar the user closed
-// by hand stays closed. Closing the panel deliberately doesn't restore here
-// (the user re-opens manually), so this is a no-op without an open panel.
-function syncSidebarToWidth() {
-  if (!state.mode) return;
-  const roomy = predictedChatWidthWithSidebarExpanded() >= CHAT_MIN_WIDTH_PX;
-  if (!roomy) {
-    maybeCollapseSidebar();
-  } else if (isAutoCollapsed()) {
-    setSidebarCollapsed(false, { auto: true });
-  }
-}
-
-function maybeCollapseSidebarOnOpen(prevMode) {
-  if (prevMode !== null) return; // mode swap, not an open
-  maybeCollapseSidebar();
-}
-
 // Track the element that had focus when the panel opened so we can
 // return focus to it on close. Only captured on a fresh open (prev=null);
 // mode swaps reuse the original snapshot.
@@ -280,10 +226,8 @@ function restoreFocusOnClose() {
 // Called by the in-thread Drafts summary card (Lot 4.3).
 export function openDrafts(activeBatchRef) {
   const prev = state.mode;
-  if (prev === null) resetPanelWidthOverride();
   snapshotFocusOnOpen(prev);
   state = { mode: "drafts", activeBatchRef: activeBatchRef || state.activeBatchRef };
-  maybeCollapseSidebarOnOpen(prev);
   rebindThread();
   renderPanel();
   notify();
@@ -292,11 +236,9 @@ export function openDrafts(activeBatchRef) {
 
 export function openIdeas() {
   const prev = state.mode;
-  if (prev === null) resetPanelWidthOverride();
   snapshotFocusOnOpen(prev);
   state = { ...state, mode: "ideas" };
   outputsView = "ideas";
-  maybeCollapseSidebarOnOpen(prev);
   renderPanel();
   notify();
   writeUrlPanel("ideas");
@@ -308,11 +250,9 @@ export function openIdeas() {
 // attached.
 export function openClips() {
   const prev = state.mode;
-  if (prev === null) resetPanelWidthOverride();
   snapshotFocusOnOpen(prev);
   state = { ...state, mode: "ideas" };
   outputsView = "clips";
-  maybeCollapseSidebarOnOpen(prev);
   renderPanel();
   notify();
   writeUrlPanel("ideas");
@@ -346,10 +286,8 @@ function pulseInPanel(selector) {
 
 export function openSources() {
   const prev = state.mode;
-  if (prev === null) resetPanelWidthOverride();
   snapshotFocusOnOpen(prev);
   state = { ...state, mode: "sources" };
-  maybeCollapseSidebarOnOpen(prev);
   renderPanel();
   notify();
   writeUrlPanel("sources");
@@ -407,24 +345,11 @@ export function init() {
     // is just the initial value for when the panel is hidden.
     el.setAttribute("aria-label", "Side panel");
     el.hidden = true;
-    // Lot 17.d — mount inside #appShell so the panel becomes a grid cell
-    // (row 2, column 3). Falls back to <body> if the shell isn't there yet
-    // (shouldn't happen in normal boot order, but defensive).
+    // Mounted inside #appShell (position: fixed — right-panel.css). Falls back
+    // to <body> if the shell isn't there yet.
     const shell = document.getElementById("appShell") || document.body;
     shell.appendChild(el);
   }
-  // Drop any leftover persisted width from the pre-formula era so the
-  // (viewport − sidebar) / 2 default takes hold on first paint.
-  resetPanelWidthOverride();
-
-  // Resize handle — mousedown begins drag, document-level mousemove +
-  // mouseup tracks until release.
-  el.addEventListener("mousedown", (event) => {
-    if (event.target.closest("[data-rpanel-resize]")) {
-      startResizeDrag(event);
-    }
-  });
-
   // Drag & drop an image straight onto a draft's empty media slot.
   //
   // Delegated on the panel root so it survives every re-render, and DRAG EVENTS
@@ -486,6 +411,15 @@ export function init() {
     if (onFeedbackClick(event)) return;
     if (event.target.closest("[data-rpanel-close]")) {
       closePanel();
+      return;
+    }
+    // The sheet's own tabs — Drafts · Ideas · Sources.
+    const sheetTab = event.target.closest("[data-rpanel-sheet-tab]");
+    if (sheetTab) {
+      const mode = sheetTab.dataset.rpanelSheetTab;
+      if (mode === "drafts") openDrafts(null);
+      else if (mode === "ideas") openIdeas();
+      else openSources();
       return;
     }
     const tab = event.target.closest("[data-rpanel-tab]");
@@ -727,7 +661,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session/clip-draft-flow.js?v=1852").then(({ startClipDraftFlow }) => {
+          import("../screens/session/clip-draft-flow.js?v=1854").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -898,7 +832,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session/clip-draft-flow.js?v=1852").then(({ startClipDraftFlow }) => {
+      import("../screens/session/clip-draft-flow.js?v=1854").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -916,7 +850,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session/clip-draft-flow.js?v=1852").then(({ startClipDraftFlow }) => {
+      import("../screens/session/clip-draft-flow.js?v=1854").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -1127,19 +1061,6 @@ export function init() {
   rebindSourcesSubscription();
   window.addEventListener("hashchange", rebindSourcesSubscription);
 
-  // Keep the sidebar in step with the viewport: collapse when the chat column
-  // would dip below CHAT_MIN_WIDTH_PX, re-expand when it widens back (if we
-  // were the ones who collapsed it). rAF-debounced so a continuous drag
-  // doesn't thrash setSidebarCollapsed.
-  let resizeRaf = 0;
-  window.addEventListener("resize", () => {
-    if (resizeRaf) return;
-    resizeRaf = requestAnimationFrame(() => {
-      resizeRaf = 0;
-      syncSidebarToWidth();
-    });
-  });
-
   // Restore panel mode from the URL hash (`?panel=drafts|ideas|sources`)
   // on boot, and re-sync on every hashchange so back/forward buttons +
   // session navigation honor the URL. The no-op guard in syncFromUrl()
@@ -1148,26 +1069,42 @@ export function init() {
   window.addEventListener("hashchange", syncFromUrl);
 }
 
-// Inline close button — placed as the last item of a mode's first control
-// row so it aligns with the tabs / select on the row's flex baseline (no
-// absolute positioning, no custom surface — a plain DS icon-button).
-export const RPANEL_CLOSE_INLINE = `
-  <button
-    type="button"
-    class="ap-icon-button transparent rpanel-row-close"
-    data-rpanel-close
-    aria-label="Close panel"
-    title="Close panel (Esc)"
-  ><i class="ap-icon-close"></i></button>
-`;
+// The sheet's head: a grab handle (a cue, not a control — Back, the close and
+// Escape dismiss it), then the three panels as DS tabs with their counts, and
+// the close. Each mode's own view starts under it.
+function renderSheetHead() {
+  const sid = activeSessionId();
+  const counts = {
+    drafts: sid ? getPosts(sid).length : 0,
+    ideas: sessionIdeas().length,
+    sources: sid ? getStreamSources(sid).length : 0,
+  };
+  const tab = (mode, label) => {
+    const on = state.mode === mode;
+    const count =
+      counts[mode] > 0 ? `<span class="ap-counter normal ${on ? "blue" : "grey"}">${counts[mode]}</span>` : "";
+    return `<button type="button" class="ap-tabs-tab${on ? " active" : ""}" role="tab" aria-selected="${on}" data-rpanel-sheet-tab="${mode}"><span>${label}</span>${count}</button>`;
+  };
+  return `
+    <div class="app-right-panel__head">
+      <span class="app-right-panel__grip" aria-hidden="true"></span>
+      <div class="ap-tabs flush app-right-panel__tabs">
+        <div class="ap-tabs-nav" role="tablist" aria-label="Chat panels">
+          ${tab("drafts", "Drafts")}${tab("ideas", "Ideas")}${tab("sources", "Sources")}
+        </div>
+        <button type="button" class="ap-icon-button transparent" data-rpanel-close aria-label="Close panel">
+          <i class="ap-icon-close"></i>
+        </button>
+      </div>
+    </div>
+  `;
+}
 
 export function renderPanel() {
   const el = document.getElementById(PANEL_ID);
   if (!el) return;
-  // Lot 17.c — toggle the .is-right-panel-open class on the app shell so
-  // the main content column reserves space for the panel instead of
-  // sitting underneath it. CSS in components/right-panel.css handles the
-  // padding-right transition.
+  // .is-right-panel-open on the shell — read by the CSS that sits under the
+  // sheet (the toasts move, the status card yields).
   const shell = document.getElementById("appShell");
   if (shell) {
     shell.classList.toggle("is-right-panel-open", !!state.mode);
@@ -1178,11 +1115,8 @@ export function renderPanel() {
     return;
   }
   el.hidden = false;
-  // No standalone title bar — the active mode is already named by the
-  // highlighted topbar pill (and, inside the panel, by each mode's own
-  // tabs/header row). We only compute a label here to keep the panel
-  // landmark's accessible name in sync. The close affordance is a single
-  // floating control pinned to the panel's top-right corner across modes.
+  // The active mode is named by the sheet's own tabs (renderSheetHead). We only
+  // compute a label here to keep the panel landmark's accessible name in sync.
   let titleText = "Ideas";
   if (state.mode === "drafts") {
     titleText = "Drafts";
@@ -1211,17 +1145,7 @@ export function renderPanel() {
   // Keep the aside's accessible name in sync with the active mode so
   // screen reader users can identify the panel from the landmark list.
   el.setAttribute("aria-label", `${titleText} panel`);
-  el.innerHTML = html`
-    <div
-      class="app-right-panel__resize"
-      data-rpanel-resize
-      role="separator"
-      aria-orientation="vertical"
-      aria-label="Resize panel"
-      title="Drag to resize"
-    ></div>
-    ${raw(bodyHtml)}
-  `;
+  el.innerHTML = html`${raw(renderSheetHead())} ${raw(bodyHtml)}`;
 
   if (previousMode === state.mode && previousScroll > 0) {
     const nextBody = el.querySelector(".app-right-panel__body");
@@ -1232,54 +1156,6 @@ export function renderPanel() {
       });
     }
   }
-}
-
-// --- Resize handle -----------------------------------------------------
-
-// Drop any inline runtime override on the shell so the next render
-// resolves the grid column through the formula default. Called on
-// every "fresh open" (state.mode transition from null → something).
-// The mode-swap path (e.g. Ideas → Drafts) intentionally keeps the
-// override so a user's in-session resize survives the swap.
-function resetPanelWidthOverride() {
-  const shell = document.getElementById("appShell");
-  if (!shell) return;
-  shell.style.removeProperty("--app-right-panel-width-runtime");
-}
-
-// Drag-to-resize handler bound on the panel root. Tracks mousemove on
-// document (not on the handle) so the cursor can leave the 4px strip
-// without dropping the drag — same pattern as standard split-pane
-// implementations.
-let resizeDragging = false;
-function startResizeDrag(event) {
-  event.preventDefault();
-  resizeDragging = true;
-  document.body.style.cursor = "col-resize";
-  document.body.style.userSelect = "none";
-  document.addEventListener("mousemove", onResizeDrag);
-  document.addEventListener("mouseup", endResizeDrag);
-}
-
-function onResizeDrag(event) {
-  if (!resizeDragging) return;
-  const shell = document.getElementById("appShell");
-  if (!shell) return;
-  const next = Math.round(window.innerWidth - event.clientX);
-  const max = Math.max(PANEL_MIN_WIDTH, window.innerWidth - PANEL_MAX_RIGHT_GAP);
-  const clamped = Math.min(max, Math.max(PANEL_MIN_WIDTH, next));
-  shell.style.setProperty("--app-right-panel-width-runtime", `${clamped}px`);
-}
-
-function endResizeDrag() {
-  if (!resizeDragging) return;
-  resizeDragging = false;
-  document.body.style.cursor = "";
-  document.body.style.userSelect = "";
-  document.removeEventListener("mousemove", onResizeDrag);
-  document.removeEventListener("mouseup", endResizeDrag);
-  // No persistence — the override lives on shell.style until the panel
-  // closes and reopens, at which point the formula reasserts.
 }
 
 // --- Drafts mode (Lot 21 — rich PostCard feed) -------------------------
@@ -1330,7 +1206,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session/draft-questions.js?v=1852").then(({ askAngleQuestion }) => {
+  import("../screens/session/draft-questions.js?v=1854").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

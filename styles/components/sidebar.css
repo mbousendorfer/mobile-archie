@@ -1,13 +1,5 @@
-/* Global app sidebar — collapsible left rail.
-   Layout: brand head / new-conversation CTA / recent list (scrollable) / footer.
-   Width controlled by --app-sidebar-width on .app-shell.
-   Collapsed state — driven by .is-sidebar-collapsed on #appShell — swaps the
-   markup to an icon-only stack. The grid template column on .app-shell
-   transitions smoothly between expanded and collapsed widths. */
-
-.app-shell {
-  transition: grid-template-columns var(--ref-animation-normal) var(--app-ease-standard);
-}
+/* Global app sidebar — the mobile fork's DRAWER (positioning in layout.css).
+   Layout: brand head / new-conversation CTA / recent list (scrollable) / footer. */
 
 .app-sidebar {
   display: flex;
@@ -30,27 +22,6 @@
    two hairlines a few pixels apart read as a mistake. */
 .app-sidebar__pb {
   padding: var(--ref-spacing-xs) var(--ref-spacing-xs) var(--ref-spacing-xxs);
-}
-
-/* Collapsed rail — the dot alone, on the same 40px icon grid as the nav.
-   It doesn't open the dropdown: a scope you can't read is a scope you
-   shouldn't be able to change, so the button re-opens the rail instead. */
-.app-sidebar__pb--collapsed {
-  display: flex;
-  justify-content: center;
-  padding: var(--ref-spacing-xxs) 0 0;
-}
-
-.app-sidebar__pb-chip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
 }
 
 /* First run — nothing to switch between, so the row is the offer to create the
@@ -120,13 +91,6 @@
   margin-left: var(--ref-spacing-xxxs);
   flex-shrink: 0;
 }
-
-/* ── New conversation CTA ───────────────────────────────────────────── */
-/* In the expanded sidebar, "+ New conversation" lives inside the nav
-   group as a regular `.app-sidebar__nav-item` (cf. renderNav() — same
-   chrome as Search / Playbooks). The dedicated `.app-sidebar__new`
-   class is kept only for the collapsed-mode icon-only variant below;
-   the expanded blue pill no longer exists. */
 
 /* ── Nav ────────────────────────────────────────────────────────────── */
 
@@ -379,16 +343,6 @@
   width: 24px;
   height: 24px;
   display: inline-flex;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--ref-animation-short) var(--app-ease-out);
-}
-
-.app-sidebar__row:hover .app-sidebar__row-menu,
-.app-sidebar__row:focus-within .app-sidebar__row-menu,
-.app-sidebar__row-menu[open] {
-  opacity: 1;
-  pointer-events: auto;
 }
 
 .app-sidebar__row-more {
@@ -591,19 +545,6 @@
   z-index: var(--app-z-overlay);
 }
 
-/* When the sidebar is collapsed the popmenu sits next to the icon rail
-   (right of it). The collapsed rail is narrow and the sidebar clips its
-   overflow, so — like the conversation row ⋮ menu — the popmenu is
-   position:fixed and JS sets left/bottom from the cog's rect (see
-   setMenuOpen in sidebar.js). */
-.ap-action-dropdown.app-sidebar__foot-popmenu--collapsed {
-  position: fixed;
-  left: auto;
-  right: auto;
-  top: auto;
-  bottom: auto;
-}
-
 /* ── Admin controls inside the cog popover (was the /settings page) ───────── */
 .admin-menu {
   display: flex;
@@ -699,49 +640,23 @@
   color: var(--ref-color-grey-80);
 }
 
-/* ── Collapsed mode (56px) ────────────────────────────────────────────
-   Icon-only stack centred horizontally. The nav block (New conversation
-   / Search / Playbooks / Ideas) renders the same markup as expanded mode;
-   CSS below squashes each row into an icon-only 36px square and hides
-   the label / shortcut / counter chrome. Tooltips (title="…") carry the
-   identity for hover discovery. */
-
-.app-sidebar__head--collapsed {
-  justify-content: center;
-  padding: 0 var(--ref-spacing-xxs);
-  /* height + border-bottom inherited from .app-sidebar__head — keeps
-     the collapsed rail aligned with the topbar baseline too. */
+/* ── Touch (mobile fork) ────────────────────────────────────────────────
+   Rows and nav items at a 40px tap height. The ⋮ of a chat row is always
+   there — no hover to reveal it — so the title stops short of it, and the
+   button drops its masking fill (nothing runs under it any more). */
+.app-sidebar__nav-item,
+.app-sidebar__row {
+  min-height: 40px;
 }
 
-.app-shell.is-sidebar-collapsed .app-sidebar__nav {
-  padding: 0 var(--ref-spacing-xxs) var(--ref-spacing-xxs);
-  align-items: center;
+.app-sidebar__row {
+  padding-right: calc(var(--ref-spacing-xxs) + 32px);
 }
 
-.app-shell.is-sidebar-collapsed .app-sidebar__nav-item {
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  justify-content: center;
-  gap: 0;
+.app-sidebar__row-menu {
+  top: calc(50% - 12px);
 }
 
-/* Hide the label, ⇧⌘O/⌘K hint, and per-row counter — only the leading
-   icon survives in collapsed mode. Tooltips carry the label. */
-.app-shell.is-sidebar-collapsed .app-sidebar__nav-item > span,
-.app-shell.is-sidebar-collapsed .app-sidebar__nav-kbd,
-.app-shell.is-sidebar-collapsed .app-sidebar__nav-item .ap-counter {
-  display: none;
-}
-
-.app-sidebar__list-spacer {
-  flex: 1 1 auto;
-}
-
-.app-sidebar__foot--collapsed {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-xxs);
+.app-sidebar__row-more {
+  background: transparent;
 }

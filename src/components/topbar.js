@@ -1,10 +1,8 @@
-import { html, raw, escapeHtml, escapeAttr } from "../utils.js?v=1852";
-import { getPath, navigate } from "../router.js?v=1852";
-import { parseHashParams } from "../url-state.js?v=1852";
-// Lot 19 — topbar no longer carries its own sidebar-toggle button. The
-// sidebar head exposes the toggle in both expanded (chevron-left) and
-// collapsed (view-list) states, so the duplicate in the topbar was just
-// a leftover. ⌘B still works globally.
+import { html, raw, escapeHtml, escapeAttr } from "../utils.js?v=1854";
+import { getPath, navigate } from "../router.js?v=1854";
+import { parseHashParams } from "../url-state.js?v=1854";
+import { setDrawerOpen } from "./sidebar.js?v=1854";
+import { installMoreMenu } from "./more-menu.js?v=1854";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
@@ -13,58 +11,53 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=1852";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=1852";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=1852";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=1852";
-import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=1852";
+} from "./right-panel.js?v=1854";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=1854";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=1854";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=1854";
+import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=1854";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=1852";
-import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=1852";
-import { open as openRenameModal } from "./rename-modal.js?v=1852";
+} from "./conversation-status-card.js?v=1854";
+import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=1854";
+import { open as openRenameModal } from "./rename-modal.js?v=1854";
 import {
   subscribe as subscribeContexts,
   getContextById,
   getDefaultContext,
   getContexts,
-} from "../contexts-store.js?v=1852";
-import { isFlagOn } from "../feature-flags.js?v=1852";
-import { getActivePlaybook, isWorkspaceMode, isAccountScope, catalogueRoute } from "../active-playbook.js?v=1852";
-import { getFeedForPlaybook } from "../topic-feeds-store.js?v=1852";
-import { findCadence } from "../topics-catalog.js?v=1852";
+} from "../contexts-store.js?v=1854";
+import { isFlagOn } from "../feature-flags.js?v=1854";
+import { getActivePlaybook, isWorkspaceMode, isAccountScope, catalogueRoute } from "../active-playbook.js?v=1854";
+import { getFeedForPlaybook } from "../topic-feeds-store.js?v=1854";
+import { findCadence } from "../topics-catalog.js?v=1854";
 import {
   getPickerState as getTopPostsState,
   subscribePicker as subscribeTopPosts,
   backToProfiles as topPostsBackToProfiles,
-} from "../top-posts-flow.js?v=1852";
+} from "../top-posts-flow.js?v=1854";
 // The Insights view switch. Imported from views.js, NOT from the screen's
 // shell: the shell imports this module, so taking it from there would close a
 // cycle. views.js imports neither.
-import { readLayoutId, viewSwitch } from "../screens/insights/views.js?v=1852";
+import { readLayoutId, viewSwitch } from "../screens/insights/views.js?v=1854";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static
 // indicator once the conversation starts — so the topbar no longer
 // renders it.
 
-// Persistent top bar.
+// Persistent top bar — the mobile fork's.
 //
-// Layout (Lot 11 refactor — feedback from user 2026-04-28):
-//   • Far left  — sidebar-toggle button (mirrors the sidebar's own collapse
-//     control so the chrome stays reachable in any state) + route-derived
-//     title
-//   • Right     — Sources / Ideas / Drafts pills (only on /session/:id, drive
-//     the right-panel modes); the feed-settings cog on /topics; the View
-//     switch on /insights
+//   • Left  — ☰ (opens the sidebar drawer), then the route title, truncated —
+//     or a sub-page's back control in its place.
+//   • Right — on /session/:id, ONE panel button (Drafts + its count) that opens
+//     the bottom sheet, where the three panels are tabs, and a ⋯ menu for the
+//     rest (Rename chat, the chat status). The feed-settings cog on /topics;
+//     the View switch on /insights.
 //
-// The Archie wordmark moved to the global sidebar at Lot 2.1. Feedback /
-// Report a bug / Keyboard shortcuts / Settings moved out of the topbar at
-// Lot 11 — they now live in the sidebar footer popmenu (cf. sidebar.js).
-// The "?" key shortcut for the keyboard legend stays globally bound so
-// power users keep their muscle memory.
+// Feedback / Report a bug / Admin live in the drawer's footer popmenu.
 
 // A page's own primary actions (DS: the header carries the title on the left and
 // the page's actions on the right). A screen hands them over for ITS path, so a
@@ -86,10 +79,6 @@ export function renderTopbar(_options = {}) {
   const onWelcomeAlt = onSession && isWelcomeAltSession();
   const rpMode = getRightPanelMode();
   const draftCount = onSession ? latestDraftCount() : 0;
-  // Empty conversation = no user turn yet. Used as one input to the
-  // Outputs gating logic (combined with the live idea count — ideas
-  // can land before the user types if a source got auto-extracted).
-  const isEmpty = onSession ? isEmptyConversation() : true;
   const ideaCount = onSession ? sessionIdeaCount() : 0;
   // Welcome-alt swaps the right-side pills cluster for a single Exit
   // button — the wizard has no conversation to surface yet, so the
@@ -107,7 +96,7 @@ export function renderTopbar(_options = {}) {
     : onWelcomeAlt
       ? renderWelcomeAltExit()
       : onSession
-        ? `${renderSessionPills(rpMode, draftCount, isEmpty, ideaCount)}${renderStatusCardToggle(statusCardAvailable)}`
+        ? `${renderPanelButton(rpMode, draftCount, ideaCount)}${renderSessionMenu(statusCardAvailable)}`
         : getPath() === "/topics"
           ? renderTopicsSettings()
           : getPath().startsWith("/insights")
@@ -124,8 +113,13 @@ export function renderTopbar(_options = {}) {
       : isTopPostsBoard()
         ? renderTopPostsBack()
         : renderTitle(onSession);
+  // ☰ everywhere the drawer exists. Account scope has no rail by decision (a
+  // page about every brand isn't framed by one) — its back leads in instead.
+  const menu = isAccountScope(getPath())
+    ? ""
+    : `<button type="button" class="ap-icon-button transparent" data-topbar-menu aria-label="Open menu"><i class="ap-icon-view-list"></i></button>`;
   el.innerHTML = html`
-    <div class="app-topbar__left">${raw(left)}</div>
+    <div class="app-topbar__left">${raw(menu)}${raw(left)}</div>
     <div class="app-topbar__right">${raw(rightSide)}</div>
   `;
 }
@@ -227,66 +221,74 @@ function renderInsightsActions() {
     </button>`;
 }
 
-// "i" icon-button at the far right of the topbar — toggles the floating
-// conversation status card on/off. Persists across reloads via
-// localStorage (cf. conversation-status-card.js).
-function renderStatusCardToggle(available) {
-  if (!available) return "";
-  const on = isStatusCardEnabled();
+// The ⋯ at the far right of a chat: what the topbar can't afford to show —
+// Rename (the title is no longer a button: too small a target, and a tap on a
+// title reads as nothing) and the chat status sheet when there's a status.
+function renderSessionMenu(statusAvailable) {
+  const sid = currentSessionId();
+  const item = (attr, icon, label) => `
+    <button type="button" role="menuitem" class="ap-action-dropdown-item" ${attr}>
+      <i class="${icon}"></i>
+      <div class="ap-action-dropdown-item-text">
+        <div class="ap-action-dropdown-item-label-container">
+          <span class="ap-action-dropdown-item-label">${label}</span>
+        </div>
+      </div>
+    </button>`;
+  const status = statusAvailable
+    ? item("data-topbar-toggle-status-card", "ap-icon-info", isStatusCardEnabled() ? "Hide chat status" : "Chat status")
+    : "";
   return `
-    <button
-      type="button"
-      class="ap-icon-button transparent app-topbar__status-toggle"
-      data-topbar-toggle-status-card
-      aria-pressed="${on}"
-      aria-label="${on ? "Hide chat status" : "Show chat status"}"
-      title="${on ? "Hide chat status" : "Show chat status"}"
-    >
-      <i class="ap-icon-info"></i>
-    </button>
+    <div class="app-topbar__more">
+      <button
+        type="button"
+        class="ap-icon-button transparent"
+        data-topbar-more
+        aria-controls="topbarMoreMenu"
+        aria-expanded="false"
+        aria-haspopup="menu"
+        aria-label="More"
+      ><i class="ap-icon-more"></i></button>
+      <div class="ap-action-dropdown app-topbar__more-menu" id="topbarMoreMenu" role="menu" hidden>
+        ${item(`data-topbar-rename-session="${escapeAttr(sid || "")}"`, "ap-icon-pen", "Rename chat")}${status}
+      </div>
+    </div>
   `;
 }
 
-// On session routes the title doubles as a rename trigger — click to
-// open the rename modal for the active conversation. Off-session the
-// title is a plain heading. Welcome-alt sessions (Playbook creation)
-// override both: a fixed "New Playbook" label, no rename — the session
-// has no persisted name yet, and the user will name the Playbook
-// itself at the end of the flow.
+// The route title — a plain heading, truncated by the CSS. Welcome-alt
+// sessions (Playbook creation) read a fixed "New Playbook".
 function renderTitle(onSession) {
   if (onSession && isWelcomeAltSession()) {
     return `<h1 class="app-topbar__title">New Playbook</h1>`;
   }
-  const title = currentTitle();
-  if (onSession) {
-    const sid = currentSessionId();
-    return `
-      <button
-        type="button"
-        class="app-topbar__title app-topbar__title--rename"
-        data-topbar-rename-session="${sid || ""}"
-        title="Rename chat"
-      >
-        ${title}
-        <i class="ap-icon-pen app-topbar__title-pen" aria-hidden="true"></i>
-      </button>
-    `;
-  }
-  return `<h1 class="app-topbar__title">${title}</h1>`;
-}
-
-function isEmptyConversation() {
-  const sid = currentSessionId();
-  if (!sid) return true;
-  const thread = getThread(sid);
-  return thread.every((m) => m.role !== "user");
+  return `<h1 class="app-topbar__title">${currentTitle()}</h1>`;
 }
 
 // Bind once at startup — the topbar DOM node is persistent.
 export function initTopbar() {
   const el = document.getElementById("topbar");
   if (!el) return;
+  // The ⋯ menu's toggle, outside-tap and Escape; tapping an item closes it.
+  installMoreMenu({
+    menuSelector: ".app-topbar__more-menu",
+    triggerSelector: "[data-topbar-more]",
+    closeAfterSelectors: [".app-topbar__more-menu [role=menuitem]"],
+  });
   el.addEventListener("click", (event) => {
+    if (event.target.closest("[data-topbar-menu]")) {
+      setDrawerOpen(true);
+      return;
+    }
+    // The panel button opens the sheet where there's something to show:
+    // Drafts first, then Ideas, then Sources. Its tabs move between them.
+    if (event.target.closest("[data-topbar-panel]")) {
+      if (getRightPanelMode()) closeRightPanel();
+      else if (latestDraftCount() > 0) openDraftsPanel(latestDraftRef(currentSessionId()));
+      else if (sessionIdeaCount() > 0) openIdeasPanel();
+      else openSourcesPanel();
+      return;
+    }
     // Back from a sub-page — target comes from backTargetFor(), and may carry a
     // query (the settings page sends its Playbook back to the digest).
     const backBtn = event.target.closest("[data-topbar-back]");
@@ -315,42 +317,12 @@ export function initTopbar() {
       });
       return;
     }
-    // Drafts pill — toggle the right panel between Drafts mode and closed.
-    // If the panel is open in Ideas mode, switch to Drafts (don't close).
-    if (event.target.closest("[data-topbar-drafts]")) {
-      const mode = getRightPanelMode();
-      if (mode === "drafts") {
-        closeRightPanel();
-      } else {
-        const sessionId = currentSessionId();
-        let activeRef = getActiveDraftsBatchRef();
-        if (sessionId) {
-          const thread = getThread(sessionId);
-          const latestDraft = [...thread].reverse().find((m) => m.variant === "draft");
-          if (latestDraft) activeRef = { sessionId, messageId: latestDraft.id };
-        }
-        openDraftsPanel(activeRef);
-      }
-      return;
-    }
-    if (event.target.closest("[data-topbar-ideas]")) {
-      const mode = getRightPanelMode();
-      if (mode === "ideas") closeRightPanel();
-      else openIdeasPanel();
-      return;
-    }
-    if (event.target.closest("[data-topbar-sources]")) {
-      const mode = getRightPanelMode();
-      if (mode === "sources") closeRightPanel();
-      else openSourcesPanel();
-      return;
-    }
     // Welcome-alt Exit — open the discard-progress confirm and navigate
     // back to the dashboard. Pairs with the topbar button rendered by
     // renderWelcomeAltExit() above. The wizard chrome no longer carries
     // its own Exit affordance; this is the only entry.
     if (event.target.closest("[data-topbar-welcome-alt-exit]")) {
-      import("./confirm-modal.js?v=1852").then(({ open }) => {
+      import("./confirm-modal.js?v=1854").then(({ open }) => {
         open({
           title: "Exit onboarding?",
           body: "Your progress so far will be discarded. You can start over anytime from the dashboard.",
@@ -442,74 +414,33 @@ export function initTopbar() {
   window.addEventListener("hashchange", syncThreadSubscription);
 }
 
-// Context + Drafts + Ideas pills — only on /session/:id. Order matches
-// handoff App.jsx: Context first, then Drafts (with badge), then Ideas.
-//
-// Lot 19 DS conformance — Drafts / Outputs / Sources now share one
-// uniform button style per user feedback:
-//   • OFF → `.ap-button ghost grey` (transparent, no border)
-//   • ON  → `.ap-button stroked blue` (1px blue border + blue text/icon,
-//           no fill — the canonical "active panel" cue in the
-//           Agorapulse DS for a ghost-rest button)
-// All hover/focus/disabled feedback is inherited from the DS.
-// Counters stay color-coded to the data they carry: Drafts orange,
-// Sources blue. The Context pill is unrelated (composed exception
-// elsewhere in the layout — `.ap-button stroked grey` wrapped in
-// `.app-topbar__context-pill`).
-function renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) {
-  const draftBadge = draftCount > 0 ? `<span class="ap-counter normal orange">${draftCount}</span>` : "";
-  const ideasBadge = ideaCount > 0 ? `<span class="ap-counter normal blue">${ideaCount}</span>` : "";
-  const draftsClass = rpMode === "drafts" ? "stroked blue" : "ghost grey";
-  const ideasClass = rpMode === "ideas" ? "stroked blue" : "ghost grey";
-  const sourcesClass = rpMode === "sources" ? "stroked blue" : "ghost grey";
-  // Each pill is disabled when its underlying count is 0 AND its panel
-  // isn't currently the active mode — a button can't be semantically
-  // both `disabled` and `aria-pressed=true`, and the user must be able
-  // to re-click to close a panel even if the count dropped to 0 while
-  // the panel was open.
-  const draftsDisabled = draftCount === 0 && rpMode !== "drafts";
-  const ideasDisabled = isEmpty && ideaCount === 0 && rpMode !== "ideas";
-  const sourcesCount = sessionSourceCount();
-  const sourcesDisabled = sourcesCount === 0 && rpMode !== "sources";
-  const sourcesBadge = sourcesCount > 0 ? `<span class="ap-counter normal blue">${sourcesCount}</span>` : "";
+// The one panel button on a chat — "Drafts" and its count, the thing a chat
+// produces. It opens the bottom sheet; Ideas and Sources are the sheet's other
+// tabs. Disabled while the chat has nothing for any of the three.
+function renderPanelButton(rpMode, draftCount, ideaCount) {
+  const disabled = !rpMode && draftCount === 0 && ideaCount === 0 && sessionSourceCount() === 0;
+  const badge = draftCount > 0 ? `<span class="ap-counter normal orange">${draftCount}</span>` : "";
   return `
     <button
       type="button"
-      class="ap-button ${sourcesClass} ${sourcesDisabled ? "is-empty" : ""}"
-      data-topbar-sources
-      ${sourcesDisabled ? "disabled" : ""}
-      aria-pressed="${rpMode === "sources"}"
-      title="${sourcesDisabled ? "No sources attached yet — drop a file in the composer to add one" : "Toggle Sources panel"}"
-    >
-      <i class="ap-icon-file"></i>
-      <span>Sources</span>
-      ${sourcesBadge}
-    </button>
-    <button
-      type="button"
-      class="ap-button ${ideasClass} ${ideasDisabled ? "is-empty" : ""}"
-      data-topbar-ideas
-      ${ideasDisabled ? "disabled" : ""}
-      aria-pressed="${rpMode === "ideas"}"
-      title="${ideasDisabled ? "No ideas yet — attach a source or send a message" : "Toggle Ideas panel"}"
-    >
-      <i class="ap-icon-sparkles"></i>
-      <span>Ideas</span>
-      ${ideasBadge}
-    </button>
-    <button
-      type="button"
-      class="ap-button ${draftsClass} ${draftsDisabled ? "is-empty" : ""}"
-      data-topbar-drafts
-      ${draftsDisabled ? "disabled" : ""}
-      aria-pressed="${rpMode === "drafts"}"
-      title="${draftsDisabled ? "No drafts in this chat yet" : "Toggle Drafts panel"}"
+      class="ap-button ${rpMode ? "stroked blue" : "ghost grey"}"
+      data-topbar-panel
+      ${disabled ? "disabled" : ""}
+      aria-pressed="${!!rpMode}"
+      aria-label="Drafts, ideas and sources"
     >
       <i class="ap-icon-pen"></i>
       <span>Drafts</span>
-      ${draftBadge}
+      ${badge}
     </button>
   `;
+}
+
+// The batch the Drafts tab pins to — the latest draft turn of the chat.
+function latestDraftRef(sessionId) {
+  if (!sessionId) return getActiveDraftsBatchRef();
+  const latest = [...getThread(sessionId)].reverse().find((m) => m.variant === "draft");
+  return latest ? { sessionId, messageId: latest.id } : getActiveDraftsBatchRef();
 }
 
 // Resolve the count of sources attached to the active session. Drives

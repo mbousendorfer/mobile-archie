@@ -16,8 +16,8 @@
 // the underlying stores mutate (assistant thread, sources-stream, library,
 // right-panel mode, sessions).
 
-import { html, raw, escapeHtml, escapeAttr } from "../utils.js?v=1852";
-import { getPath } from "../router.js?v=1852";
+import { html, raw, escapeHtml, escapeAttr } from "../utils.js?v=1854";
+import { getPath } from "../router.js?v=1854";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
@@ -25,41 +25,49 @@ import {
   openSources as openSourcesPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=1852";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=1852";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=1852";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=1852";
-import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=1852";
-import { subscribe as subscribeSessions } from "../sessions-store.js?v=1852";
-import { addMention } from "../composer-mentions.js?v=1852";
-import { isFlagOn } from "../feature-flags.js?v=1852";
+} from "./right-panel.js?v=1854";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=1854";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=1854";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=1854";
+import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=1854";
+import { subscribe as subscribeSessions } from "../sessions-store.js?v=1854";
+import { addMention } from "../composer-mentions.js?v=1854";
+import { isFlagOn } from "../feature-flags.js?v=1854";
 
 // Two-level structure:
 //   .conversation-status-column   — fills grid column 3 with white bg
 //                                    (no grey reveal between chat + card).
 //   .conversation-status-card     — the floating-card chrome (border +
 //                                    shadow + radius) sitting inside.
+// Mobile fork: the column is a bottom SHEET over the chat, opened from the
+// topbar's ⋯ (Chat status) and closed by its close button, its backdrop, or
+// any row that opens a panel. Closed by default, and not persisted.
 const HTML = `
+<div class="app-modal-backdrop" id="conversationStatusBackdrop" hidden></div>
 <aside class="conversation-status-column" id="conversationStatusCard" hidden aria-label="Chat status">
   <div class="conversation-status-card">
+    <div class="conversation-status-card__head">
+      <h2 class="conversation-status-card__title">Chat status</h2>
+      <button type="button" class="ap-icon-button transparent" data-status-close aria-label="Close chat status">
+        <i class="ap-icon-close"></i>
+      </button>
+    </div>
     <div class="conversation-status-card__inner" data-status-card-root></div>
   </div>
 </aside>
 `;
 
-// User preference — the topbar info-button toggles the card visibility.
-// Default ON; stored as "0" in localStorage when explicitly hidden so a
-// missing key still resolves to "show".
-const STORAGE_KEY = "archie-status-card-visible";
+// Open/closed — the topbar ⋯ toggles it. Not persisted: a sheet that came
+// back open on every reload would be in the way.
+let sheetOpen = false;
 const visibilityListeners = new Set();
 
 export function isEnabled() {
-  return localStorage.getItem(STORAGE_KEY) !== "0";
+  return sheetOpen;
 }
 
 function setEnabled(on) {
-  if (on) localStorage.removeItem(STORAGE_KEY);
-  else localStorage.setItem(STORAGE_KEY, "0");
+  sheetOpen = on;
   visibilityListeners.forEach((fn) => {
     try {
       fn(on);
@@ -95,6 +103,9 @@ export function init() {
   if (initialized) return;
   const wrapper = document.createElement("div");
   wrapper.innerHTML = HTML;
+  const backdrop = wrapper.querySelector("#conversationStatusBackdrop");
+  (document.getElementById("appShell") || document.body).appendChild(backdrop);
+  backdrop.addEventListener("click", () => setEnabled(false));
   // Append to .app-shell (not <body>) so the card can be grid-positioned
   // as a real third column rather than overlaying the chat — the shell's
   // grid template adds a column when `.is-status-card-visible` is set.
@@ -105,6 +116,10 @@ export function init() {
 
   // Click delegate — one handler for all the action rows.
   rootEl.addEventListener("click", (event) => {
+    if (event.target.closest("[data-status-close]")) {
+      setEnabled(false);
+      return;
+    }
     // Source row → push the filename as a mention pill into the composer.
     // The composer renders the pills inline at the top of its card (cf.
     // session.js + composer-mentions.js). More visible than an inline
@@ -136,7 +151,11 @@ export function init() {
   // Global state subscriptions that don't depend on a session id.
   subscribeRightPanel(() => render());
   subscribeSessions(() => render());
+  // Leaving the chat closes the sheet (a query-only change — ?panel= — doesn't).
+  let lastPath = getPath();
   window.addEventListener("hashchange", () => {
+    if (getPath() !== lastPath) sheetOpen = false;
+    lastPath = getPath();
     syncSessionSubscriptions();
     render();
   });
@@ -212,6 +231,9 @@ export function render() {
   // reappears if it was enabled.
   const rpMode = getRightPanelMode();
   if (rpMode === "drafts" || rpMode === "ideas" || rpMode === "sources") {
+    // A row opened a panel: the status sheet is done, it doesn't come back
+    // when the panel closes.
+    sheetOpen = false;
     hideCard();
     return;
   }
@@ -249,11 +271,19 @@ export function render() {
     ${raw(renderClipsRow(clipCount))} ${raw(renderDraftsRow(draftCount))}
   `;
   rootEl.hidden = false;
+  const backdrop = document.getElementById("conversationStatusBackdrop");
+  backdrop.hidden = false;
+  backdrop.classList.add("open"); // modals.css shows a backdrop only when .open
   setShellLayout(true);
 }
 
 function hideCard() {
   if (rootEl) rootEl.hidden = true;
+  const backdrop = document.getElementById("conversationStatusBackdrop");
+  if (backdrop) {
+    backdrop.hidden = true;
+    backdrop.classList.remove("open");
+  }
   setShellLayout(false);
 }
 
