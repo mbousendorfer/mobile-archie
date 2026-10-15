@@ -32,6 +32,6 @@ class Server(http.server.ThreadingHTTPServer):
 
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
-    with Server(("127.0.0.1", port), Handler) as httpd:
-        print(f"Serving on http://localhost:{port}", flush=True)
+    with Server(("0.0.0.0", port), Handler) as httpd:
+        print(f"Serving on http://localhost:{port} (and on the LAN, for a phone)", flush=True)
         httpd.serve_forever()

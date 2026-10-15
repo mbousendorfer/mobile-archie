@@ -31,6 +31,9 @@ let anchor = null;
 export function init() {
   if (initialized) return;
   initialized = true;
+  // Touch screens: a tap fires mouseover and nothing ever fires mouseout, so the
+  // tooltip would stick. The fork is touch-first — no tooltips without a hover.
+  if (matchMedia("(hover: none)").matches) return;
 
   // Delegated on the document, so anything rendered later — every screen here
   // re-renders its own DOM — gets tooltips without registering anything.

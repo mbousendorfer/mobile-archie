@@ -6,7 +6,7 @@
   left: 50vw;
   transform: translate(-50%, -50%);
   z-index: var(--app-z-modal);
-  max-height: calc(100vh - 2 * var(--ref-spacing-md));
+  max-height: calc(100dvh - 2 * var(--ref-spacing-md));
   border: 1px solid var(--ref-color-grey-20);
   box-shadow: var(--app-shadow-popover-lg);
 }

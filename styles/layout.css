@@ -6,7 +6,7 @@
    itself spans the full width above the panel — pills stay visible. */
 
 .app-shell {
-  height: 100vh;
+  height: 100dvh;
   width: 100%;
   display: grid;
   grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr);

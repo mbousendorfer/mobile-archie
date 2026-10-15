@@ -1,28 +1,27 @@
-import { html, raw } from "../utils.js?v=1851";
-import { navigate, getPath } from "../router.js?v=1851";
-import { open as openBugReportModal } from "./bug-report-modal.js?v=1851";
-import { open as openFeedbackModal } from "./feedback-modal.js?v=1851";
-import { open as openSearchModal } from "./search-modal.js?v=1851";
-import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=1851";
-import { renderAdminMenu, applyUserMode, applyOrgRole, toggleFlag } from "../admin-menu.js?v=1851";
-import { subscribe as subscribeSessions } from "../sessions-store.js?v=1851";
-import { isFlagOn } from "../feature-flags.js?v=1851";
-import { subscribe as subscribeContexts } from "../contexts-store.js?v=1851";
+import { html, raw } from "../utils.js?v=1852";
+import { navigate, getPath } from "../router.js?v=1852";
+import { open as openBugReportModal } from "./bug-report-modal.js?v=1852";
+import { open as openFeedbackModal } from "./feedback-modal.js?v=1852";
+import { open as openSearchModal } from "./search-modal.js?v=1852";
+import { renderAdminMenu, applyUserMode, applyOrgRole, toggleFlag } from "../admin-menu.js?v=1852";
+import { subscribe as subscribeSessions } from "../sessions-store.js?v=1852";
+import { isFlagOn } from "../feature-flags.js?v=1852";
+import { subscribe as subscribeContexts } from "../contexts-store.js?v=1852";
 import {
   getActivePlaybook,
   isWorkspaceMode,
   playbookForNewWork,
   catalogueRoute,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=1851";
-import { setHandoff } from "../handoff.js?v=1851";
+} from "../active-playbook.js?v=1852";
+import { setHandoff } from "../handoff.js?v=1852";
 // A Playbook nobody shared with me must not surface here either — the store
 // still holds it (see playbook-access.js), the sidebar just doesn't name it.
-import { visibleContexts } from "../playbook-access.js?v=1851";
-import { getFeedForPlaybook } from "../topic-feeds-store.js?v=1851";
-import { countToReview, subscribe as subscribeTopics } from "../topics-store.js?v=1851";
-import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=1851";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=1851";
+import { visibleContexts } from "../playbook-access.js?v=1852";
+import { getFeedForPlaybook } from "../topic-feeds-store.js?v=1852";
+import { countToReview, subscribe as subscribeTopics } from "../topics-store.js?v=1852";
+import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=1852";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=1852";
 import {
   deleteSidebarSession,
   matchSessionId,
@@ -30,8 +29,8 @@ import {
   renderRecentLists,
   startRenameSidebar,
   togglePinSidebar,
-} from "./sidebar/recent-chats.js?v=1851";
-import { renderPlaybookSwitcher, switchPlaybook } from "./sidebar/playbook-switcher.js?v=1851";
+} from "./sidebar/recent-chats.js?v=1852";
+import { renderPlaybookSwitcher, switchPlaybook } from "./sidebar/playbook-switcher.js?v=1852";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the
@@ -322,11 +321,6 @@ export function initSidebar() {
       openBugReportModal();
       return;
     }
-    if (event.target.closest("[data-sidebar-shortcuts]")) {
-      setMenuOpen(false);
-      toggleShortcutLegend();
-      return;
-    }
     // Admin (cog popover) — feature-flag toggle. Reloads so stores re-read it.
     const flagRow = event.target.closest("[data-admin-flag]");
     if (flagRow) {
@@ -442,21 +436,6 @@ export function initSidebar() {
     }
     event.preventDefault();
     toggleSidebar();
-  });
-
-  // ⇧⌘O / Ctrl+Shift+O — start a new conversation from anywhere. Matches
-  // Claude.ai's "New chat" shortcut. Like ⌘K, it intentionally fires even
-  // from inside inputs / textareas / contenteditable: starting a new
-  // conversation is a global navigation action, and the user can always
-  // come back if they want to keep editing. Same closeRightPanel + fresh
-  // session-id logic as the `[data-sidebar-new]` click handler above.
-  document.addEventListener("keydown", (event) => {
-    if (event.key !== "o" && event.key !== "O") return;
-    if (!(event.metaKey || event.ctrlKey)) return;
-    if (!event.shiftKey) return;
-    event.preventDefault();
-    closeRightPanel();
-    navigate(`/session/new-${Date.now().toString(36)}`);
   });
 }
 
@@ -603,15 +582,6 @@ function renderFootMenu({ collapsed }) {
             </div>
           </div>
         </button>
-        <button type="button" role="menuitem" class="ap-action-dropdown-item" data-sidebar-shortcuts>
-          <i class="ap-icon-question"></i>
-          <div class="ap-action-dropdown-item-text">
-            <div class="ap-action-dropdown-item-label-container">
-              <span class="ap-action-dropdown-item-label">Keyboard shortcuts</span>
-            </div>
-          </div>
-          <kbd class="app-sidebar__foot-kbd">?</kbd>
-        </button>
         <div class="ap-action-dropdown-divider" role="separator"></div>
         ${renderAdminMenu()}
       </div>
@@ -722,19 +692,16 @@ function workspaceNav(items) {
 function renderNav(path) {
   // Action rows at the top of the nav group: New conversation + Search.
   // Both are verbs (not routes), so they live alongside Playbooks / Connectors
-  // but never carry the `.is-active` cue. Their ⇧⌘O / ⌘K kbd hints are
-  // hover-revealed (cf. sidebar.css — opacity 0 → 1 on :hover/:focus).
+  // but never carry the `.is-active` cue. No keyboard hints: the fork is touch-only.
   const newConversationItem = `
     <button
       type="button"
       class="app-sidebar__nav-item"
       data-sidebar-new
       aria-label="New chat"
-      title="New chat (⇧⌘O)"
     >
       <i class="ap-icon-plus"></i>
       <span>New chat</span>
-      <kbd class="app-sidebar__nav-kbd" aria-hidden="true">⇧⌘O</kbd>
     </button>
   `;
 
@@ -744,11 +711,9 @@ function renderNav(path) {
       class="app-sidebar__nav-item"
       data-sidebar-search-open
       aria-label="Search chats"
-      title="Search chats (⌘K)"
     >
       <i class="ap-icon-search"></i>
       <span>Search…</span>
-      <kbd class="app-sidebar__nav-kbd" aria-hidden="true">⌘K</kbd>
     </button>
   `;
 

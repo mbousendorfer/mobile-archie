@@ -24,6 +24,19 @@ body {
   overflow: hidden;
 }
 
+/* Touch first (mobile fork). No grey flash on tap — every control has its own
+   pressed state — and a scroll that reaches the end of a panel stops there
+   instead of dragging the page (or pulling to refresh) behind it. */
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+* {
+  overscroll-behavior: contain;
+}
+
 /* Reduced motion — global umbrella. WCAG 2.3.3 says any animation
    triggered by interaction must be disablable when the user opts out.
    The DS doesn't ship a global guard, and per-component coverage in

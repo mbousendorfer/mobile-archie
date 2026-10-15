@@ -188,35 +188,6 @@
   margin-left: auto;
 }
 
-/* Shortcut hint pill on the trailing edge of action nav rows
-   (New conversation, Search). Hover-revealed so the resting state
-   stays calm — the row still announces its shortcut on hover/focus
-   without ever feeling like a permanent badge. */
-.app-sidebar__nav-kbd {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  height: 18px;
-  padding: 0 var(--ref-spacing-xxxs);
-  border-radius: var(--app-radius-sm);
-  background: var(--ref-color-white);
-  border: 1px solid var(--app-border);
-  font-family: inherit;
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-80);
-  opacity: 0;
-  transition: opacity var(--ref-animation-short) var(--app-ease-out);
-}
-
-.app-sidebar__nav-item:hover .app-sidebar__nav-kbd,
-.app-sidebar__nav-item:focus-visible .app-sidebar__nav-kbd {
-  opacity: 1;
-}
-
 /* ── List ───────────────────────────────────────────────────────────── */
 
 .app-sidebar__list {
@@ -725,24 +696,6 @@
 }
 .admin-menu__doc i {
   flex-shrink: 0;
-  color: var(--ref-color-grey-80);
-}
-
-.app-sidebar__foot-kbd {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 var(--ref-spacing-xxxs);
-  border-radius: var(--app-radius-sm);
-  background: var(--ref-color-grey-05);
-  border: 1px solid var(--app-border);
-  font-family: inherit;
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-80);
 }
 

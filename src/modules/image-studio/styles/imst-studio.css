@@ -1430,7 +1430,7 @@
 
 .imst-dialog--studio {
   width: min(calc(100vw - 2 * var(--ref-spacing-md)), calc(var(--app-content) * 1.35));
-  height: calc(100vh - 2 * var(--ref-spacing-md));
+  height: calc(100dvh - 2 * var(--ref-spacing-md));
   display: flex;
   flex-direction: column;
 }

@@ -16,7 +16,7 @@
   width: min(960px, 100%);
   /* One height for every step — a dialog that resized per step jumped on
      screen at each Next. The content scrolls inside. */
-  height: min(calc(100vh - 48px), 680px);
+  height: min(calc(100dvh - 48px), 680px);
   box-shadow: var(--app-shadow-popover-lg);
 }
 

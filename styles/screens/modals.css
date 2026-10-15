@@ -47,15 +47,14 @@ body.has-modal {
 .connect-account-modal,
 .skip-connect,
 .fill-document-modal,
-.search-modal,
-.shortcut-legend {
+.search-modal {
   position: fixed;
   top: 50vh;
   left: 50vw;
   transform: translate(-50%, -50%);
   display: none;
   z-index: var(--app-z-modal);
-  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
   border: 1px solid var(--app-border);
   box-shadow: var(--app-shadow-popover-lg);
 }
@@ -64,7 +63,7 @@ body.has-modal {
   width: min(calc(100% - 32px), 920px);
   /* Cap the height so the dialog reads as a panel and the gallery scrolls
      inside it, rather than the modal stretching to near-full-viewport. */
-  max-height: min(calc(100vh - 48px), 720px);
+  max-height: min(calc(100dvh - 48px), 720px);
 }
 
 .bug-report-modal {
@@ -94,7 +93,7 @@ body.has-modal {
    a long-lived Topic can accumulate entries. */
 .topic-history {
   width: min(calc(100% - 32px), 520px);
-  max-height: min(calc(100vh - 48px), 640px);
+  max-height: min(calc(100dvh - 48px), 640px);
   flex-direction: column;
 }
 
@@ -357,7 +356,7 @@ body.has-modal {
    "Pinned" group heading, no per-row glyph needed. */
 .search-modal {
   width: min(calc(100% - 32px), 560px);
-  max-height: min(calc(100vh - 80px), 480px);
+  max-height: min(calc(100dvh - 80px), 480px);
   flex-direction: column;
   padding: 0;
 }
@@ -520,10 +519,6 @@ body.has-modal {
   color: var(--ref-color-grey-80);
 }
 
-.shortcut-legend {
-  width: min(calc(100% - 32px), 480px);
-}
-
 .bug-report-modal.open,
 .feedback-modal.open,
 .chat-picker-modal.open,
@@ -540,8 +535,7 @@ body.has-modal {
 .connect-account-modal.open,
 .skip-connect.open,
 .fill-document-modal.open,
-.search-modal.open,
-.shortcut-legend.open {
+.search-modal.open {
   display: flex;
   animation: app-modal-fade-in var(--ref-animation-normal) ease;
 }
@@ -957,64 +951,6 @@ body.has-modal {
   --archie-loader-size: 88px;
 }
 
-/* ── Shortcut legend ────────────────────────────────────── */
-
-.shortcut-legend__content {
-  padding-bottom: var(--ref-spacing-md);
-}
-
-.shortcut-legend__list {
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.shortcut-legend__row {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-md);
-  padding: var(--ref-spacing-xs) 0;
-  border-top: 1px solid var(--app-border);
-}
-
-.shortcut-legend__row:first-child {
-  border-top: 0;
-  padding-top: 0;
-}
-
-.shortcut-legend__row dt {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxxs);
-  align-items: center;
-  flex-shrink: 0;
-  min-width: 120px;
-}
-
-.shortcut-legend__row dd {
-  margin: 0;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  font-weight: var(--sys-text-style-body-weight);
-  color: var(--sys-text-color-default);
-}
-
-.shortcut-legend__row kbd {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs);
-  background: var(--ref-color-white);
-  border: 1px solid var(--app-border);
-  border-bottom-width: 2px;
-  border-radius: var(--app-radius-sm);
-  font-family: inherit;
-  font-size: var(--sys-text-style-caption-bold-size);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-100);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-}
-
 /* ── Save-drafts modal ─────────────────────────────────────────────────
    Two radio choices (separate drafts / save to a folder). The folder choice
    reveals the DS Selection Dropdown (.ap-selection-dropdown) — search +
@@ -1394,7 +1330,7 @@ body.has-modal {
    two feel like different screens. */
 .topic-picker {
   width: min(calc(100% - 32px), 720px);
-  max-height: min(calc(100vh - 48px), 800px);
+  max-height: min(calc(100dvh - 48px), 800px);
   flex-direction: column;
 }
 
@@ -1536,7 +1472,7 @@ body.has-modal {
 }
 
 /* The DS content block neither scrolls nor shrinks, so in a dialog capped at
-   100vh - 48px it keeps its full height and pushes the footer past the bottom
+   100dvh - 48px it keeps its full height and pushes the footer past the bottom
    edge, where .ap-dialog's own overflow:hidden clips it — measured at a 600px
    viewport: Back / Skip landed 256px below the dialog, unreachable. Same fix
    as the Share dialog above: let the content scroll and let it shrink. */

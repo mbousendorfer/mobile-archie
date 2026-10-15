@@ -8,11 +8,11 @@
 // uses, so the preview IS what a click opens. The card is inert: a picture of
 // the object, not a second set of its controls.
 
-import { resolveRef } from "../chat-refs.js?v=1851";
-import { getIdeas, getSources } from "../library.js?v=1851";
-import { renderPostEchoRow } from "./top-post-card.js?v=1851";
-import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1851";
-import { renderSourceCard } from "./source-card.js?v=1851";
+import { resolveRef } from "../chat-refs.js?v=1852";
+import { getIdeas, getSources } from "../library.js?v=1852";
+import { renderPostEchoRow } from "./top-post-card.js?v=1852";
+import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1852";
+import { renderSourceCard } from "./source-card.js?v=1852";
 
 const ANCHOR_SEL = "[data-chat-ref]";
 const DELAY = 250;
@@ -27,6 +27,8 @@ let timer = null;
 export function init() {
   if (initialized) return;
   initialized = true;
+  // No hover on touch: the tap goes straight to the ref's click, which opens it.
+  if (matchMedia("(hover: none)").matches) return;
   document.addEventListener("mouseover", onOver);
   document.addEventListener("mouseout", onOut);
   document.addEventListener("focusin", (e) => (e.target.matches?.(ANCHOR_SEL) ? schedule(e.target) : hide()));

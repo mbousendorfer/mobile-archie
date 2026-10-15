@@ -1063,3 +1063,16 @@ button.ap-link {
   height: 16px;
   color: var(--ref-color-grey-40);
 }
+
+/* ── Form fields at 16px — the mobile fork ────────────────────────────────
+   iOS Safari zooms the page on focus into any field whose text is under 16px,
+   and doesn't zoom back out. The DS sets its fields at 14px (body), so every
+   text field is lifted to 16px here — the composer included. `!important`
+   because the DS and app selectors that set 14px are many and more specific
+   than an element selector; this is the one value that has to win everywhere. */
+input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"]),
+textarea,
+select,
+[contenteditable="true"] {
+  font-size: 16px !important;
+}

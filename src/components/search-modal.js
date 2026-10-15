@@ -19,11 +19,11 @@
 //   - Subscribes to the sessions-store so the result list refreshes if a session
 //     is renamed / deleted from elsewhere while the modal is open.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1851";
-import { escapeHtml } from "../utils.js?v=1851";
-import { navigate } from "../router.js?v=1851";
-import { getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1851";
-import { getContextById } from "../contexts-store.js?v=1851";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1852";
+import { escapeHtml } from "../utils.js?v=1852";
+import { navigate } from "../router.js?v=1852";
+import { getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1852";
+import { getContextById } from "../contexts-store.js?v=1852";
 
 const MODAL_ID = "search";
 
@@ -55,7 +55,6 @@ const HTML = `
         aria-controls="searchModalResults"
         autocomplete="off"
       />
-      <kbd class="search-modal__kbd">Esc</kbd>
     </div>
   </div>
   <div
@@ -140,20 +139,6 @@ function injectOnce() {
     renderResults();
   });
 
-  // Global ⌘K / Ctrl+K — open the modal from anywhere (matches Claude /
-  // Linear / Raycast / Slack). Intentionally NOT skipped on inputs /
-  // textareas / contenteditable: ⌘K is the canonical "navigate anywhere"
-  // shortcut and should win over the surface the user is currently on.
-  // No-op if the modal is already open so re-pressing the shortcut
-  // doesn't reset the input mid-query.
-  document.addEventListener("keydown", (event) => {
-    if (event.key !== "k" && event.key !== "K") return;
-    if (!(event.metaKey || event.ctrlKey)) return;
-    event.preventDefault();
-    if (isOpen) return;
-    open();
-  });
-
   initialized = true;
 }
 
@@ -229,9 +214,6 @@ function renderResultRow(session, index) {
         aria-hidden="true"
       ></span>
       <span class="search-modal__result-title">${safeName}</span>
-      <span class="search-modal__result-meta" aria-hidden="true">
-        <kbd class="search-modal__result-kbd">↵</kbd>
-      </span>
     </button>
   `;
 }
