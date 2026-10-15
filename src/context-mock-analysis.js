@@ -365,14 +365,18 @@ export function analyzeSocialProfiles(profileIds = []) {
 }
 
 // How each network bends the base voice, as Archie would read it off that
-// network's posts. Only what DIFFERS — every other part inherits the base.
+// network's posts — a version of each of the four parts, so any one of them
+// can be optimized on its own (the network voice's checklist).
 const NETWORK_ADAPTATIONS = {
   linkedin: {
+    signatureHooks: ["Here's what we learned the hard way:", "Most teams get this wrong:"],
+    closingPatterns: ["What's your take?", "Follow for the next one."],
     formattingStyle:
       "A first line strong enough to earn the « see more », then short paragraphs with air between them. Ends on a takeaway or a question.",
     visualStyle: "Sentence case. Emoji rarely, as bullets at most. Three hashtags at the end, never in the text.",
   },
   instagram: {
+    signatureHooks: ["Save this before you scroll:", "Your week, but easier:"],
     closingPatterns: ["Save this for later.", "Tag someone who needs this."],
     formattingStyle:
       "The hook sits in the first line, before the caption is cut. Short paragraphs, then the hashtags in one block at the very end.",
@@ -380,20 +384,27 @@ const NETWORK_ADAPTATIONS = {
       "Emoji welcome — one or two to open a line, never mid-sentence. No link in the caption: point to the link in bio.",
   },
   x: {
+    signatureHooks: ["Hot take:", "Thread:"],
     closingPatterns: ["Thoughts?", "More in the thread below."],
     formattingStyle: "One idea per post, under 280 characters. Anything longer becomes a numbered thread.",
     visualStyle: "One emoji at most. One hashtag at most. The link goes last.",
   },
   facebook: {
+    signatureHooks: ["Quick question for you:", "Here's something we noticed:"],
+    closingPatterns: ["What would you add?", "Share this with someone who needs it."],
     formattingStyle:
       "Two or three short paragraphs that read like a conversation, then a question to open the comments.",
     visualStyle: "A few emoji are fine. Links stay in the post so the preview card shows.",
   },
   tiktok: {
+    signatureHooks: ["Wait for it:", "Nobody tells you this:"],
+    closingPatterns: ["Follow for part 2.", "Save this one."],
     formattingStyle: "The caption backs the video: one line that says the hook again in words.",
     visualStyle: "Casual casing, emoji that fit the clip, three or four hashtags with one broad one.",
   },
   youtube: {
+    signatureHooks: ["In this video:", "Here's how we did it:"],
+    closingPatterns: ["Subscribe for the next one.", "Tell us in the comments."],
     formattingStyle: "The title carries the hook. The description opens with what the video answers, then chapters.",
     visualStyle: "No emoji in titles. Links and timestamps live in the description.",
   },
