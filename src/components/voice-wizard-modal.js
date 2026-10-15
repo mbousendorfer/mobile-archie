@@ -23,10 +23,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1816";
-import { bindReorder } from "../drag-reorder.js?v=1816";
-import { escapeHtml as esc } from "../utils.js?v=1816";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1816";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1818";
+import { bindReorder } from "../drag-reorder.js?v=1818";
+import { escapeHtml as esc } from "../utils.js?v=1818";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1818";
 import {
   networkFields,
   isNewPart,
@@ -35,7 +35,7 @@ import {
   baseNetwork,
   networkEntry,
   resolvedVoice,
-} from "../network-voice.js?v=1816";
+} from "../network-voice.js?v=1818";
 
 const MODAL_ID = "voiceWizard";
 
@@ -323,16 +323,22 @@ const ARCHIE_MARK = `<span class="vw-option__archie" title="Archie's pick"><i cl
 // What the network itself recommends for this part — the reason behind
 // Archie's picks, in the right column beside the choices.
 function renderGuidance(field) {
-  const lines = networkGuidance(w.net, field);
-  if (!lines.length) return "";
-  // The source, one click away — a new tab, the draft stays open here.
-  const url = networkGuidanceUrl(w.net);
-  return `<aside class="vw__aside" aria-label="What ${esc(networkLabel(w.net))} says">
-      <p class="vw__aside-title"><i class="${networkIcon(w.net)}" aria-hidden="true"></i>What ${esc(networkLabel(w.net))} says</p>
-      <ul class="vw-guide">${lines.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>
+  const label = esc(networkLabel(w.net));
+  const items = networkGuidance(w.net, field);
+  // The source, one click away (a new tab — the draft stays open here): the
+  // page these sentences come from when they share one, else the network's
+  // guidelines page.
+  const sources = [...new Set(items.map((i) => i.source))];
+  const url = sources.length === 1 ? sources[0] : networkGuidanceUrl(w.net);
+  const body = items.length
+    ? `<ul class="vw-guide">${items.map((i) => `<li>${esc(i.text)}</li>`).join("")}</ul>`
+    : `<p class="vw-guide__none">${label} doesn't publish guidance on this part. My suggestions come from how posts that work there are written.</p>`;
+  return `<aside class="vw__aside" aria-label="What ${label} says">
+      <p class="vw__aside-title"><i class="${networkIcon(w.net)}" aria-hidden="true"></i>What ${label} says</p>
+      ${body}
       ${
         url
-          ? `<a class="ap-link standalone small vw-guide__link" href="${esc(url)}" target="_blank" rel="noopener noreferrer"><span>Read ${esc(networkLabel(w.net))}'s guidelines</span><i class="ap-icon-external-link" aria-hidden="true"></i></a>`
+          ? `<a class="ap-link standalone small vw-guide__link" href="${esc(url)}" target="_blank" rel="noopener noreferrer"><span>Read ${label}'s guidelines</span><i class="ap-icon-external-link" aria-hidden="true"></i></a>`
           : ""
       }
     </aside>`;

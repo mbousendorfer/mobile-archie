@@ -288,6 +288,13 @@
   list-style: none;
 }
 
+/* Nothing official on this part: said plainly, in body ink. */
+.vw-guide__none {
+  margin: 0;
+  color: var(--ref-color-grey-80);
+  line-height: 1.5;
+}
+
 /* The network's own page, under its recommendations — hugs its text. */
 .vw-guide__link {
   align-self: flex-start;

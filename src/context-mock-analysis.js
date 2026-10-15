@@ -400,7 +400,7 @@ const NETWORK_ADAPTATIONS = {
     signatureHooks: ["Wait for it:", "Nobody tells you this:"],
     closingPatterns: ["Follow for part 2.", "Save this one."],
     formattingStyle: "The caption backs the video: one line that says the hook again in words.",
-    visualStyle: "Casual casing, emoji that fit the clip, three or four hashtags with one broad one.",
+    visualStyle: "Casual casing, emoji that fit the clip, two or three hashtags that match the video.",
   },
   youtube: {
     signatureHooks: ["In this video:", "Here's how we did it:"],
@@ -424,7 +424,7 @@ const NETWORK_ALTERNATIVES = {
     signatureHooks: ["Real talk:"],
     closingPatterns: ["Tell me in the comments.", "Link in bio."],
     formattingStyle: "A one-line caption that frames the visual; the details live in the carousel.",
-    visualStyle: "Emoji as line bullets. Lowercase is fine. Five to ten hashtags in the first comment.",
+    visualStyle: "Emoji as line bullets. Lowercase is fine. Up to five hashtags, in the caption.",
   },
   x: {
     signatureHooks: ["Unpopular opinion:"],
@@ -480,115 +480,290 @@ export function networkVoiceOptions(network) {
 const HASHTAG_OPTIONS = {
   linkedin: ["Three at the end, never in the text.", "None — LinkedIn reach doesn't need them."],
   instagram: [
-    "Five to ten in the first comment, a mix of broad and niche.",
-    "Three to five at the end of the caption.",
+    "Three to five in the caption, only ones that match the topic.",
+    "One or two specific ones at the end of the caption.",
   ],
   x: ["One at most, only when it's the conversation's tag.", "None."],
   facebook: ["None — they read as spam here.", "One branded hashtag at the end."],
-  tiktok: ["Three or four, one broad and the rest niche.", "Two niche ones that match the sound or trend."],
+  tiktok: ["Two or three that relate to the video.", "Two niche ones that match the sound or trend."],
   youtube: [
     "Three in the description, the first one shows above the title.",
     "One branded hashtag in the description.",
   ],
 };
 
-// What each network itself recommends, part by part — the "What Instagram
-// says" box at the top of each step of the Optimize wizard: the reason behind
-// Archie's picks, before the picks. Paraphrased from each platform's public
-// creator / business guidance, never quoted.
-// ponytail: static copy; the real thing reads the platforms' guidance pages.
+// What each network itself recommends, part by part — "What X says" in the
+// Optimize assistant's right column. Researched 2026-10-15 on the networks'
+// OWN pages (creator portals, business help centres, official blogs; no
+// third-party blog), each sentence paraphrased, never quoted, with the page it
+// comes from. An empty list = the network publishes nothing official on that
+// part (the column says so). A few come from ad guidance and say it in the
+// text ("From X's ad guidance: …"). Two X pages exist only in German.
+// ponytail: a snapshot — re-check the sources before trusting a number.
 const NETWORK_GUIDANCE = {
   linkedin: {
     signatureHooks: [
-      "Only the first two or three lines show before “see more” — the hook has to land there.",
-      "Posts that open on a concrete lesson or number get more dwell time than ones that open on a question.",
+      {
+        text: "Lead with what the reader gets out of the post, using as few characters as possible.",
+        source:
+          "https://www.linkedin.com/business/marketing/blog/linkedin-pages/5-non-obvious-ways-to-improve-your-linkedin-company-page",
+      },
+      {
+        text: "Open with a thought-provoking question, a relevant statistic or a point from the content you're linking to.",
+        source:
+          "https://www.linkedin.com/business/marketing/blog/linkedin-pages/5-non-obvious-ways-to-improve-your-linkedin-company-page",
+      },
     ],
     closingPatterns: [
-      "Comments weigh more than reactions: a closing that invites a real answer keeps the post circulating.",
-      "Links in the post cut reach — point to the comments instead.",
+      {
+        text: "Treat each post as the start of a conversation: end on a question that invites comments, then reply to them.",
+        source:
+          "https://www.linkedin.com/business/marketing/blog/linkedin-pages/5-non-obvious-ways-to-improve-your-linkedin-company-page",
+      },
     ],
     formattingStyle: [
-      "Short paragraphs and line breaks read better on mobile, where most people scroll the feed.",
-      "Long posts are fine when every line earns the next one.",
+      {
+        text: "Keep updates short. LinkedIn suggests about 150 characters or fewer.",
+        source:
+          "https://www.linkedin.com/business/marketing/blog/linkedin-pages/5-non-obvious-ways-to-improve-your-linkedin-company-page",
+      },
+      {
+        text: "Add an image to your posts. Collages of 3–4 images and uploaded PDFs or slide decks also work well for organizations.",
+        source: "https://business.linkedin.com/advertise/linkedin-pages/best-practices",
+      },
     ],
-    visualStyle: ["Emoji are rare in the feed; one or two at most keeps a professional tone."],
-    hashtagStyle: ["Three relevant hashtags at the end are plenty — more adds noise, not reach."],
+    visualStyle: [
+      {
+        text: "Try posts with no link for questions or ideas, and add tracking codes to the links you do share.",
+        source:
+          "https://www.linkedin.com/business/marketing/blog/linkedin-pages/5-non-obvious-ways-to-improve-your-linkedin-company-page",
+      },
+    ],
+    hashtagStyle: [
+      {
+        text: "Pick 3–5 hashtags your organization cares about and add them when they're relevant.",
+        source: "https://business.linkedin.com/advertise/linkedin-pages/best-practices",
+      },
+      {
+        text: "Use the hashtags your communities already use, and give themed series their own hashtag.",
+        source:
+          "https://www.linkedin.com/business/marketing/blog/linkedin-pages/5-non-obvious-ways-to-improve-your-linkedin-company-page",
+      },
+    ],
   },
   instagram: {
     signatureHooks: [
-      "Captions are cut after about 125 characters — the first line is all most people see before “more”.",
-      "Posts people save travel further: an opening that promises something worth saving helps.",
+      {
+        text: "Make the first 3 seconds of a reel engaging so people don't scroll past.",
+        source: "https://creators.instagram.com/faq?locale=en_US",
+      },
     ],
-    closingPatterns: [
-      "Saves and shares count more than likes — ask for one of those.",
-      "Links in captions aren't clickable: point to the link in bio.",
-    ],
+    closingPatterns: [],
     formattingStyle: [
-      "The visual does the stopping; the caption gives the context in a few short lines.",
-      "Carousels keep people on a post longer than a single image.",
+      {
+        text: "Keep reels to 3 minutes or less if you want them recommended to people who don't follow you.",
+        source: "https://creators.instagram.com/faq?locale=en_US",
+      },
+      {
+        text: "If you mostly post photos, share feed posts or carousels on a regular schedule.",
+        source: "https://creators.instagram.com/faq?locale=en_US",
+      },
     ],
-    visualStyle: ["Emoji are part of the language here — used as markers, not in every word."],
-    hashtagStyle: ["A few specific hashtags beat thirty generic ones — Instagram recommends three to five."],
+    visualStyle: [],
+    hashtagStyle: [
+      {
+        text: "Use no more than five hashtags per reel or post. Instagram now caps it at five.",
+        source: "https://www.threads.com/@creators/post/DSalXGPCWM4",
+      },
+      {
+        text: "Put keywords and hashtags in the caption, not the comments. Use only ones that match your topic, because off-topic tags hurt distribution.",
+        source: "https://about.instagram.com/blog/announcements/break-down-how-instagram-search-works",
+      },
+    ],
   },
   x: {
     signatureHooks: [
-      "Posts are 280 characters: the opening is most of the post.",
-      "Posts that state a point plainly get more replies than ones that tease it.",
+      {
+        text: "Write it like a text message: real, conversational and concise.",
+        source: "https://business.x.com/en/basics/get-your-business-started-with-x",
+      },
+      {
+        text: "From X's ad guidance: get straight to the point with one clear message. Its best ads run 50–100 characters.",
+        source: "https://business.x.com/en/advertising/creative-best-practices",
+      },
     ],
-    closingPatterns: ["Replies drive the conversation — a short question works better than a call to action."],
-    formattingStyle: ["One idea per post. Longer ideas work as a thread, each post readable on its own."],
-    visualStyle: ["Emoji and hashtags eat characters — one of each at most."],
-    hashtagStyle: ["One or two hashtags at most; more reads as spam and lowers engagement."],
+    closingPatterns: [
+      {
+        text: "Add a clear call to action when it fits, such as sending people to your site.",
+        source: "https://business.x.com/en/basics/get-your-business-started-with-x",
+      },
+      {
+        text: "Ask questions to start conversations, collect feedback or let followers vote on a choice.",
+        source: "https://business.x.com/de/basics/what-to-tweet",
+      },
+    ],
+    formattingStyle: [
+      {
+        text: "Keep each post to one specific message. If you have more to say, link to your site or start a thread.",
+        source: "https://business.x.com/de/basics/what-to-tweet",
+      },
+      {
+        text: "Add media such as an image, video, GIF or poll to your posts.",
+        source: "https://business.x.com/en/basics/get-your-business-started-with-x",
+      },
+    ],
+    visualStyle: [
+      {
+        text: "If you use emojis, put them at the end of the text to add emotion.",
+        source: "https://business.x.com/en/basics/get-your-business-started-with-x",
+      },
+    ],
+    hashtagStyle: [
+      {
+        text: "If you use hashtags, keep to 1–2 per post.",
+        source: "https://business.x.com/en/basics/get-your-business-started-with-x",
+      },
+      {
+        text: "Capitalize each word for readability and avoid all caps. Don't force a slogan into a hashtag that doesn't fit the post.",
+        source: "https://business.x.com/de/blog/the-dos-and-donts-of-hashtags",
+      },
+    ],
   },
   facebook: {
     signatureHooks: [
-      "Posts that open like a conversation get more comments than announcements.",
-      "Long text is cut after a few lines on mobile.",
+      {
+        text: "From Meta's video-ad guidance: grab attention right away by opening on strong visuals and showing your brand in the first seconds.",
+        source: "https://www.facebook.com/business/news/updated-features-for-video-ads",
+      },
     ],
-    closingPatterns: ["Questions open the comments, and comments widen who sees the post."],
-    formattingStyle: ["Two or three short paragraphs read like a conversation; walls of text get skipped."],
-    visualStyle: ["A few emoji fit the tone; links stay in the post so the preview card shows."],
-    hashtagStyle: ["Hashtags do little here — none, or one branded tag."],
+    closingPatterns: [],
+    formattingStyle: [
+      {
+        text: "Use short reels (10–30 seconds) to grow reach and longer ones (30 seconds to over 3 minutes) to build engagement.",
+        source: "https://creators.facebook.com/blog/making-it-easier-to-create-videos-on-facebook",
+      },
+      {
+        text: "Assume video plays without sound, and carry the message with captions and on-screen text.",
+        source: "https://www.facebook.com/business/news/updated-features-for-video-ads",
+      },
+    ],
+    visualStyle: [],
+    hashtagStyle: [
+      {
+        text: "Write each hashtag as one word with no spaces. Numbers work, but punctuation and special characters don't.",
+        source: "https://www.facebook.com/help/587836257914341",
+      },
+    ],
   },
   tiktok: {
     signatureHooks: [
-      "The first second of the video is the hook — the caption backs it up, it doesn't replace it.",
-      "Captions that repeat the hook in words help people who watch on mute.",
+      {
+        text: "Put something eye-catching in the first 5 seconds to stop the scroll, whatever the video's length.",
+        source: "https://www.tiktok.com/creator-academy/en/article/elements-of-tiktok-video?lang=en",
+      },
+      {
+        text: "From TikTok's ad guidance: land the hook within 6 seconds and state your core message within the first 3.",
+        source: "https://ads.tiktok.com/help/article/creative-best-practices",
+      },
     ],
-    closingPatterns: ["Follows and saves come from a clear “part 2” or a reason to come back."],
-    formattingStyle: ["Keep the caption short: the video carries the story."],
-    visualStyle: ["Casual casing and emoji that match the clip feel native."],
-    hashtagStyle: ["Three to five hashtags — one broad, the rest specific to the niche — help TikTok place the video."],
+    closingPatterns: [
+      {
+        text: "From TikTok's ad guidance: end on a clear call to action that tells viewers what to think, feel or do.",
+        source: "https://ads.tiktok.com/help/article/creative-best-practices",
+      },
+    ],
+    formattingStyle: [
+      {
+        text: "Build the video like a story, with a beginning, a middle and an end. Fit the length to the type of content.",
+        source: "https://www.tiktok.com/creator-academy/en/article/elements-of-tiktok-video?lang=en",
+      },
+      {
+        text: "Add on-screen text, such as headlines, intro cards or auto-captions. Many viewers watch on mute.",
+        source: "https://www.tiktok.com/creator-academy/en/article/elements-of-tiktok-video?lang=en",
+      },
+    ],
+    visualStyle: [],
+    hashtagStyle: [
+      {
+        text: "Use 2–3 hashtags per video, and only ones that relate to the video.",
+        source: "https://www.tiktok.com/creator-academy/en/article/elements-of-tiktok-video?lang=en",
+      },
+      {
+        text: "Pair them with a clear description so viewers quickly get what the video is about.",
+        source: "https://www.tiktok.com/creator-academy/en/article/elements-of-tiktok-video?lang=en",
+      },
+    ],
   },
   youtube: {
     signatureHooks: [
-      "The title and thumbnail do the hooking; the first line of the description supports the title.",
-      "Only the first 100 or so characters of the description show above “more”.",
+      {
+        text: "Keep titles short and put the most important words first. Save episode numbers and branding for the end.",
+        source: "https://support.google.com/youtube/answer/12340300?hl=en",
+      },
+      {
+        text: "Put the key information at the top of the description, since that is what shows before Show more.",
+        source: "https://support.google.com/youtube/answer/12948449?hl=en",
+      },
     ],
-    closingPatterns: ["Ending screens and a subscribe ask work best when they point to the next video."],
-    formattingStyle: ["A description that opens with what the video answers, then chapters, helps search and viewers."],
-    visualStyle: ["No emoji in titles; links and timestamps belong in the description."],
-    hashtagStyle: ["Up to three hashtags in the description — the first ones show above the title."],
+    closingPatterns: [
+      {
+        text: "Use end screens in the last 5–20 seconds to promote other videos or ask for subscriptions. Leave room for them.",
+        source: "https://support.google.com/youtube/answer/6388789?hl=en",
+      },
+      {
+        text: "Link to playlists of related videos in the description.",
+        source: "https://support.google.com/youtube/answer/12948449?hl=en",
+      },
+    ],
+    formattingStyle: [
+      {
+        text: "Write a unique description for each video (up to 5,000 characters). Use your one or two main keywords in both the title and description.",
+        source: "https://support.google.com/youtube/answer/12948449?hl=en",
+      },
+      {
+        text: "Add chapters to longer videos so viewers can jump to the key parts.",
+        source: "https://support.google.com/youtube/answer/12948449?hl=en",
+      },
+    ],
+    visualStyle: [
+      {
+        text: "Use ALL CAPS and emoji sparingly, only to stress an emotion or a special moment.",
+        source: "https://support.google.com/youtube/answer/12340300?hl=en",
+      },
+      {
+        text: "Avoid loud or misleading titles, such as all caps, strings of exclamation marks, or clickbait that misrepresents the video.",
+        source: "https://support.google.com/youtube/answer/141805?hl=en",
+      },
+    ],
+    hashtagStyle: [
+      {
+        text: "Add hashtags to the title or description. Up to three from the description appear next to the title. Hashtags can't contain spaces.",
+        source: "https://support.google.com/youtube/answer/6390658?hl=en",
+      },
+      {
+        text: "Use only hashtags directly related to the video. YouTube ignores all of them if there are more than 60.",
+        source: "https://support.google.com/youtube/answer/6390658?hl=en",
+      },
+    ],
   },
 };
 
-// Where each network publishes its own creator / business guidance — the link
-// under "What X says", so the source is one click away.
+// Each network's guidelines landing page — the link when a part has no source.
 const NETWORK_GUIDANCE_URL = {
-  linkedin: "https://business.linkedin.com/marketing-solutions",
-  instagram: "https://creators.instagram.com/",
-  x: "https://business.x.com/",
-  facebook: "https://www.facebook.com/business/learn",
-  tiktok: "https://www.tiktok.com/creators/creator-portal/",
-  youtube: "https://www.youtube.com/creators/",
+  linkedin: "https://business.linkedin.com/advertise/linkedin-pages/best-practices",
+  instagram: "https://creators.instagram.com/best-practices",
+  x: "https://business.x.com/en/basics/get-your-business-started-with-x",
+  facebook: "https://creators.facebook.com/how-to-get-your-content-seen-on-facebook/",
+  tiktok: "https://www.tiktok.com/creator-academy/en/article/elements-of-tiktok-video?lang=en",
+  youtube: "https://www.youtube.com/creators/grow/optimize-your-content/",
 };
 
-/** The network's own guidance page, or "" when there's none. */
+/** The network's guidelines landing page, or "" when there's none. */
 export function networkGuidanceUrl(network) {
   return NETWORK_GUIDANCE_URL[network] || "";
 }
 
-/** What the network itself says about one part of a voice (1–2 sentences). */
+/** What the network says about one part: [{ text, source }] (may be empty). */
 export function networkGuidance(network, field) {
   return NETWORK_GUIDANCE[network]?.[field] || [];
 }
