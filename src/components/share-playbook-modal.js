@@ -19,8 +19,8 @@
 //     • onDone() — fired after a committed change (scope or ownership), so the
 //       caller can repaint or bail out if it just handed away its own access.
 
-import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1854";
-import { getContextById, updateContext, appendHistory } from "../contexts-store.js?v=1854";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1856";
+import { getContextById, updateContext, appendHistory } from "../contexts-store.js?v=1856";
 import {
   canTransfer,
   isMine,
@@ -29,10 +29,10 @@ import {
   recipientsOf,
   tiedProfile,
   profileBlockFor,
-} from "../playbook-access.js?v=1854";
-import { MEMBERS, ORG, CURRENT_USER, getMember, memberName } from "../org.js?v=1854";
-import { showToast } from "./toast.js?v=1854";
-import { html, raw, escapeHtml } from "../utils.js?v=1854";
+} from "../playbook-access.js?v=1856";
+import { MEMBERS, ORG, CURRENT_USER, getMember, memberName } from "../org.js?v=1856";
+import { showToast } from "./toast.js?v=1856";
+import { html, raw, escapeHtml } from "../utils.js?v=1856";
 
 const MODAL_ID = "sharePlaybook";
 
@@ -68,7 +68,7 @@ function fold(text) {
 const HTML = `
 <div class="app-modal-backdrop share-playbook-modal__backdrop" id="sharePlaybookBackdrop" hidden></div>
 <aside
-  class="ap-dialog share-playbook-modal"
+  class="ap-dialog app-dialog--full share-playbook-modal"
   id="sharePlaybookModal"
   role="dialog"
   aria-modal="true"

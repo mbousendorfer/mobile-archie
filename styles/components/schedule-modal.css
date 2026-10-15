@@ -632,7 +632,7 @@
    surface, radius, shadow and z-index; we give it width and layout. */
 .schedule-modal__peek.ap-action-dropdown {
   position: absolute;
-  width: 380px;
+  width: min(380px, calc(100% - 2 * var(--ref-spacing-md)));
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xxs);

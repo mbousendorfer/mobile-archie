@@ -9,23 +9,23 @@
 // upload state machines live outside in sources-stream.js so they
 // continue running even after the modal closes.
 
-import { html, raw, escapeHtml } from "../utils.js?v=1854";
-import { iconFor } from "../file-kinds.js?v=1854";
-import { connectorDocs } from "../mocks.js?v=1854";
+import { html, raw, escapeHtml } from "../utils.js?v=1856";
+import { iconFor } from "../file-kinds.js?v=1856";
+import { connectorDocs } from "../mocks.js?v=1856";
 import {
   getConnectors,
   findConnector,
   setConnectorStatus,
   subscribe as subscribeConnectors,
-} from "../connectors-store.js?v=1854";
-import { postConnectPrompt } from "../assistant.js?v=1854";
-import { URL_SERVICES, detectUrlService } from "../url-services.js?v=1854";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1854";
-import { navigate } from "../router.js?v=1854";
-import { renderConnectorLogo } from "../connectors-view.js?v=1854";
-import { isFlagOn } from "../feature-flags.js?v=1854";
-import { showToast } from "./toast.js?v=1854";
-import { dropzoneHTML } from "./dropzone.js?v=1854";
+} from "../connectors-store.js?v=1856";
+import { postConnectPrompt } from "../assistant.js?v=1856";
+import { URL_SERVICES, detectUrlService } from "../url-services.js?v=1856";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1856";
+import { navigate } from "../router.js?v=1856";
+import { renderConnectorLogo } from "../connectors-view.js?v=1856";
+import { isFlagOn } from "../feature-flags.js?v=1856";
+import { showToast } from "./toast.js?v=1856";
+import { dropzoneHTML } from "./dropzone.js?v=1856";
 
 const MODAL_ID = "addSource";
 import {
@@ -37,7 +37,7 @@ import {
   cancelUpload,
   getUploads,
   subscribeUploads,
-} from "../sources-stream.js?v=1854";
+} from "../sources-stream.js?v=1856";
 
 let backdrop, modal, contentEl, footerEl, fileInput;
 let initialized = false;
@@ -108,7 +108,7 @@ const state = {
 const HTML = `
 <div class="app-modal-backdrop add-source-modal__backdrop" id="addSourceBackdrop" hidden></div>
 <aside
-  class="ap-dialog add-source-modal"
+  class="ap-dialog app-dialog--full add-source-modal"
   id="addSourceModal"
   role="dialog"
   aria-modal="true"

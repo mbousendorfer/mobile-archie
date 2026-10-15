@@ -30,10 +30,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1854";
-import { bindReorder } from "../drag-reorder.js?v=1854";
-import { escapeHtml as esc } from "../utils.js?v=1854";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1854";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1856";
+import { bindReorder } from "../drag-reorder.js?v=1856";
+import { escapeHtml as esc } from "../utils.js?v=1856";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1856";
 import {
   networkFields,
   isNewPart,
@@ -43,7 +43,7 @@ import {
   networkEntry,
   resolvedVoice,
   progressRingHtml,
-} from "../network-voice.js?v=1854";
+} from "../network-voice.js?v=1856";
 
 const MODAL_ID = "voiceWizard";
 
@@ -108,7 +108,7 @@ const review = () => w.fields.length;
 
 const SHELL = `
 <div class="app-modal-backdrop vw__backdrop" id="vwBackdrop" hidden>
-  <aside class="ap-dialog vw" id="vwModal" role="dialog" aria-modal="true" aria-labelledby="vwTitle" tabindex="-1">
+  <aside class="ap-dialog app-dialog--full vw" id="vwModal" role="dialog" aria-modal="true" aria-labelledby="vwTitle" tabindex="-1">
     <div class="ap-dialog-header vw__header" id="vwHead"></div>
     <button type="button" class="ap-dialog-close" data-vw-close aria-label="Close"><i class="ap-icon-close"></i></button>
     <div class="ap-dialog-content vw__content" id="vwBody"></div>

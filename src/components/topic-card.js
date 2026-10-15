@@ -73,10 +73,10 @@
 // Everything inside the body is a <span> for the same reason — a button may only
 // contain phrasing content, so no h3 and no p in there.
 
-import { html, raw, escapeAttr } from "../utils.js?v=1854";
-import { topicTitle } from "../topics-store.js?v=1854";
-import { renderTopicStates } from "../topic-article.js?v=1854";
-import { findTopicSource } from "../topics-catalog.js?v=1854";
+import { html, raw, escapeAttr } from "../utils.js?v=1856";
+import { topicTitle } from "../topics-store.js?v=1856";
+import { renderTopicStates } from "../topic-article.js?v=1856";
+import { findTopicSource } from "../topics-catalog.js?v=1856";
 
 // ── The state chips ───────────────────────────────────────────────────────
 // `renderTopicStates` comes from topic-article.js, which is where a Topic's

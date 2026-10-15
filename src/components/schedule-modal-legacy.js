@@ -1,6 +1,6 @@
-import { html, raw, escapeText } from "../utils.js?v=1854";
-import { showToast } from "./toast.js?v=1854";
-import { bindReorder } from "../drag-reorder.js?v=1854";
+import { html, raw, escapeText } from "../utils.js?v=1856";
+import { showToast } from "./toast.js?v=1856";
+import { bindReorder } from "../drag-reorder.js?v=1856";
 import {
   getQueue,
   getQueueOn,
@@ -8,9 +8,9 @@ import {
   dayKey,
   addToQueue,
   subscribe as subscribeQueue,
-} from "../schedule-store.js?v=1854";
-import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1854";
-import { renderProfileTag, profileForNetwork } from "../social-profiles.js?v=1854";
+} from "../schedule-store.js?v=1856";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1856";
+import { renderProfileTag, profileForNetwork } from "../social-profiles.js?v=1856";
 
 // ⚠️ LEGACY — the schedule modal as it was before the redesign, kept behind
 // the `newScheduleModal` flag ("New SM", default ON) so the two can be
@@ -181,7 +181,7 @@ export function init() {
 
     modal = document.createElement("div");
     modal.id = ROOT_ID;
-    modal.className = "ap-dialog schedule-modal-legacy schedule-modal-legacy--wide";
+    modal.className = "ap-dialog app-dialog--full schedule-modal-legacy schedule-modal-legacy--wide";
     modal.setAttribute("role", "dialog");
     modal.setAttribute("aria-modal", "true");
     modal.setAttribute("aria-labelledby", `${ROOT_ID}Title`);

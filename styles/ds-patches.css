@@ -1093,3 +1093,70 @@ select,
 .app-shell.is-right-panel-open ~ .ap-snackbar-thread {
   bottom: calc(var(--ref-spacing-md) + var(--app-safe-bottom));
 }
+
+/* ── .ap-dialog as a BOTTOM SHEET — the mobile fork ─────────────────────────
+   The DS dialog is a centred card; every modal of the app placed it in the
+   middle of the viewport, each in its own file. On a phone a dialog is a sheet:
+   anchored to the bottom edge, the full width, the top corners rounded, the
+   footer above the home indicator. One rule for all of them, here — the only
+   legitimate place to touch .ap-dialog.
+
+   The selector is `:root body .ap-dialog` on purpose: several modals position
+   their root with two classes (`.schedule-modal.ap-dialog`), and this placement
+   has to win over every one of them without an !important. Showing/hiding
+   (`display`, `.open`) stays each modal's own business.
+
+   `transform: translateY(0)` and not `none`: the dialogs used to be centred by a
+   transform, which made each one the containing block of its fixed popovers —
+   and those are placed in JS against the dialog's rect (share-playbook-modal's
+   placePopover, schedule-modal's placePeek). Keeping a transform keeps that true. */
+:root body .ap-dialog {
+  position: fixed;
+  top: auto;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateY(0);
+  width: 100%;
+  max-width: none;
+  max-height: calc(100dvh - var(--app-safe-top) - 16px);
+  margin: 0;
+  border: 0;
+  border-radius: var(--app-radius-modal) var(--app-radius-modal) 0 0;
+  padding-bottom: var(--app-safe-bottom);
+}
+
+/* Full-screen variant, set in the markup of the big modals (schedule, objective,
+   voice wizard, video clips, connectors, share, add-source, the Image Studio):
+   the sheet takes the whole height but a sliver, so it still reads as a sheet. */
+:root body .ap-dialog.app-dialog--full {
+  height: calc(100dvh - var(--app-safe-top) - 8px);
+  max-height: none;
+}
+
+/* Phone gutters: the DS spaces its dialog at 24px; 16px here. */
+.ap-dialog .ap-dialog-header {
+  padding: var(--ref-spacing-md) var(--ref-spacing-md) 0;
+  padding-right: 56px;
+}
+
+.ap-dialog .ap-dialog-content {
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+}
+
+.ap-dialog .ap-dialog-close {
+  top: var(--ref-spacing-xs);
+  right: var(--ref-spacing-xs);
+}
+
+/* Footer: the CTAs keep their width (house rule — never full width), grouped on
+   the right, and wrap onto their own line when a left-hand group is there. */
+.ap-dialog .ap-dialog-footer {
+  flex-wrap: wrap;
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+}
+
+.ap-dialog .ap-dialog-footer-right {
+  flex-wrap: wrap;
+  margin-left: auto;
+}

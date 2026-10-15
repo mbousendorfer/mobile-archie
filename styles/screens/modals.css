@@ -29,7 +29,7 @@ body.has-modal {
   overflow: hidden;
 }
 
-/* ── Centered modal shell (opt-in via .open) ──────────────── */
+/* ── Modal shell (opt-in via .open) ───────────────────────── */
 
 .bug-report-modal,
 .feedback-modal,
@@ -48,14 +48,9 @@ body.has-modal {
 .skip-connect,
 .fill-document-modal,
 .search-modal {
-  position: fixed;
-  top: 50vh;
-  left: 50vw;
-  transform: translate(-50%, -50%);
+  /* Placement: the bottom-sheet rule in ds-patches.css (mobile fork). */
   display: none;
   z-index: var(--app-z-modal);
-  max-height: calc(100dvh - 48px);
-  border: 1px solid var(--app-border);
   box-shadow: var(--app-shadow-popover-lg);
 }
 
@@ -543,14 +538,13 @@ body.has-modal {
 /* CSS animation, not transition: re-runs every time .open is added so the
    fade-in is reliable even when the modal's [hidden] backdrop attr is
    toggled in the same JS frame. */
+/* Every dialog is a bottom sheet on the fork: it rises from the bottom edge. */
 @keyframes app-modal-fade-in {
   from {
-    opacity: 0;
-    transform: translate(-50%, calc(-50% + 4px)) scale(0.98);
+    transform: translateY(100%);
   }
   to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translateY(0);
   }
 }
 

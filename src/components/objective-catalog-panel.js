@@ -18,11 +18,11 @@
 // modal EMBEDS (the panel is a view of that dialog, the design's own "the panel
 // slides"); `open()` wraps the same flow in a standalone body-level dialog.
 
-import { escapeHtml as esc } from "../utils.js?v=1854";
-import { getConnectedProfileById } from "../social-profiles.js?v=1854";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1854";
-import { getContextById } from "../contexts-store.js?v=1854";
-import { catalogEntries } from "../objective-measures.js?v=1854";
+import { escapeHtml as esc } from "../utils.js?v=1856";
+import { getConnectedProfileById } from "../social-profiles.js?v=1856";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1856";
+import { getContextById } from "../contexts-store.js?v=1856";
+import { catalogEntries } from "../objective-measures.js?v=1856";
 
 let flowSeq = 0;
 
@@ -244,7 +244,7 @@ let onDone = null;
 
 const SHELL = `
 <div class="app-modal-backdrop objc__backdrop" id="objcBackdrop" hidden>
-  <aside class="ap-dialog objc" id="objcModal" role="dialog" aria-modal="true" aria-label="Metric catalog" tabindex="-1">
+  <aside class="ap-dialog app-dialog--full objc" id="objcModal" role="dialog" aria-modal="true" aria-label="Metric catalog" tabindex="-1">
     <div class="ap-dialog-header">
       <span class="ap-dialog-title" id="objcTitle">Add a measure</span>
       <span class="ap-dialog-subtitle" id="objcSub" hidden></span>

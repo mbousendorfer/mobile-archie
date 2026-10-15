@@ -5,7 +5,7 @@
 // openDialog() returns { el, close, setBody }. Escape and the backdrop close it;
 // focus moves in on open and back to the opener on close.
 
-import { html, toString } from "../lib/html.js?v=1854";
+import { html, toString } from "../lib/html.js?v=1856";
 
 let open = [];
 
@@ -67,7 +67,9 @@ export function openDialog({
   const backdrop = document.createElement("div");
   backdrop.className = "app-modal-backdrop imst-backdrop open";
   const el = document.createElement("aside");
-  el.className = `ap-dialog imst-dialog imst-dialog--${size}`;
+  // Mobile fork: the studio and the large dialogs take the whole screen.
+  const full = size === "studio" || size === "lg" ? " app-dialog--full" : "";
+  el.className = `ap-dialog imst-dialog imst-dialog--${size}${full}`;
   el.setAttribute("role", role);
   el.setAttribute("aria-modal", "true");
   const titleId = `imst-dlg-${Math.random().toString(36).slice(2, 8)}`;

@@ -21,12 +21,12 @@
 // Replaces objective-editor-modal (the field-stack editor): the sentence form
 // is the editor now. Body-level, modal-coordinator, closes on route change.
 
-import { escapeHtml as esc } from "../utils.js?v=1854";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1854";
-import { getContexts } from "../contexts-store.js?v=1854";
-import { getActivePlaybookId } from "../active-playbook.js?v=1854";
-import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1854";
-import { renderScopeField, scopeFromClick } from "./measure-scope-field.js?v=1854";
+import { escapeHtml as esc } from "../utils.js?v=1856";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1856";
+import { getContexts } from "../contexts-store.js?v=1856";
+import { getActivePlaybookId } from "../active-playbook.js?v=1856";
+import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1856";
+import { renderScopeField, scopeFromClick } from "./measure-scope-field.js?v=1856";
 import {
   resolveObjectives,
   materializeMeasureEntries,
@@ -35,7 +35,7 @@ import {
   scopedBaselineFor,
   proposeTargetFrom,
   WINDOWS,
-} from "../objective-measures.js?v=1854";
+} from "../objective-measures.js?v=1856";
 
 const MODAL_ID = "objectiveModal";
 
@@ -62,7 +62,7 @@ let scopeUi = { open: null, query: "" };
 
 const SHELL = `
 <div class="app-modal-backdrop objm__backdrop" id="objmBackdrop" hidden>
-  <aside class="ap-dialog objm" id="objmModal" role="dialog" aria-modal="true" aria-label="Objective" tabindex="-1">
+  <aside class="ap-dialog app-dialog--full objm" id="objmModal" role="dialog" aria-modal="true" aria-label="Objective" tabindex="-1">
     <div class="ap-dialog-header">
       <span class="ap-dialog-title" id="objmTitle">New objective</span>
       <span class="ap-dialog-subtitle" id="objmSub" hidden></span>
