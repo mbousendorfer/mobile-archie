@@ -30,10 +30,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1844";
-import { bindReorder } from "../drag-reorder.js?v=1844";
-import { escapeHtml as esc } from "../utils.js?v=1844";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1844";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1845";
+import { bindReorder } from "../drag-reorder.js?v=1845";
+import { escapeHtml as esc } from "../utils.js?v=1845";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1845";
 import {
   networkFields,
   isNewPart,
@@ -43,7 +43,7 @@ import {
   networkEntry,
   resolvedVoice,
   progressRingHtml,
-} from "../network-voice.js?v=1844";
+} from "../network-voice.js?v=1845";
 
 const MODAL_ID = "voiceWizard";
 
@@ -306,9 +306,11 @@ function paintFooter() {
     return;
   }
   const onPart = w.step < review();
-  // Left: the one-click way, kept — every part at Archie's pick, then review.
+  // Left: the one-click way — every part at Archie's pick, then review. Archie
+  // doing the work for you: the AI action, so primary orange (the house
+  // convention), set apart on the left from the step's own Next (blue).
   footLeftEl.innerHTML = onPart
-    ? `<button type="button" class="ap-button ghost grey" data-vw-archie><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Use all of Archie's picks</span></button>`
+    ? `<button type="button" class="ap-button primary orange" data-vw-archie><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Use all of Archie's picks</span></button>`
     : "";
   footRightEl.innerHTML = `
     ${w.step > 0 ? `<button type="button" class="ap-button stroked grey" data-vw-back><i class="ap-icon-arrow-left" aria-hidden="true"></i><span>Back</span></button>` : ""}
