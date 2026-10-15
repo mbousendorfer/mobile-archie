@@ -29,10 +29,10 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1826";
-import { bindReorder } from "../drag-reorder.js?v=1826";
-import { escapeHtml as esc } from "../utils.js?v=1826";
-import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1826";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1829";
+import { bindReorder } from "../drag-reorder.js?v=1829";
+import { escapeHtml as esc } from "../utils.js?v=1829";
+import { networkVoiceOptions, networkGuidance, networkGuidanceUrl } from "../context-mock-analysis.js?v=1829";
 import {
   networkFields,
   isNewPart,
@@ -41,7 +41,7 @@ import {
   baseNetwork,
   networkEntry,
   resolvedVoice,
-} from "../network-voice.js?v=1826";
+} from "../network-voice.js?v=1829";
 
 const MODAL_ID = "voiceWizard";
 
@@ -375,27 +375,33 @@ function renderPart(field) {
   }</h3>`;
   if (P.list) {
     const n = p.lines.length;
+    // ONE card, every row on the same five columns — handle or + · rank ·
+    // the line · Archie's mark · action — so nothing floats out of line.
+    // Your lines (white, ranked, draggable) · his other suggestions (a grey
+    // band, one click adds one) · your own line (the card's last row).
+    const mark = (on) => (on ? ARCHIE_MARK : `<span aria-hidden="true"></span>`);
     const kept = p.lines
-      .map((line, i) => {
-        const archie = w.opts[field].includes(line);
-        return `<li class="vw-option vw-line app-reorder__item">
+      .map(
+        (line, i) => `<li class="vw-row app-reorder__item">
           <button type="button" class="app-reorder__grip" data-vw-handle="${i}" title="Drag to reorder" aria-label="${esc(`Move “${line}” — ${i + 1} of ${n}. Use the up and down arrow keys.`)}"><i class="ap-icon-move"></i></button>
-          <span class="vw-line__rank" aria-hidden="true">${i + 1}</span>
-          <span class="vw-option__text">“${esc(line)}”</span>
-          ${archie ? ARCHIE_MARK : ""}
+          <span class="vw-row__rank" aria-hidden="true">${i + 1}</span>
+          <span class="vw-row__text">“${esc(line)}”</span>
+          ${mark(w.opts[field].includes(line))}
           <button type="button" class="ap-icon-button transparent grey" data-vw-unadd="${i}" aria-label="${esc(`Remove “${line}”`)}"><i class="ap-icon-close"></i></button>
-        </li>`;
-      })
+        </li>`,
+      )
       .join("");
-    // Archie's other suggestions continue the same list, lighter: no card, a
-    // + where the grip sits — one click and the line joins yours, last.
     const more = w.opts[field]
       .filter((o) => !p.lines.includes(o))
       .map(
-        (o) => `<li><button type="button" class="vw-suggest" data-vw-take="${esc(o)}" aria-label="${esc(`Add “${o}”`)}">
-          <i class="ap-icon-plus vw-suggest__plus" aria-hidden="true"></i>
-          <span class="vw-option__text">“${esc(o)}”</span>
-          ${ARCHIE_MARK}
+        (
+          o,
+        ) => `<li><button type="button" class="vw-row vw-row--suggest" data-vw-take="${esc(o)}" aria-label="${esc(`Add “${o}”`)}">
+          <i class="ap-icon-plus vw-row__plus" aria-hidden="true"></i>
+          <span aria-hidden="true"></span>
+          <span class="vw-row__text">“${esc(o)}”</span>
+          ${mark(true)}
+          <span aria-hidden="true"></span>
         </button></li>`,
       )
       .join("");
@@ -403,17 +409,17 @@ function renderPart(field) {
       <div class="vw-list-head"><span class="vw-list-head__title">${esc(P.yours)}</span>${
         n > 1 ? `<span class="vw-list-head__hint">I lead with the first one. Drag to reorder.</span>` : ""
       }</div>
-      <div class="vw-lines">
+      <div class="vw-list">
         ${
           n
-            ? `<ol class="vw-options app-reorder">${kept}</ol>`
-            : `<p class="vw__empty">No line yet. Add one of my suggestions, or write your own.</p>`
+            ? `<ol class="vw-list__kept app-reorder">${kept}</ol>`
+            : `<p class="vw-list__empty">No line yet. Pick one of mine below, or write your own.</p>`
         }
-        ${more ? `<ul class="vw-suggests" aria-label="More suggestions">${more}</ul>` : ""}
-      </div>
-      <div class="vw-add">
-        <div class="ap-input-group"><input type="text" data-vw-add placeholder="${esc(P.add)}" aria-label="${esc(P.add)}" /></div>
-        <button type="button" class="ap-button stroked blue" data-vw-add-btn><i class="ap-icon-plus" aria-hidden="true"></i><span>Add</span></button>
+        ${more ? `<ul class="vw-list__suggest" aria-label="Suggestions">${more}</ul>` : ""}
+        <div class="vw-list__add">
+          <div class="ap-input-group"><input type="text" data-vw-add placeholder="${esc(P.add)}" aria-label="${esc(P.add)}" /></div>
+          <button type="button" class="ap-button stroked blue" data-vw-add-btn><i class="ap-icon-plus" aria-hidden="true"></i><span>Add</span></button>
+        </div>
       </div>
       ${renderDefaultNote(field)}`;
   }

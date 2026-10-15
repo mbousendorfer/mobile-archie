@@ -123,9 +123,8 @@
 }
 
 /* ── The options ─────────────────────────────────────────────────────────
-   Lines (hooks, closings): your lines, ranked, as white cards you drag; then
-   Archie's other suggestions on the page's grey, one Add each. Layouts and
-   conventions are DS radio cards; a picked card takes the blue border. */
+   Single-value parts: DS radio cards in a column; a picked card takes the
+   blue border. Lines: one card (below). */
 .vw-options {
   display: flex;
   flex-direction: column;
@@ -133,34 +132,6 @@
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-.vw-option {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: var(--ref-border-radius-md);
-  background: var(--ref-color-white);
-  cursor: pointer;
-}
-
-.vw-option:has(input:checked) {
-  border-color: var(--ref-color-electric-blue-100);
-}
-
-/* Two classes: the DS checkbox container centres its label span. A list of
-   lines reads from the left. */
-.vw-option .vw-option__text {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--ref-spacing-xxxs);
-  min-width: 0;
-  color: var(--ref-color-grey-100);
-  text-align: left;
 }
 
 /* Archie's picks wear his olive mark — what he chose, not a decoration. */
@@ -171,93 +142,134 @@
   color: var(--app-butter-accent);
 }
 
-/* A kept line: grip · rank · line · Archie's mark · remove. The grip, the
-   lift and the slide are the shared reorder (drag-reorder.css). The 36px icon
-   buttons set the height; a 4px inset keeps the row at ≈ 46px. */
-.vw-line {
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs) var(--ref-spacing-xxxs) var(--ref-spacing-sm);
-  cursor: default;
+/* ── The lines card ──────────────────────────────────────────────────────
+   One white card, grey-20 edge. Every row shares the same five columns —
+   handle / + · rank · line · Archie's mark · action — so the glyphs, the text
+   and the marks of all rows fall on the same verticals. Your lines first
+   (white, a hairline between them), then his suggestions on the page's grey,
+   then your own line as the card's footer row. */
+.vw-list {
+  overflow: hidden;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  background: var(--ref-color-white);
+}
+
+/* A lifted row and its shadow overflow the card while it moves. */
+.vw-list:has(.app-reorder.is-reordering) {
+  overflow: visible;
+}
+
+.vw-list__kept,
+.vw-list__suggest {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vw-row {
+  display: grid;
+  grid-template-columns: 20px 16px minmax(0, 1fr) 16px 36px;
+  column-gap: var(--ref-spacing-sm);
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 var(--ref-spacing-xxs) 0 var(--ref-spacing-sm);
+  color: var(--ref-color-grey-100);
+  text-align: left;
+}
+
+/* Your lines: a hairline between them; a transparent edge the shared reorder
+   turns blue (grip hover, lift). */
+.vw-list__kept > .vw-row {
+  border: 1px solid transparent;
+  border-bottom-color: var(--ref-color-grey-20);
+  background: var(--ref-color-white);
+}
+
+.vw-list__kept > .vw-row:last-child {
+  border-bottom-color: transparent;
+}
+
+.vw-list__kept > .vw-row.is-dragging {
+  border-radius: var(--ref-border-radius-md);
+}
+
+.vw-row > .app-reorder__grip,
+.vw-row__plus {
+  justify-self: center;
 }
 
 /* The rank IS the preference: 1 = the line used most. */
-.vw-line__rank {
-  flex-shrink: 0;
-  min-width: 16px;
+.vw-row__rank {
   color: var(--ref-color-grey-80);
   font-size: var(--ref-font-size-sm);
   font-weight: var(--sys-text-style-body-bold-weight);
   text-align: center;
 }
 
-/* Your lines, then Archie's other suggestions — one list. The suggestions
-   are compact rows without a card: a blue + in the grip's column, the line in
-   body ink, his olive mark. The whole row is the button. */
-.vw-lines {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
+.vw-row__text {
+  min-width: 0;
 }
 
-.vw-suggests {
-  display: flex;
-  flex-direction: column;
+.vw-row > .vw-option__archie {
+  justify-self: center;
   margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
-.vw-suggest {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  width: 100%;
-  /* Right inset = a kept row's remove button + gap, so the olive marks of
-     both kinds of rows sit in one column. */
-  padding: var(--ref-spacing-xxs) calc(var(--ref-spacing-xxs) + 36px + var(--ref-spacing-xs)) var(--ref-spacing-xxs)
-    var(--ref-spacing-sm);
+/* His other suggestions: a grey band under your lines, the whole row a
+   button; body ink until you reach for it. */
+.vw-list__suggest {
+  padding: var(--ref-spacing-xxxs) 0;
+  border-top: 1px solid var(--ref-color-grey-20);
+  background: var(--app-surface-subtle);
+}
+
+.vw-row--suggest {
+  min-height: 40px;
+  /* The same 1px edge as your lines, so both sit on the same verticals. */
   border: 1px solid transparent;
-  border-radius: var(--ref-border-radius-md);
   background: none;
   color: var(--ref-color-grey-80);
   font: inherit;
-  text-align: left;
   cursor: pointer;
 }
 
-.vw-suggest:hover,
-.vw-suggest:focus-visible {
-  background: var(--app-surface-subtle);
+.vw-row--suggest:hover,
+.vw-row--suggest:focus-visible {
+  background: var(--ref-color-grey-10);
   color: var(--ref-color-grey-100);
+  outline: none;
 }
 
-/* Past an empty rank column, so the text lines up with your lines'. */
-.vw-suggest .vw-option__text {
-  flex: 1;
-  min-width: 0;
-  margin-left: calc(16px + var(--ref-spacing-xs));
-  color: inherit;
-}
-
-.vw-suggest__plus {
-  flex-shrink: 0;
+.vw-row__plus {
   width: 16px;
   height: 16px;
   color: var(--ref-color-electric-blue-100);
 }
 
-.vw__empty {
+.vw-list__empty {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
   margin: 0;
+  padding: 0 var(--ref-spacing-sm);
   color: var(--ref-color-grey-60);
   font-style: italic;
 }
 
-.vw-add {
+/* Your own line: the card's last row. */
+/* Same side insets as the rows: the field starts on the handle column's
+   edge, Add ends on the remove buttons' edge. */
+.vw-list__add {
   display: flex;
   gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-xxs) var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border-top: 1px solid var(--ref-color-grey-20);
 }
 
-.vw-add > .ap-input-group {
+.vw-list__add > .ap-input-group {
   flex: 1;
 }
 
