@@ -53,11 +53,19 @@
   overflow-y: auto;
 }
 
+/* The step's rhythm: 24px between its question and its sections; 8px between
+   the elements of a section (.vw-section). */
 .vw__main {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-sm);
+  gap: var(--ref-spacing-md);
   min-width: 0;
+}
+
+.vw-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
 }
 
 .vw__ask {
@@ -87,7 +95,7 @@
    picked, a small link back once something is. The link is a <button> — its
    own class drops the button chrome (the DS .ap-link styles an <a>). */
 .vw-default {
-  margin: var(--ref-spacing-xs) 0 0;
+  margin: 0;
   color: var(--ref-color-grey-80);
   font-size: var(--ref-font-size-sm);
 }
@@ -104,7 +112,6 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--ref-spacing-sm);
-  margin-top: var(--ref-spacing-xs);
 }
 
 .vw-list-head__title {
@@ -137,77 +144,44 @@
   color: var(--app-butter-accent);
 }
 
-/* ── The lines card ──────────────────────────────────────────────────────
-   One white card, grey-20 edge. Every row shares the same columns — handle
-   / + (20) · rank (44: the 20px badge sits at its right, 8px from the text)
-   · line · action (36) — so glyphs and text of all rows fall on the same
-   verticals. Your lines first (white, a hairline between them), then his
-   suggestions on the page's grey under one label, then your own line as the
-   card's footer row. */
-.vw-list {
-  overflow: hidden;
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: var(--ref-border-radius-md);
-  background: var(--ref-color-white);
-}
-
-/* A lifted row and its shadow overflow the card while it moves. */
-.vw-list:has(.app-reorder.is-reordering) {
-  overflow: visible;
-}
-
-.vw-list__kept,
-.vw-list__suggest ul {
+/* ── Lines ───────────────────────────────────────────────────────────────
+   Distinct elements on one width and one rhythm. Your lines: white cards
+   (grey-20 edge, radius md, 48px), grip · rank badge · text · remove. Every
+   element starts its content 12px in — the DS field's own inset — so the
+   field's placeholder, the grips and the suggestions' text share one vertical. His suggestions: the same cards on
+   the page's grey without an edge, the whole card the button, "+ Add" at the
+   right in the action blue; hover = the house blue border. */
+.vw-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.vw-row {
-  display: grid;
-  grid-template-columns: 20px 44px minmax(0, 1fr) 36px;
-  column-gap: 0;
+.vw-kept {
+  display: flex;
   align-items: center;
+  gap: var(--ref-spacing-xs);
   box-sizing: border-box;
-  width: 100%;
   min-height: 48px;
-  padding: 0 var(--ref-spacing-xxs) 0 var(--ref-spacing-sm);
-  color: var(--ref-color-grey-100);
-  text-align: left;
-}
-
-/* Your lines: a hairline between them; a transparent edge the shared reorder
-   turns blue (grip hover, lift). */
-.vw-list__kept > .vw-row {
-  border: 1px solid transparent;
-  border-bottom-color: var(--ref-color-grey-20);
+  padding: 0 var(--ref-spacing-xxs) 0 var(--ref-spacing-xs);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
   background: var(--ref-color-white);
 }
 
-.vw-list__kept > .vw-row:last-child {
-  border-bottom-color: transparent;
-}
-
-.vw-list__kept > .vw-row.is-dragging {
-  border-radius: var(--ref-border-radius-md);
-}
-
-.vw-row > .app-reorder__grip,
-.vw-row__plus {
-  justify-self: center;
-}
-
-/* The rank IS the preference: 1 = the line used most. A 20px outlined badge
-   — the stepper's — against the line it numbers, not afloat in a column. */
-.vw-row__rank {
+/* The rank IS the preference (1 = the line used most): the stepper's 20px
+   outlined badge, right against the line it numbers. */
+.vw-kept__rank {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  justify-self: end;
   box-sizing: border-box;
   width: 20px;
   height: 20px;
-  margin-right: var(--ref-spacing-xxs);
   border: 1px solid var(--ref-color-grey-20);
   border-radius: 24px;
   color: var(--ref-color-grey-80);
@@ -216,73 +190,62 @@
   line-height: 1;
 }
 
-.vw-row__text {
+.vw-kept__text {
+  flex: 1;
   min-width: 0;
-  padding-right: var(--ref-spacing-xs);
+  color: var(--ref-color-grey-100);
 }
 
-/* His other suggestions: a grey band under your lines, the whole row a
-   button; body ink until you reach for it. */
-.vw-list__suggest {
-  padding: var(--ref-spacing-xs) 0 var(--ref-spacing-xxxs);
-  border-top: 1px solid var(--ref-color-grey-20);
+.vw-pick {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 var(--ref-spacing-sm) 0 var(--ref-spacing-xs);
+  border: 1px solid transparent;
+  border-radius: var(--ref-border-radius-md);
   background: var(--app-surface-subtle);
+  color: var(--ref-color-grey-100);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
-/* "My suggestions" — said once for the band, on the text's vertical
-   (row inset + handle + rank columns + the row's 1px edge). */
-.vw-list__suggest-head {
-  margin: 0 0 var(--ref-spacing-xxxs);
-  padding-left: calc(1px + var(--ref-spacing-sm) + 20px + 44px);
-  color: var(--ref-color-grey-80);
+.vw-pick:hover,
+.vw-pick:focus-visible {
+  border-color: var(--ref-color-electric-blue-100);
+  outline: none;
+}
+
+.vw-pick__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.vw-pick__add {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  color: var(--ref-color-electric-blue-100);
   font-size: var(--ref-font-size-sm);
   font-weight: var(--sys-text-style-body-bold-weight);
 }
 
-.vw-row--suggest {
-  min-height: 40px;
-  /* The same 1px edge as your lines, so both sit on the same verticals. */
-  border: 1px solid transparent;
-  background: none;
-  color: var(--ref-color-grey-80);
-  font: inherit;
-  cursor: pointer;
-}
-
-.vw-row--suggest:hover,
-.vw-row--suggest:focus-visible {
-  background: var(--ref-color-grey-10);
-  color: var(--ref-color-grey-100);
-  outline: none;
-}
-
-.vw-row__plus {
+.vw-pick__add > i {
   width: 16px;
   height: 16px;
-  color: var(--ref-color-electric-blue-100);
 }
 
-.vw-list__empty {
-  display: flex;
-  align-items: center;
-  min-height: 48px;
-  margin: 0;
-  padding: 0 var(--ref-spacing-sm);
-  color: var(--ref-color-grey-60);
-  font-style: italic;
-}
-
-/* Your own line: the card's last row. */
-/* Same side insets as the rows: the field starts on the handle column's
-   edge, Add ends on the remove buttons' edge. */
-.vw-list__add {
+/* Write your own: the field takes the width, Add hugs its label. */
+.vw-add {
   display: flex;
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-xxs) var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border-top: 1px solid var(--ref-color-grey-20);
 }
 
-.vw-list__add > .ap-input-group {
+.vw-add > .ap-input-group {
   flex: 1;
 }
 

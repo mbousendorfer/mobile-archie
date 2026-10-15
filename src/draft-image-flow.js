@@ -15,15 +15,15 @@
 // starts at the click and its first stage is exactly that. No chat message: the
 // image appearing in the slot is the feedback; a failure says so in a toast.
 
-import { showToast } from "./components/toast.js?v=1831";
-import { attachImageToDraft, getPosts, updatePostContent } from "./posts-store.js?v=1831";
-import { getSessionById } from "./sessions-store.js?v=1831";
+import { showToast } from "./components/toast.js?v=1833";
+import { attachImageToDraft, getPosts, updatePostContent } from "./posts-store.js?v=1833";
+import { getSessionById } from "./sessions-store.js?v=1833";
 import {
   defaultQuickLook,
   generateQuickImage,
   quickImageChoices,
   suggestImageSubject,
-} from "./modules/image-studio/index.js?v=1831";
+} from "./modules/image-studio/index.js?v=1833";
 
 const FALLBACK_SUBJECT = "One simple object that stands for the idea, on a plain background. No text in the image.";
 

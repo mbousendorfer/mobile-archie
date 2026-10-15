@@ -13,12 +13,12 @@
 // through state/playbook-brand.js only, the Playbooks — the brand IS the
 // Playbook. See docs/audits/image-studio-integration.md.
 
-import { navigate } from "../../router.js?v=1831";
-import { renderTopbar } from "../../components/topbar.js?v=1831";
-import { delegate, disposer } from "./lib/delegate.js?v=1831";
-import { installMenus } from "./ui/menu.js?v=1831";
-import { closeAllDialogs } from "./ui/dialog.js?v=1831";
-import * as styleCreator from "./views/style-creator.js?v=1831";
+import { navigate } from "../../router.js?v=1833";
+import { renderTopbar } from "../../components/topbar.js?v=1833";
+import { delegate, disposer } from "./lib/delegate.js?v=1833";
+import { installMenus } from "./ui/menu.js?v=1833";
+import { closeAllDialogs } from "./ui/dialog.js?v=1833";
+import * as styleCreator from "./views/style-creator.js?v=1833";
 
 /**
  * Wraps a view into a router handler: topbar, seed, the delegation
@@ -49,19 +49,19 @@ export const ROUTES = Object.freeze([
   { pattern: "/playbook/:id/styles/:styleId", handler: screen(styleCreator.mount) },
 ]);
 
-export { openDraftStudio } from "./ui/draft-studio.js?v=1831";
+export { openDraftStudio } from "./ui/draft-studio.js?v=1833";
 export {
   defaultQuickLook,
   generateQuickImage,
   quickImageChoices,
   quickImagePreset,
   suggestImageSubject,
-} from "./quick-image.js?v=1831";
-export { renderPlaybookStyles, handlePlaybookStylesClick } from "./views/playbook-styles.js?v=1831";
+} from "./quick-image.js?v=1833";
+export { renderPlaybookStyles, handlePlaybookStylesClick } from "./views/playbook-styles.js?v=1833";
 export {
   renderImagesStyles,
   renderImagesReferences,
   renderImagesGenerate,
   handlePlaybookImagesClick,
-} from "./views/playbook-images.js?v=1831";
-export { shapesFor } from "./config/formats.js?v=1831";
+} from "./views/playbook-images.js?v=1833";
+export { shapesFor } from "./config/formats.js?v=1833";
