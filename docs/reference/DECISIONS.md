@@ -5,6 +5,17 @@
 > something that was argued, shipped and in several cases reverted — read the section before touching
 > the surface it names, and update it in the same commit when the user overrules it.
 
+## The mobile fork — mobile-only, framed by an iframe, drawer + sheets
+
+`mobile-archie` is the mobile-only fork of rebel-racoon (2026-10-15, plan in [`docs/plans/mobile-fork.md`](../plans/mobile-fork.md)). Every surface targets a phone; there is no desktop layout to keep. What was decided, and what went:
+
+- **The desktop frame is an iframe, not CSS.** An inline script at the top of `index.html` sends a top-level window ≥ 768px to `frame.html`, which loads the app in a 390×844 iframe. Inside it `dvh`, media queries and `position: fixed` (modals, dropdowns, toasts) behave as on a phone; a CSS frame would let every fixed layer escape it.
+- **Drawer + sheets, the ChatGPT / Claude pattern.** The chat is full screen; the sidebar is a drawer (☰); the right panel is a full-height bottom sheet with Drafts · Ideas · Sources tabs, `?panel=` still the source of truth so Back closes it. Rules in [`PANEL-SIDEBAR-RULES.md`](PANEL-SIDEBAR-RULES.md).
+- **Modals are sheets**, by one rule in `ds-patches.css` (`:root body .ap-dialog`), plus `app-dialog--full` for the big ones. The dialog keeps a `transform` so it stays the containing block of the popovers placed against its rect.
+- **Deeper levels are pushed by URL** — a Topic (`?topic=`), an Insights objective (`?objective=`, Mob · Index now the default layout) — so Back always walks back up.
+- **Deleted, not flagged:** the collapsed rail (`archie-sidebar-collapsed`, `setSidebarCollapsed`), ⌘B / ⌘K / ⇧⌘O / `?`, the shortcut legend, every `<kbd>` hint, the panel's mouse resize and its sidebar coupling (`CHAT_MIN_WIDTH_PX`, `syncSidebarToWidth`), the topbar's three pills (they are the sheet's tabs), the click-to-rename title (Rename is in the topbar ⋯), the persisted status-card toggle (`archie-status-card-visible`), the Topic Feed's auto-opened first article, hover reveals (each one is now always visible, or hidden: the turn's time). Tooltips and ref previews are off under `(hover: none)`.
+- **Merging upstream:** `upstream` (rebel-racoon) is fetch-only. A desktop change merged in has to be re-checked at 375px — most conflicts will be in `layout.css`, `sidebar.js`, `topbar.js` and `right-panel.js`, which the fork rewrote.
+
 ## A settings surface must not aggregate
 
 Three attempts at a general settings page were reverted here: the drawer (`2b0abcf`, the DS ships no side-drawer primitive), a Connectors section (`8cdd7e8`, it duplicated `/connectors`), then `/settings` itself (`6fca0b0`). Config belongs on the entity that owns it (a Playbook's fields live on `/playbook/:id`) or on a route scoped to one feature — never re-hosted in a global page.

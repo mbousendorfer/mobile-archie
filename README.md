@@ -2,7 +2,7 @@
 
 Interactive prototype for **Archie**, Agorapulse's AI content assistant — Sources → Ideas → Drafts → Schedule. Built on the Agorapulse V2 Design System.
 
-Live preview: [mbousendorfer.github.io/rebel-racoon](https://mbousendorfer.github.io/rebel-racoon/)
+**`mobile-archie` is the mobile-only fork** of [rebel-racoon](https://github.com/mbousendorfer/rebel-racoon) (the desktop proto): a phone web app — chat full screen, the sidebar as a drawer, Drafts / Ideas / Sources as a bottom sheet, every modal a sheet. Local only: no GitHub Pages; `upstream` is fetch-only. The plan: [`docs/plans/mobile-fork.md`](docs/plans/mobile-fork.md).
 
 ## Origine
 
@@ -16,6 +16,28 @@ npm start     # runs `npx serve -p 8000` — open http://localhost:8000
 ```
 
 With Claude Code the dev server auto-launches via `.claude/launch.json`.
+
+### On a desktop
+
+Open the server's root: any window 768px wide or more is sent to `frame.html`,
+which shows the app in a 390×844 phone frame (an iframe, so the app gets a real
+phone viewport). Narrow the window under 768px, or open `index.html` inside a
+device emulator, to get it unframed.
+
+### On a phone
+
+`scripts/dev-server.py` (the `archie` launch config) listens on every interface.
+With the phone on the same Wi-Fi as the Mac:
+
+```bash
+ipconfig getifaddr en0
+```
+
+then open `http://<that-ip>:<port>` on the phone (the port the server printed).
+Add it to the home screen for the standalone look (`manifest.webmanifest`).
+Check there what an emulator can't: the virtual keyboard (the composer must stay
+visible), the safe areas (notch, home indicator), and that focusing a field
+doesn't zoom.
 
 There is no test suite — changes are verified by running the app. What the repo
 does check:

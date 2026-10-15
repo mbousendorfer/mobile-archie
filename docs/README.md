@@ -20,9 +20,9 @@ Documentation qui décrit l'état actuel du code. À maintenir à jour quand le 
 | [`reference/STORES.md`](reference/STORES.md)                             | Stores : pattern de base, catalogue, persistence, invariants, singleton warning                     |
 | [`reference/DESIGN-SYSTEM.md`](reference/DESIGN-SYSTEM.md)               | Workflow DS obligatoire (skill `/design-guidelines`, DS en CDN), tokens, `.ap-*`, `check:ds`        |
 | [`reference/UI-PATTERNS.md`](reference/UI-PATTERNS.md)                   | **Usage concret du DS** : `ds-patches`, tokens app, patterns UI, loaders, couleur                   |
-| [`reference/PANEL-SIDEBAR-RULES.md`](reference/PANEL-SIDEBAR-RULES.md)   | **Règles simples v1** sidebar + right panel (tailles & comportements) — à lire en premier           |
-| [`reference/SHELL-LAYOUT.md`](reference/SHELL-LAYOUT.md)                 | Le même sujet en détail technique : right panel / status-card / sidebar + formules de tailles       |
-| [`reference/SIDEBAR-PANEL-RECIPE.md`](reference/SIDEBAR-PANEL-RECIPE.md) | Le même sujet en **recette autonome** : le recréer de zéro, sans code (ex. pour le fork Angular)    |
+| [`reference/PANEL-SIDEBAR-RULES.md`](reference/PANEL-SIDEBAR-RULES.md)   | **Fork mobile** : le drawer (sidebar) et le bottom sheet (right panel) — à lire en premier          |
+| [`reference/SHELL-LAYOUT.md`](reference/SHELL-LAYOUT.md)                 | ⚠️ Desktop (rebel-racoon) — remplacé dans le fork ; gardé pour merger l'upstream                    |
+| [`reference/SIDEBAR-PANEL-RECIPE.md`](reference/SIDEBAR-PANEL-RECIPE.md) | ⚠️ Desktop (rebel-racoon) — remplacé dans le fork par le drawer + sheet                             |
 | [`reference/GLOSSARY.md`](reference/GLOSSARY.md)                         | Vocabulaire produit, pipeline, ambiguïtés (Playbook ↔ Context)                                      |
 
 ---
@@ -78,7 +78,7 @@ Les trois premiers précèdent le workspace Playbook, le Topic Feed, le partage,
 | Comment ajouter une route / un écran                                | [`reference/ROUTES.md`](reference/ROUTES.md)                             |
 | Comment ajouter / modifier un store                                 | [`reference/STORES.md`](reference/STORES.md)                             |
 | Comment poser une couleur / un spacing                              | [`reference/DESIGN-SYSTEM.md`](reference/DESIGN-SYSTEM.md)               |
-| Comment se comportent sidebar + right panel (v1)                    | [`reference/PANEL-SIDEBAR-RULES.md`](reference/PANEL-SIDEBAR-RULES.md)   |
+| Comment se comportent le drawer et le panel sheet (fork mobile)     | [`reference/PANEL-SIDEBAR-RULES.md`](reference/PANEL-SIDEBAR-RULES.md)   |
 | Recréer le comportement sidebar + right panel de zéro               | [`reference/SIDEBAR-PANEL-RECIPE.md`](reference/SIDEBAR-PANEL-RECIPE.md) |
 | Que veut dire "Playbook" / "Context" / "Finding" / "Idea" / "Draft" | [`reference/GLOSSARY.md`](reference/GLOSSARY.md)                         |
 | Pourquoi c'est fait comme ça (et ce qu'il ne faut pas reproposer)   | [`reference/DECISIONS.md`](reference/DECISIONS.md)                       |

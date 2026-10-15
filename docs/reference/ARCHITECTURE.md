@@ -185,7 +185,6 @@ src/
     tooltip.js            document-delegated [data-tooltip] — no per-screen wiring
     feedback-control.js   the thumbs + reasons row under anything Archie generated
     toast.js              showToast() snackbar (DS .ap-snackbar)
-    shortcut-legend.js    ? key dialog
     # Modals (init → open → close, coordinated by modal-coordinator.js):
     add-source-modal.js   Upload / URL / Connectors tabs
     connectors-modal.js   connectors gallery + detail overlay (from composer Add / Sources panel / page)

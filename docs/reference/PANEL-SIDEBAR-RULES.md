@@ -1,68 +1,69 @@
-# Sidebar & right panel — règles (v1)
+# Drawer & panel sheet — règles (fork mobile)
 
-Set de règles simples qui décrivent **comment se comportent et se dimensionnent**
-la **sidebar** et le **right panel** dans la zone session.
+Comment se comportent la **sidebar** et le **right panel** dans `mobile-archie`,
+le fork mobile-only de rebel-racoon. Sur téléphone, aucune des deux n'est une
+colonne : la sidebar est un **drawer**, le right panel un **bottom sheet**. Le
+contenu prend toujours toute la largeur.
 
-> Périmètre **v1** : la `conversation-status-card` n'est **pas** shippée en
-> première version. Les règles ci-dessous ignorent donc la status-card. Pour le
-> détail technique complet (status-card incluse, formules de grille, gardes
-> internes), voir [`SHELL-LAYOUT.md`](SHELL-LAYOUT.md).
+> Avant le fork, ce fichier décrivait une grille 3 colonnes (sidebar 260/56px ·
+> contenu · panel ≥ 610px), un rail rétracté, ⌘B, un resize du panel à la
+> souris et un couplage sidebar ↔ panel. **Tout cela est supprimé** — ne le
+> réintroduisez pas. Le plan qui a produit le fork :
+> [`docs/plans/mobile-fork.md`](../plans/mobile-fork.md).
 
-Les deux surfaces sont des **colonnes d'une même grille** (`#appShell`), pas des
-overlays : `sidebar | contenu | right panel`.
-
----
-
-## Sidebar
-
-1. **Deux états** : étendue (~260px, complète) ou rétractée (~56px, rail
-   d'icônes). Jamais cachée.
-2. **Toggle manuel** : bouton chevron en tête, ou **⌘B / Ctrl+B** (le raccourci
-   est ignoré quand on tape dans un champ texte).
-3. **État mémorisé** : le choix étendu/rétracté est retenu entre les sessions et
-   appliqué dès l'ouverture (pas de flash).
+Le shell (`styles/layout.css`) est **une colonne** : la topbar (56px + la
+safe-area du haut) au-dessus du contenu, sur `100dvh`.
 
 ---
 
-## Right panel
+## Drawer (la sidebar)
 
-4. **Une seule chose à la fois** : le panel a un seul contenu actif parmi
-   **Drafts**, **Ideas** (avec sous-onglet Clips) et **Sources**. Ouvrir un mode
-   remplace le précédent.
-5. **Lié à la session** : le panel n'existe que sur une page de session. Quitter
-   la session (Playbooks, Connectors, Dashboard, changement de chat…) le ferme.
-6. **Deep-link & retour navigateur** : le mode ouvert est encodé dans l'URL
-   (`?panel=drafts|ideas|sources`), donc partageable et restauré au
-   précédent/suivant.
-7. **Fermeture** : bouton de fermeture du panel, ou **Échap** (Échap ferme
-   d'abord un menu contextuel ouvert, puis le panel).
-
----
-
-## Couplage sidebar ↔ panel
-
-8. **Ouvrir le panel rétracte la sidebar — seulement si nécessaire.** À
-   l'ouverture (une seule fois, pas à chaque changement de mode), la sidebar
-   se rétracte **uniquement** si la garder étendue rendrait la colonne de chat
-   trop étroite (en dessous d'un **plancher de 560px**). Sur un grand écran il
-   y a de la place : la sidebar **reste étendue**.
-9. **Pas de ré-extension auto à la fermeture** : quand on ferme le panel,
-   l'utilisateur ré-étend la sidebar lui-même.
-10. **La sidebar suit la largeur de la fenêtre** (panel ouvert) : au
-    redimensionnement, elle se rétracte quand le chat passe sous le plancher et
-    **se ré-étend** quand la fenêtre laisse à nouveau de la place — mais
-    uniquement si c'est elle (la règle de largeur) qui l'avait rétractée. Une
-    sidebar **rétractée à la main** (chevron / ⌘B) reste rétractée.
+1. **Fermé au repos**, hors écran à gauche (`translateX(-100%)`),
+   `width: min(85vw, 320px)`, `inert` tant qu'il est fermé.
+2. **Ouverture** : le ☰ de la topbar (`setDrawerOpen(true)`, `sidebar.js`) pose
+   `is-sidebar-open` sur `#appShell` et affiche un scrim (`.app-modal-backdrop`).
+3. **Fermeture** : toute navigation (`hashchange`), un tap sur le scrim, le ✕ en
+   tête du drawer, ou **Échap** (Échap ferme d'abord un menu ouvert du drawer).
+4. **Pas d'état rétracté, pas de raccourci**, rien de persisté.
+5. **Account scope** (`body.account-scope`, flag `playbookWorkspace`) : pas de
+   drawer ni de ☰ — le retour de la topbar ramène dans le workspace.
 
 ---
 
-## Tailles
+## Panel sheet (le right panel)
 
-11. **Largeur par défaut du panel** : **1/3 de l'espace disponible**
-    (viewport − sidebar), avec un **plancher de 610px**.
-12. **Redimensionnable à la souris** : une poignée sur le bord gauche du panel
-    permet de l'élargir/rétrécir, entre **380px** minimum et **viewport − 400px**
-    maximum (on garde toujours ≥400px pour la sidebar + le contenu).
-13. **Largeur custom non persistée** : elle est conservée tant qu'on change de
-    mode dans le même panel, mais **réinitialisée** à la prochaine ouverture
-    fraîche et **non** mémorisée entre rechargements.
+6. **Un sheet plein écran** ancré en bas (`position: fixed`,
+   `height: calc(100dvh − safe-top − 8px)`, coins hauts arrondis), qui monte à
+   l'ouverture.
+7. **Sa tête** : une poignée (un repère, pas un contrôle), puis les `.ap-tabs`
+   **Drafts · Ideas · Sources** avec leurs compteurs, et le close. Le
+   sous-onglet Ideas | Clips reste dans Ideas.
+8. **Ouverture** : le bouton **Drafts** de la topbar (avec le compteur de drafts)
+   ouvre Drafts s'il y en a, sinon Ideas, sinon Sources. Les cartes du chat
+   (Review, refs, status) ouvrent directement le bon onglet.
+9. **`?panel=` est la vérité.** Ouvrir le sheet pousse une entrée d'historique :
+   le **retour navigateur le ferme**. Changer d'onglet dans le sheet ouvert
+   _remplace_ l'entrée (Back ferme le sheet, il ne rejoue pas les onglets).
+10. **Lié à la session** : quitter le chat ferme le sheet.
+11. **Fermeture** : le close, Back, ou Échap. Pas de swipe-to-dismiss pour
+    l'instant (à ajouter si le test sur téléphone le réclame).
+
+---
+
+## Status card (flag `conversationStatusCard`)
+
+12. Un **sheet** ancré en bas, ouvert depuis le ⋯ de la topbar (« Chat
+    status »). Fermé par défaut, non persisté ; il se ferme quand une de ses
+    lignes ouvre le panel, et quand on quitte le chat.
+
+---
+
+## Ce qui en découle pour une nouvelle surface
+
+- Un menu long → **action sheet** du bas (le menu Add du composer, les Filters
+  du Topic Feed).
+- Un niveau de lecture plus profond → **poussé** en plein écran avec un retour
+  dans la topbar, piloté par un paramètre d'URL (un Topic `?topic=`, un objectif
+  Insights `?objective=`).
+- Une modale → la règle sheet de `ds-patches.css` (et `app-dialog--full` pour
+  les grosses). Voir [`UI-PATTERNS.md`](UI-PATTERNS.md) § Mobile.

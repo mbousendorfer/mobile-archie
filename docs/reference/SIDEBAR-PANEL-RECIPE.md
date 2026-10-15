@@ -1,5 +1,9 @@
 # Recette — sidebar + right panel (à recréer de zéro)
 
+> ⚠️ **Desktop uniquement — remplacé dans ce fork.** Cette recette décrit le
+> couplage sidebar ↔ panel de rebel-racoon (desktop). `mobile-archie` a un drawer
+> et un bottom sheet : voir [`PANEL-SIDEBAR-RULES.md`](PANEL-SIDEBAR-RULES.md).
+
 Document **autonome** : tout ce qu'il faut pour reconstruire le comportement
 sidebar ↔ right panel (structure, tailles, collapse/expand couplé) sans lire
 d'autre doc. Description fonctionnelle, **sans code** — à traduire dans

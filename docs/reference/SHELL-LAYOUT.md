@@ -1,5 +1,12 @@
 # Shell layout — Right panel · Status card · Sidebar
 
+> ⚠️ **Desktop only — superseded in this fork.** This page describes rebel-racoon's
+> three-column grid (collapsed rail, resizable panel, status-card column). The
+> mobile fork replaced all of it with a drawer and bottom sheets: read
+> [`PANEL-SIDEBAR-RULES.md`](PANEL-SIDEBAR-RULES.md) and
+> [`UI-PATTERNS.md`](UI-PATTERNS.md) § 6. Kept as the reference for merging
+> upstream changes.
+
 Handoff sur l'ensemble des règles qui pilotent les 3 surfaces de chrome de la
 zone session : le **right panel**, la **conversation-status-card** et la
 **sidebar** (collapsed / expanded), plus la définition des **tailles** du right

@@ -416,19 +416,28 @@ Codifiée dans `tokens.css` (_« orange = primary/AI, blue = selected/info, red 
 
 ---
 
-## 6. Layout / shell CSS
+## 6. Layout / shell CSS — le fork mobile
 
-`styles/layout.css` — `.app-shell` est une grille CSS :
+`styles/layout.css` — `.app-shell` est **une colonne** : `calc(--app-topbar-height + --app-safe-top)` puis `minmax(0, 1fr)`, sur `100dvh`. Les safe areas sont des tokens (`--app-safe-top/bottom/left/right`, `tokens.css`).
 
-- **Colonnes** : `--app-sidebar-width` (260) + `minmax(0,1fr)` contenu ; `.is-sidebar-collapsed` → col 1 = 56.
-- **Rangées** : `--app-topbar-height` (56) + `1fr`.
-- **Sidebar** (`.app-sidebar`) : `grid-row 1/3` (col 1). **Topbar** : row 1, col `2/-1` (span le panneau pour garder les pills visibles). **Content** : row 2, col 2.
-- **Right panel** : row 2, col 3 quand `.is-right-panel-open` ajoute une 3e colonne (`max(610px, calc((100vw − sidebar)/3))`, override runtime persisté).
-- **Status card** (`conversation-status-card.css`) : colonne 296px (row 2, col 3) quand `.is-status-card-visible` ; si le panneau est aussi ouvert il passe **col 4** pour coexister. Masquée sur routes `.clip-studio`.
-- **Modes spéciaux** : `body.onboarding` → colonne unique plein-viewport (pas de sidebar/topbar) ; `.app-shell:has(.empty-chat)` drop le topbar pour le hero.
-- **Scaffolding** : `.screen`, `.screen--split` (`minmax(320px,380px) 1fr`), `.screen--centered` ; helpers `.stack`/`.row`/`.row-between`/`.grow`/`.muted`/`.text-title`/`.text-subtitle`/`.text-caption`.
+- **Drawer** (`.app-sidebar`) : `position: fixed`, `width: --app-drawer-width` (`min(85vw, 320px)`), `translateX(-100%)` → `none` sous `.is-sidebar-open` ; scrim `.app-drawer-backdrop` (une `.app-modal-backdrop`).
+- **Panel sheet** (`.app-right-panel`, `right-panel.css`) : fixed en bas, `calc(100dvh − safe-top − 8px)`, coins hauts `--app-radius-modal`, animation `app-sheet-up`.
+- **Status card** : un sheet aussi (`conversation-status-card.css`), avec son scrim.
+- **Modes spéciaux** : `body.onboarding` → pas de topbar ; `body.account-scope` → pas de drawer.
+- **Scaffolding** : `.screen`, helpers `.stack`/`.row`/`.row-between`/`.grow`/`.muted` ; `.app-visually-hidden` (base.css) pour un en-tête de table gardé pour sa sémantique.
 
-Détail complet des formules de taille : [`SHELL-LAYOUT.md`](SHELL-LAYOUT.md).
+### Les patterns mobiles — où les trouver
+
+| Pattern                       | Quand                                      | Implémentation                                                                                                                                                                                    |
+| ----------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Sheet modal**               | toute `.ap-dialog`                         | `ds-patches.css` § `.ap-dialog` as a BOTTOM SHEET (`:root body .ap-dialog`) ; `app-dialog--full` pour schedule, objective, voice wizard, video clips, connectors, share, add-source, Image Studio |
+| **Action sheet**              | un menu long                               | `.assistant-attach__menu` (Add du composer), `.topics-view__filter-panel` (Filters du feed), `.imst-stylepop` (Create a style, dans le studio)                                                    |
+| **Niveau poussé**             | lire un objet en entier                    | un paramètre d'URL + une couche plein écran + le retour dans la topbar : `?topic=` (Topic Feed), `?objective=` (Insights Mob · Index)                                                             |
+| **Overflow ⋯**                | des actions de page en trop pour la topbar | `.app-topbar__more` + `installMoreMenu()` (`more-menu.js`) — session (Rename / Chat status), Playbook (Duplicate / Share / Re-analyze / Delete)                                                   |
+| **Liste deux lignes**         | une table à colonnes                       | Home : `.home-chats__row` (nom + quand, puis Playbook + compteurs **en mots**) ; Playbooks : brief + méta « Updated … · Owner: … »                                                                |
+| **Barre d'onglets défilante** | plus d'onglets que de largeur              | `.ap-tabs-nav.scrollable` (DS) ; l'onglet actif est ramené dans la vue (`playbook-view.js`)                                                                                                       |
+
+Règles transverses : champs à **16px** (`ds-patches.css`, pas de zoom iOS), `overscroll-behavior: contain` et pas de tap-highlight (`base.css`), toasts en bas pleine largeur au-dessus du composer (`ds-patches.css` § `.ap-snackbar-thread`), popovers placés en JS bornés par `clampToViewport()` (`utils.js`). Aucune révélation au survol.
 
 ---
 
