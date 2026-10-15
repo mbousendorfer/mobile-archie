@@ -16,7 +16,7 @@
 //
 // Bump SHELL when this file's strategy changes (activate drops other caches).
 
-const SHELL = "archie-shell-v2";
+const SHELL = "archie-shell-v3";
 const RUNTIME = "archie-runtime";
 const SHELL_URLS = [
   "./",
@@ -31,7 +31,9 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(SHELL)
-      .then((cache) => cache.addAll(SHELL_URLS))
+      // `reload`: past the browser's HTTP cache — GitHub Pages serves HTML with a
+      // 10-minute max-age, and a precached stale shell would outlive the deploy.
+      .then((cache) => cache.addAll(SHELL_URLS.map((u) => new Request(u, { cache: "reload" }))))
       .then(() => self.skipWaiting()),
   );
 });
@@ -65,7 +67,10 @@ self.addEventListener("fetch", (event) => {
 async function networkFirst(request) {
   const cache = await caches.open(SHELL);
   try {
-    const response = await fetch(request);
+    // `no-cache`: revalidate with the server (a cheap 304 when nothing changed),
+    // so a deploy reaches the next open instead of waiting out Pages' 10-minute
+    // HTTP cache on the HTML.
+    const response = await fetch(request.url, { cache: "no-cache", credentials: "same-origin" });
     if (response.ok) cache.put(request, response.clone());
     return response;
   } catch {

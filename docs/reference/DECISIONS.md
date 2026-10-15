@@ -9,7 +9,7 @@
 
 `mobile-archie` is the mobile-only fork of rebel-racoon (2026-10-15, plan in [`docs/plans/mobile-fork.md`](../plans/mobile-fork.md)). Every surface targets a phone; there is no desktop layout to keep. What was decided, and what went:
 
-- **No desktop frame.** For a day a desktop window was redirected to `frame.html`, the app in a 390×844 iframe. Removed at the user's request (2026-10-15): the PWA on Pages is served as itself on every screen, and a desktop shows the mobile layout wider. Don't reintroduce a frame.
+- **No desktop frame.** For a day a desktop window was redirected to `frame.html`, the app in a 390×844 iframe. Removed at the user's request (2026-10-15): the PWA on Pages is served as itself on every screen, and a desktop shows the mobile layout wider. Don't reintroduce a frame. `frame.html` survives as a stub that sends a browser still holding the old `index.html` (Pages caches HTML for 10 minutes) back to the app under a fresh URL; and `sw.js` revalidates the HTML (`cache: "no-cache"`) so a deploy is seen on the next open.
 - **Drawer + sheets, the ChatGPT / Claude pattern.** The chat is full screen; the sidebar is a drawer (☰); the right panel is a full-height bottom sheet with Drafts · Ideas · Sources tabs, `?panel=` still the source of truth so Back closes it. Rules in [`PANEL-SIDEBAR-RULES.md`](PANEL-SIDEBAR-RULES.md).
 - **Modals are sheets**, by one rule in `ds-patches.css` (`:root body .ap-dialog`), plus `app-dialog--full` for the big ones. The dialog keeps a `transform` so it stays the containing block of the popovers placed against its rect.
 - **Deeper levels are pushed by URL** — a Topic (`?topic=`), an Insights objective (`?objective=`, Mob · Index now the default layout) — so Back always walks back up.

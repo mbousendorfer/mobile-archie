@@ -1,0 +1,16 @@
+<!doctype html>
+<!-- Legacy URL. For a day the app redirected desktop windows here (a phone frame);
+     the frame is gone and the app opens as itself. A browser still holding the old
+     index.html in its HTTP cache lands here: go back to the app under a NEW URL,
+     so that cache can't hand the old redirect back (no loop). Safe to delete once
+     no old index.html can be cached anywhere. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Archie</title>
+    <script>
+      location.replace("./index.html?fresh=" + Date.now() + location.hash);
+    </script>
+  </head>
+  <body></body>
+</html>
