@@ -8,7 +8,7 @@
    in the same place, at the same height.
 
    .memory-note--kept — a rule already in the voice ("What I've learned"):
-   plain text beside the olive mark, in Archie's block, under his butter header (.pb2-block--memory).
+   plain text beside the olive mark, in Archie's block (.pb2-block--memory).
 
    Butter is Archie's colour (tokens.css). The mark is the DS sparkles glyph in
    olive. Ink stays grey-80…100; no shadow, no edge bar, no capitals. */
@@ -118,13 +118,7 @@ i.memory-mark {
   container-type: inline-size;
 }
 
-/* Nothing learned yet: the block reads disabled — the band loses its butter
-   (grey-05), the line goes grey-60 italic. Archie's colour comes back with
-   his first proposal. */
-.pb2-block--memory:has(.pb2-empty) > .pb2-block__head {
-  background: var(--app-surface-subtle);
-}
-
+/* Nothing learned yet: the line reads disabled — grey-60 italic. */
 .pb2-block--memory .pb2-empty {
   color: var(--ref-color-grey-60);
   font-style: italic;
@@ -160,31 +154,14 @@ i.memory-mark {
 }
 
 /* "What I've learned" on the Voice tab — Archie's block, proposals and kept
-   rules together. His butter is the header band, edge to edge, and nowhere
-   else on the block. The proposals inside are the chat's memory card, as is —
-   same butter body; only its width follows the block. A grey-20 hairline
-   under the band. */
-.pb2-block.pb2-block--memory {
-  gap: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-.pb2-block--memory > .pb2-block__head {
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
-  border-bottom: 1px solid var(--ref-color-grey-20);
-  background: var(--app-butter);
-}
-
+   rules together: a block like its neighbours (white, the tab's own head).
+   The butter is only in the proposals — the chat's memory card, as is; only
+   its width follows the block. (A butter header band, edge to edge, was
+   "too much" — 2026-10-15.) */
 .pb2-block--memory > .pb2-block__body {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-md);
-}
-
-.memory-notes {
-  padding-left: 4px;
 }
 
 .memory-notes {
