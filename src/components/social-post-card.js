@@ -23,8 +23,8 @@
 // colours baked into the icon (they're SVG data-URI backgrounds, not font
 // glyphs), so nothing here has to hardcode a third-party hex.
 
-import { html, raw } from "../utils.js?v=1798";
-import { networkMeta } from "../social-profiles.js?v=1798";
+import { html, raw } from "../utils.js?v=1799";
+import { networkMeta } from "../social-profiles.js?v=1799";
 
 // Avatar tints the card knows how to paint (see social-post-card.css). An
 // unknown accent falls back to grey rather than rendering an unstyled circle —

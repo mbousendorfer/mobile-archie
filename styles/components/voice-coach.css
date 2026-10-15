@@ -8,7 +8,7 @@
    in the same place, at the same height.
 
    .memory-note--kept — a rule already in the voice ("What I've learned"):
-   plain text beside the olive mark, on the block's butter (.pb2-block--memory).
+   plain text beside the olive mark, under Archie's butter disc (.pb2-block--memory).
 
    Butter is Archie's colour (tokens.css). The mark is the DS sparkles glyph in
    olive. Ink stays grey-80…100; no shadow, no edge bar, no capitals. */
@@ -147,11 +147,34 @@ i.memory-mark {
   margin: 0;
 }
 
-/* "What I've learned" on the Voice tab: what Archie remembers, on his butter —
-   the same surface as a proposal's body, so a Remembered rule lands where it
-   looks like it came from. The hairline stays grey-20. */
-.pb2-block.pb2-block--memory {
+/* "What I've learned" on the Voice tab: a white block like its neighbours; the
+   only butter is Archie's disc behind the head's mark — his signature, as in
+   the thread. On a ::before because ap-icon-* masks its own element (a
+   background on the <i> would be clipped to the glyph). The rules' marks sit
+   under the disc's centre. */
+.pb2-block--memory .pb2-block__head {
+  position: relative;
+  padding-left: 4px;
+}
+
+.pb2-block--memory .pb2-block__head::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  border-radius: 50%;
   background: var(--app-butter);
+  content: "";
+}
+
+.pb2-block--memory .pb2-block__icon {
+  position: relative;
+}
+
+.pb2-block--memory .memory-notes {
+  padding-left: 4px;
 }
 
 .memory-notes {
