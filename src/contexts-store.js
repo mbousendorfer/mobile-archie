@@ -22,18 +22,18 @@
 // chooses "Save as global". updateContext is used by the section-edit flow
 // when scope is "Update everywhere".
 
-import { contexts as seed, sharedContexts } from "./mocks.js?v=1791";
-import { isNewUser } from "./user-mode.js?v=1791";
-import { CURRENT_USER } from "./org.js?v=1791";
-import { isFlagOn } from "./feature-flags.js?v=1791";
-import { createNotifier } from "./store-utils.js?v=1791";
+import { contexts as seed, sharedContexts } from "./mocks.js?v=1793";
+import { isNewUser } from "./user-mode.js?v=1793";
+import { CURRENT_USER } from "./org.js?v=1793";
+import { isFlagOn } from "./feature-flags.js?v=1793";
+import { createNotifier } from "./store-utils.js?v=1793";
 import {
   normalizeLanguages,
   mirrorPrimaryToTopLevel,
   syncTopLevelToPrimary,
   cloneVoiceByLanguage,
-} from "./languages.js?v=1791";
-import { cloneVoiceByNetwork } from "./network-voice.js?v=1791";
+} from "./languages.js?v=1793";
+import { cloneVoiceByNetwork } from "./network-voice.js?v=1793";
 
 // Lives up here, away from normalizeBrandLogos where it belongs, because the
 // seed below calls that normalizer at module-init time — a `let` declared beside
@@ -444,6 +444,7 @@ export function addContext(ctx = {}) {
     closingPatterns: Array.isArray(ctx.closingPatterns) ? ctx.closingPatterns.slice() : [],
     formattingStyle: ctx.formattingStyle || "",
     visualStyle: ctx.visualStyle || "",
+    hashtagStyle: ctx.hashtagStyle || "",
     voiceMode: ctx.voiceMode === "manual" ? "manual" : "guided",
     voiceManual: ctx.voiceManual || "",
     brandPersonality: ctx.brandPersonality || "",
@@ -536,6 +537,7 @@ export function updateContext(id, patch) {
   if (patch.closingPatterns !== undefined) c.closingPatterns = patch.closingPatterns;
   if (patch.formattingStyle !== undefined) c.formattingStyle = patch.formattingStyle;
   if (patch.visualStyle !== undefined) c.visualStyle = patch.visualStyle;
+  if (patch.hashtagStyle !== undefined) c.hashtagStyle = patch.hashtagStyle;
   if (patch.voiceMode !== undefined) c.voiceMode = patch.voiceMode;
   if (patch.voiceManual !== undefined) c.voiceManual = patch.voiceManual;
   if (patch.brandPersonality !== undefined) c.brandPersonality = patch.brandPersonality;
@@ -652,6 +654,7 @@ export function duplicateContext(id) {
     closingPatterns: (src.closingPatterns || []).slice(),
     formattingStyle: src.formattingStyle || "",
     visualStyle: src.visualStyle || "",
+    hashtagStyle: src.hashtagStyle || "",
     brandPersonality: src.brandPersonality || "",
     brandTypography: src.brandTypography ? { ...src.brandTypography } : null,
     imageDefaults: { ...(src.imageDefaults || {}) },

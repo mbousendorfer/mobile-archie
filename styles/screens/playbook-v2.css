@@ -843,6 +843,10 @@
 }
 
 .pb2-nv-progress__count {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
   margin: 0;
   color: var(--ref-color-grey-100);
   font-size: var(--ref-font-size-md);
@@ -926,10 +930,36 @@
 }
 
 .pb2-nv-tile__state {
+  display: inline-flex;
   grid-column: 2;
   align-self: start;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
   color: var(--ref-color-grey-80);
   font-size: var(--ref-font-size-sm);
+}
+
+/* A network all done says it with the DS check, in green. */
+.pb2-nv-tile__state.is-done > i {
+  width: 14px;
+  height: 14px;
+  color: var(--ref-color-green-100);
+}
+
+/* In the network tabs: a green check once a network is all done, an orange dot
+   while a part the product just added waits for it. */
+.pb2-nv-tab-done {
+  width: 14px;
+  height: 14px;
+  color: var(--ref-color-green-100);
+}
+
+.pb2-nv-tab-new {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ref-color-orange-100);
 }
 
 .pb2-nv-tile__action {

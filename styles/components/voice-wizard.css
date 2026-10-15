@@ -56,6 +56,12 @@
   font-weight: var(--sys-text-style-body-bold-weight);
 }
 
+.vw__new {
+  margin-left: var(--ref-spacing-xs);
+  vertical-align: middle;
+  font-weight: normal;
+}
+
 .vw__hint {
   margin: 0 0 var(--ref-spacing-xs);
   color: var(--ref-color-grey-80);

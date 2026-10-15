@@ -167,4 +167,18 @@ export const FLAGS = Object.freeze([
       "Playbook without a click. Each network voice says how far along it is. " +
       "The per-network view lives on the Playbook 2.0 page (flag playbook2).",
   },
+  {
+    id: "voiceNewSection",
+    label: "Voice: simulate a new section (Hashtags)",
+    // A demo, not a feature: how the Voice tab tells a user the product added a
+    // part to every voice. Needs networkVoices.
+    default: false,
+    hides:
+      "Adds a fifth part to every voice — Hashtags — marked New. A network that " +
+      "was fully optimized drops to 4 of 5 and says what's new: an orange arc on " +
+      'its ring, "1 new part" in its band, a dot on its tab, a New pill on the ' +
+      "Hashtags block, a New step in the Optimize wizard. On a Playbook whose " +
+      "base voice has no hashtags yet, the base asks for them too. Turn it off and " +
+      "the part disappears — what was written for it is kept. Needs networkVoices.",
+  },
 ]);

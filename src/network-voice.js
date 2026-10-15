@@ -21,11 +21,37 @@
 // ON an overridden hook is written in one language. Per-language × per-network
 // examples when a brand actually publishes in two languages on one network.
 
-import { isFlagOn } from "./feature-flags.js?v=1791";
-import { escapeHtml } from "./utils.js?v=1791";
-import { NETWORKS, normalizeNetwork, getConnectedProfileById } from "./social-profiles.js?v=1791";
+import { isFlagOn } from "./feature-flags.js?v=1793";
+import { escapeHtml } from "./utils.js?v=1793";
+import { NETWORKS, normalizeNetwork, getConnectedProfileById } from "./social-profiles.js?v=1793";
 
-export const NETWORK_FIELDS = ["signatureHooks", "closingPatterns", "formattingStyle", "visualStyle"];
+// The parts of a voice — ONE registry, in reading order. `isNew` marks a part
+// the product just added: a network that hasn't optimized it is told so (an
+// orange arc, a "New" pill). Hashtags is that part, simulated behind the flag
+// voiceNewSection — the demo of a section added to every Voice.
+export const VOICE_PARTS = [
+  { field: "signatureHooks", title: "Opens with" },
+  { field: "closingPatterns", title: "Closes with" },
+  { field: "formattingStyle", title: "Formatting" },
+  { field: "visualStyle", title: "Emoji & casing" },
+  { field: "hashtagStyle", title: "Hashtags", isNew: true, flag: "voiceNewSection" },
+];
+
+// Every field a voice can carry, whatever the flags — what a copy must keep, so
+// turning a part off never erases what was written for it.
+export const ALL_NETWORK_FIELDS = VOICE_PARTS.map((p) => p.field);
+
+// The parts on screen now.
+export function voiceParts() {
+  return VOICE_PARTS.filter((p) => !p.flag || isFlagOn(p.flag));
+}
+
+export function networkFields() {
+  return voiceParts().map((p) => p.field);
+}
+
+const NEW_FIELDS = new Set(VOICE_PARTS.filter((p) => p.isNew).map((p) => p.field));
+export const isNewPart = (field) => NEW_FIELDS.has(field);
 const LIST_FIELDS = new Set(["signatureHooks", "closingPatterns"]);
 
 export function networkVoicesOn() {
@@ -65,7 +91,7 @@ export function voiceNetworks(ctx) {
 // it: they were learned from use, the parts are what Optimize writes.
 export function isOptimized(ctx, n) {
   const e = networkEntry(ctx, n);
-  return !!e && NETWORK_FIELDS.some((f) => e[f] !== undefined);
+  return !!e && networkFields().some((f) => e[f] !== undefined);
 }
 
 export function networkEntry(ctx, n) {
@@ -85,7 +111,7 @@ export function maturity(ctx, n) {
     return { level: "base", label: "Base voice", detail: `Learned from your ${networkLabel(n)} posts.` };
   }
   const e = networkEntry(ctx, n) || {};
-  const adapted = NETWORK_FIELDS.filter((f) => e[f] !== undefined).length;
+  const adapted = networkFields().filter((f) => e[f] !== undefined).length;
   const rules = (e.rules || []).length;
   // Written by Archie (at creation, by Learn from, by Optimize) and not
   // touched since: nothing has been learned from use yet, so it can't claim a
@@ -94,7 +120,7 @@ export function maturity(ctx, n) {
     return {
       level: "drafted",
       label: "Optimized by Archie",
-      detail: `${adapted} of ${NETWORK_FIELDS.length} parts adapted to how posts work on ${networkLabel(n)}. It moves on as you edit it and I learn.`,
+      detail: `${adapted} of ${networkFields().length} parts adapted to how posts work on ${networkLabel(n)}. It moves on as you edit it and I learn.`,
     };
   }
   const score = adapted + rules;
@@ -102,7 +128,7 @@ export function maturity(ctx, n) {
   const label = { new: "Not optimized", learning: "Learning", shaping: "Taking shape", tuned: "Tuned" }[level];
   const parts = [];
   if (rules) parts.push(`${rules} ${rules === 1 ? "rule" : "rules"} learned`);
-  if (adapted) parts.push(`${adapted} of ${NETWORK_FIELDS.length} parts adapted`);
+  if (adapted) parts.push(`${adapted} of ${networkFields().length} parts adapted`);
   return {
     level,
     label,
@@ -187,30 +213,52 @@ export function memoryCardHtml(s, { attr, value, undo = true, evidence = "", rew
   </div>`;
 }
 
-// Which of the four parts a network has made its own, in NETWORK_FIELDS order.
+// Which parts a network has made its own, in voiceParts() order.
 export function partsDone(ctx, n) {
-  return NETWORK_FIELDS.map((f) => isOverridden(ctx, n, f));
+  return networkFields().map((f) => isOverridden(ctx, n, f));
 }
 
-// The progress ring: four arcs around the network's logo, one per part of its
-// voice — green once that part is optimized, grey-20 while it follows the base.
-// The base's ring is all grey-100: it is the reference, not a score. `current`
-// thickens one arc (the wizard's step); `fresh` arcs play their fill once, to
-// show what an action just changed. Decorative: the state is always said in
-// text beside it (styles/components/voice-coach.css).
-export function progressRingHtml(n, { done = [], base = false, current = -1, fresh = [], size = 56 } = {}) {
-  const arcs = NETWORK_FIELDS.map((_, i) => {
-    const cls = [
-      "nv-ring__arc",
-      base ? "is-base" : done[i] ? "is-done" : "",
-      i === current ? "is-current" : "",
-      fresh.includes(i) ? "is-fresh" : "",
-    ]
-      .filter(Boolean)
-      .join(" ");
-    return `<circle class="${cls}" cx="18" cy="18" r="15" pathLength="100" stroke-dasharray="17 83" stroke-dashoffset="${-(25 * i + 4)}" />`;
-  }).join("");
-  return `<span class="nv-ring" style="--nv-ring:${size}px" aria-hidden="true"><svg viewBox="0 0 36 36" focusable="false">${arcs}</svg><i class="${networkIcon(n)}"></i></span>`;
+// Which parts need the user because the product just added them: a new part
+// the network hasn't optimized — on the base, a new part it hasn't filled in.
+export function partsNew(ctx, n) {
+  const onBase = normalizeNetwork(n) === baseNetwork(ctx);
+  return networkFields().map(
+    (f) => isNewPart(f) && (onBase ? !String(ctx?.[f] || "").trim() : !isOverridden(ctx, n, f)),
+  );
+}
+
+// The progress ring: one arc per part of the voice around the network's logo —
+// green once optimized, grey-20 while it follows the base, ORANGE for a part
+// the product just added and nobody has done yet. The base's ring is grey-100
+// (the reference, not a score). When every part is done the arcs close into ONE
+// green circle and a check badge says "all done". `current` thickens an arc
+// (the wizard's step); `fresh` arcs fill once, to show what an action changed.
+// Decorative: the state is always said in text beside it (voice-coach.css).
+export function progressRingHtml(
+  n,
+  { done = [], base = false, current = -1, fresh = [], attention = [], size = 56 } = {},
+) {
+  const count = networkFields().length;
+  const complete = !base && count > 0 && done.length === count && done.every(Boolean);
+  const span = 100 / count;
+  const gap = 7;
+  const arcs = complete
+    ? `<circle class="nv-ring__arc is-done is-complete${fresh.length ? " is-fresh" : ""}" cx="18" cy="18" r="15" pathLength="100" />`
+    : networkFields()
+        .map((_, i) => {
+          const cls = [
+            "nv-ring__arc",
+            base && !attention[i] ? "is-base" : done[i] ? "is-done" : attention[i] ? "is-attention" : "",
+            i === current ? "is-current" : "",
+            fresh.includes(i) ? "is-fresh" : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
+          return `<circle class="${cls}" cx="18" cy="18" r="15" pathLength="100" stroke-dasharray="${span - gap} ${100 - span + gap}" stroke-dashoffset="${-(span * i + gap / 2)}" />`;
+        })
+        .join("");
+  const badge = complete ? `<span class="nv-ring__check"><i class="ap-icon-rounded-check_fill"></i></span>` : "";
+  return `<span class="nv-ring${complete ? " is-complete" : ""}" style="--nv-ring:${size}px" aria-hidden="true"><svg viewBox="0 0 36 36" focusable="false">${arcs}</svg><i class="${networkIcon(n)}"></i>${badge}</span>`;
 }
 
 export function cloneVoiceByNetwork(v) {
@@ -220,7 +268,7 @@ export function cloneVoiceByNetwork(v) {
     if (!known(net) || !e || typeof e !== "object") continue;
     const entry = { rules: Array.isArray(e.rules) ? e.rules.filter(Boolean) : [] };
     if (e.drafted) entry.drafted = true;
-    for (const f of NETWORK_FIELDS) {
+    for (const f of ALL_NETWORK_FIELDS) {
       if (e[f] === undefined) continue;
       entry[f] = LIST_FIELDS.has(f) ? (Array.isArray(e[f]) ? e[f].slice() : []) : String(e[f] ?? "");
     }

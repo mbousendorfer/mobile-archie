@@ -212,6 +212,9 @@ export const contexts = [
       "Short paragraphs, one idea each. Opens on a hook line, then 2–3 lines of context. A tight three-item list when points are parallel, prose otherwise. Generous line breaks — no walls of text. Most posts top out around 90 words.",
     visualStyle:
       "No emoji. Sentence case throughout — no ALL-CAPS shouting. Numbers as digits ('3x', '40%'). One link, dropped in the first comment, never mid-sentence.",
+    // Hashtags — the part simulated as "new" (flag voiceNewSection). Acme's base
+    // has it, so its networks show it to optimize; other Playbooks don't yet.
+    hashtagStyle: "Three at the end, never in the text.",
     // Voice per network (flag networkVoices) — the base was learned on LinkedIn;
     // Instagram and X only say what differs. See network-voice.js.
     voiceBaseNetwork: "linkedin",

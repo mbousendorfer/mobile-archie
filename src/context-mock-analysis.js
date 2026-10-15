@@ -470,8 +470,27 @@ export function networkVoiceOptions(network) {
     closingPatterns: three([...a.closingPatterns, ...b.closingPatterns]),
     formattingStyle: [a.formattingStyle, b.formattingStyle],
     visualStyle: [a.visualStyle, b.visualStyle],
+    hashtagStyle: HASHTAG_OPTIONS[network] || null,
   };
 }
+
+// Hashtags — the part the product "just added" (flag voiceNewSection). Kept out
+// of NETWORK_ADAPTATIONS on purpose: a Playbook created today doesn't get it
+// written, so the demo shows a part every network still has to do.
+const HASHTAG_OPTIONS = {
+  linkedin: ["Three at the end, never in the text.", "None — LinkedIn reach doesn't need them."],
+  instagram: [
+    "Five to ten in the first comment, a mix of broad and niche.",
+    "Three to five at the end of the caption.",
+  ],
+  x: ["One at most, only when it's the conversation's tag.", "None."],
+  facebook: ["None — they read as spam here.", "One branded hashtag at the end."],
+  tiktok: ["Three or four, one broad and the rest niche.", "Two niche ones that match the sound or trend."],
+  youtube: [
+    "Three in the description, the first one shows above the title.",
+    "One branded hashtag in the description.",
+  ],
+};
 
 /**
  * Pretend to read the posts of each network the Playbook publishes on and

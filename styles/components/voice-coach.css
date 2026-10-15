@@ -194,6 +194,38 @@ i.memory-mark {
   stroke: var(--ref-color-grey-100);
 }
 
+/* A part the product just added and nobody has done yet — orange, the colour
+   of "something new to do". */
+.nv-ring__arc.is-attention {
+  stroke: var(--ref-color-orange-100);
+}
+
+/* All done: the arcs close into one green circle, and a check badge sits on
+   it — the "you're done" moment (the text beside it says "Optimized"). */
+.nv-ring__arc.is-complete {
+  stroke-width: 3;
+}
+
+.nv-ring__check {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--nv-ring, 56px) * 0.42);
+  height: calc(var(--nv-ring, 56px) * 0.42);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: 50%;
+  background: var(--ref-color-white);
+}
+
+.nv-ring__check > i {
+  width: 72%;
+  height: 72%;
+  color: var(--ref-color-green-100);
+}
+
 /* The wizard's step: the same arc, heavier — a weight change, not a colour. */
 .nv-ring__arc.is-current {
   stroke-width: 4;
@@ -216,6 +248,11 @@ i.memory-mark {
     stroke: var(--ref-color-grey-20);
     stroke-dasharray: 0 100;
   }
+}
+
+/* The closing circle draws itself once, then holds. */
+.nv-ring__arc.is-complete.is-fresh {
+  stroke-dasharray: 100 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

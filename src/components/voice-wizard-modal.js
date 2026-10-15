@@ -15,18 +15,19 @@
 //   result = { values: { [field]: value | undefined }, drafted: boolean }
 //   undefined = the part follows the base voice.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1791";
-import { escapeHtml as esc } from "../utils.js?v=1791";
-import { networkVoiceOptions } from "../context-mock-analysis.js?v=1791";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1793";
+import { escapeHtml as esc } from "../utils.js?v=1793";
+import { networkVoiceOptions } from "../context-mock-analysis.js?v=1793";
 import {
-  NETWORK_FIELDS,
+  networkFields,
+  isNewPart,
   networkLabel,
   networkIcon,
   baseNetwork,
   networkEntry,
   resolvedVoice,
   progressRingHtml,
-} from "../network-voice.js?v=1791";
+} from "../network-voice.js?v=1793";
 
 const MODAL_ID = "voiceWizard";
 
@@ -52,6 +53,13 @@ const PARTS = {
     keep: (b) => `Keep my ${b} formatting`,
     add: "How posts are structured on this network…",
   },
+  hashtagStyle: {
+    title: "Hashtags",
+    list: false,
+    ask: (n) => `How do you use hashtags on ${n}?`,
+    keep: (b) => `Keep my ${b} hashtags`,
+    add: "How many, where, which kind…",
+  },
   visualStyle: {
     title: "Emoji & casing",
     list: false,
@@ -60,7 +68,6 @@ const PARTS = {
     add: "Emoji, capitalisation, hashtags, links…",
   },
 };
-const REVIEW = NETWORK_FIELDS.length; // the step after the four parts
 
 let backdrop = null;
 let panel = null;
@@ -70,10 +77,13 @@ let footLeftEl = null;
 let footRightEl = null;
 let initialized = false;
 
-// { data, net, base, opts, step, parts: { [field]: part }, initial, startParts, leaving, onSave }
+// { data, net, base, opts, fields, step, parts: { [field]: part }, initial, startParts, leaving, onSave }
 //   list part: { keep, picked: string[], custom: string[] }
 //   text part: { choice: 0 | 1 | "keep" | "own", own }
 let w = null;
+
+// The step after the parts: the review.
+const review = () => w.fields.length;
 
 const SHELL = `
 <div class="app-modal-backdrop vw__backdrop" id="vwBackdrop" hidden>
@@ -124,21 +134,24 @@ export function open({ data, network, part = null, onSave }) {
   requestOpen(MODAL_ID, close);
   const entry = networkEntry(data, network) || {};
   const parts = {};
-  for (const field of NETWORK_FIELDS) parts[field] = initialPart(field, entry[field], opts[field]);
-  const firstLeft = NETWORK_FIELDS.findIndex((f) => entry[f] === undefined);
-  const asked = part ? NETWORK_FIELDS.indexOf(part) : -1;
+  // The parts on screen when it opens (a flag can add one — voiceParts()).
+  const fields = networkFields().filter((f) => opts[f]);
+  for (const field of fields) parts[field] = initialPart(field, entry[field], opts[field]);
+  const firstLeft = fields.findIndex((f) => entry[f] === undefined);
+  const asked = part ? fields.indexOf(part) : -1;
   w = {
     data,
     net: network,
     base: baseNetwork(data),
     opts,
+    fields,
     parts,
     step: asked >= 0 ? asked : firstLeft >= 0 ? firstLeft : 0,
     leaving: false,
     onSave,
   };
   w.initial = snapshot();
-  w.startParts = Object.fromEntries(NETWORK_FIELDS.map((f) => [f, JSON.stringify(parts[f])]));
+  w.startParts = Object.fromEntries(w.fields.map((f) => [f, JSON.stringify(parts[f])]));
   paint();
   backdrop.hidden = false;
   document.body.classList.add("has-modal");
@@ -203,13 +216,13 @@ function isArchieDefault(field) {
 }
 
 function snapshot() {
-  return JSON.stringify(NETWORK_FIELDS.map(valueOf));
+  return JSON.stringify(w.fields.map(valueOf));
 }
 
 // Archie's picks for every part nobody has made their own — not the ones the
 // network already had, not the ones changed in this wizard.
 function archieAll() {
-  for (const field of NETWORK_FIELDS) {
+  for (const field of w.fields) {
     if (networkEntry(w.data, w.net)?.[field] !== undefined) continue;
     if (JSON.stringify(w.parts[field]) !== w.startParts[field]) continue;
     w.parts[field] = initialPart(field, undefined, w.opts[field]);
@@ -221,21 +234,27 @@ function archieAll() {
 function paint() {
   if (!w) return;
   const label = networkLabel(w.net);
-  const onPart = w.step < REVIEW;
-  const done = NETWORK_FIELDS.map((f) => valueOf(f) !== undefined);
+  const onPart = w.step < review();
+  const done = w.fields.map((f) => valueOf(f) !== undefined);
   headEl.innerHTML = `
-    ${progressRingHtml(w.net, { done, current: onPart ? w.step : -1, size: 48 })}
+    ${progressRingHtml(w.net, {
+      done,
+      current: onPart ? w.step : -1,
+      // A part the product just added, still on the base in the draft: orange.
+      attention: w.fields.map((f) => isNewPart(f) && valueOf(f) === undefined),
+      size: 48,
+    })}
     <div class="vw__titles">
       <span class="ap-dialog-title" id="vwTitle">Optimize your ${esc(label)} voice</span>
       <span class="ap-dialog-subtitle">${
-        onPart ? `${esc(PARTS[NETWORK_FIELDS[w.step]].title)} · ${w.step + 1} of ${REVIEW}` : "Review your choices"
+        onPart ? `${esc(PARTS[w.fields[w.step]].title)} · ${w.step + 1} of ${review()}` : "Review your choices"
       }</span>
     </div>`;
   bodyEl.innerHTML = `
-    <div class="vw__main">${onPart ? renderPart(NETWORK_FIELDS[w.step]) : renderReview()}</div>
+    <div class="vw__main">${onPart ? renderPart(w.fields[w.step]) : renderReview()}</div>
     <div class="vw__aside">
       <p class="vw__aside-title"><i class="${networkIcon(w.net)}" aria-hidden="true"></i>Preview on ${esc(label)}</p>
-      ${renderPreview(onPart ? NETWORK_FIELDS[w.step] : null)}
+      ${renderPreview(onPart ? w.fields[w.step] : null)}
     </div>`;
   paintFooter();
 }
@@ -249,7 +268,7 @@ function paintFooter() {
       <button type="button" class="ap-button primary blue" data-vw-stay>Keep editing</button>`;
     return;
   }
-  const onPart = w.step < REVIEW;
+  const onPart = w.step < review();
   // Left: the one-click way, kept — every part at Archie's pick, then review.
   footLeftEl.innerHTML = onPart
     ? `<button type="button" class="ap-button ghost grey" data-vw-archie><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Use all of Archie's picks</span></button>`
@@ -287,7 +306,9 @@ function renderPart(field) {
   const p = w.parts[field];
   const label = networkLabel(w.net);
   const baseLabel = networkLabel(w.base);
-  const head = `<h3 class="vw__ask">${esc(P.ask(label))}</h3>
+  const head = `<h3 class="vw__ask">${esc(P.ask(label))}${
+    isNewPart(field) ? ` <span class="ap-status orange vw__new">New in your voice</span>` : ""
+  }</h3>
     <p class="vw__hint">I picked these from how posts work on ${esc(label)}. Change anything.</p>`;
   if (P.list) {
     const rows = w.opts[field]
@@ -346,15 +367,16 @@ function renderPart(field) {
 function renderReview() {
   const label = networkLabel(w.net);
   const baseLabel = networkLabel(w.base);
-  const rows = NETWORK_FIELDS.map((field, i) => {
-    const v = valueOf(field);
-    const shown =
-      v === undefined
-        ? baseSummary(field)
-        : Array.isArray(v)
-          ? `“${v[0]}”${v.length > 1 ? ` and ${v.length - 1} more` : ""}`
-          : v;
-    return `<li class="pb2-nv-row vw-review__row">
+  const rows = w.fields
+    .map((field, i) => {
+      const v = valueOf(field);
+      const shown =
+        v === undefined
+          ? baseSummary(field)
+          : Array.isArray(v)
+            ? `“${v[0]}”${v.length > 1 ? ` and ${v.length - 1} more` : ""}`
+            : v;
+      return `<li class="pb2-nv-row vw-review__row">
       <span class="pb2-nv-row__name">${esc(PARTS[field].title)}</span>
       <span class="vw-review__value">
         ${v === undefined ? `<span class="ap-status grey">Same as ${esc(baseLabel)}</span>` : `<span class="ap-status green">Optimized</span>`}
@@ -362,10 +384,11 @@ function renderReview() {
       </span>
       <span class="pb2-nv-row__action"><button type="button" class="ap-button ghost blue" data-vw-goto="${i}">Change</button></span>
     </li>`;
-  }).join("");
-  const n = NETWORK_FIELDS.filter((f) => valueOf(f) !== undefined).length;
+    })
+    .join("");
+  const n = w.fields.filter((f) => valueOf(f) !== undefined).length;
   return `<h3 class="vw__ask">Your ${esc(label)} voice</h3>
-    <p class="vw__hint">${n} of ${REVIEW} parts optimized for ${esc(label)}. The others follow your ${esc(baseLabel)} voice.</p>
+    <p class="vw__hint">${n} of ${review()} parts optimized for ${esc(label)}. The others follow your ${esc(baseLabel)} voice.</p>
     <ul class="pb2-nv-rows vw-review">${rows}</ul>`;
 }
 
@@ -468,7 +491,7 @@ function renderPreview(touched) {
 // ── Events ───────────────────────────────────────────────────────────────────
 
 function go(step) {
-  w.step = Math.max(0, Math.min(REVIEW, step));
+  w.step = Math.max(0, Math.min(review(), step));
   paint();
   focusFirst();
 }
@@ -493,7 +516,7 @@ function addLine(field) {
 function onClick(event) {
   if (!w) return;
   const t = event.target;
-  const field = NETWORK_FIELDS[w.step];
+  const field = w.fields[w.step];
   if (t.closest("[data-vw-close]")) return requestClose();
   if (t.closest("[data-vw-discard]")) return close();
   if (t.closest("[data-vw-stay]")) {
@@ -510,7 +533,7 @@ function onClick(event) {
   }
   if (t.closest("[data-vw-archie]")) {
     archieAll();
-    return go(REVIEW);
+    return go(review());
   }
   const gotoBtn = t.closest("[data-vw-goto]");
   if (gotoBtn) return go(Number(gotoBtn.dataset.vwGoto));
@@ -522,8 +545,8 @@ function onClick(event) {
   }
   if (t.closest("[data-vw-save]")) {
     const values = {};
-    for (const f of NETWORK_FIELDS) values[f] = valueOf(f);
-    const defined = NETWORK_FIELDS.filter((f) => values[f] !== undefined);
+    for (const f of w.fields) values[f] = valueOf(f);
+    const defined = w.fields.filter((f) => values[f] !== undefined);
     const drafted = defined.length > 0 && defined.every((f) => isArchieDefault(f));
     const onSave = w.onSave;
     close();
@@ -534,7 +557,7 @@ function onClick(event) {
 function onChange(event) {
   if (!w) return;
   const t = event.target;
-  const field = NETWORK_FIELDS[w.step];
+  const field = w.fields[w.step];
   const p = w.parts[field];
   if (t.matches("[data-vw-pick]")) {
     const option = w.opts[field][Number(t.dataset.vwPick)];
@@ -559,15 +582,15 @@ function onChange(event) {
 // Typing in "Write my own" updates the preview without repainting the field.
 function onInput(event) {
   if (!w || !event.target.matches("[data-vw-own]")) return;
-  w.parts[NETWORK_FIELDS[w.step]].own = event.target.value;
+  w.parts[w.fields[w.step]].own = event.target.value;
   const aside = bodyEl.querySelector(".vw__aside .vwp");
-  if (aside) aside.outerHTML = renderPreview(NETWORK_FIELDS[w.step]);
+  if (aside) aside.outerHTML = renderPreview(w.fields[w.step]);
 }
 
 function onKeydown(event) {
   if (!w) return;
   if (event.key === "Enter" && event.target.matches("[data-vw-add]")) {
     event.preventDefault();
-    addLine(NETWORK_FIELDS[w.step]);
+    addLine(w.fields[w.step]);
   }
 }

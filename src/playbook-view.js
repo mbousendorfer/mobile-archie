@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1791";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1793";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -26,11 +26,11 @@ import {
   handleKitChange,
   kitSnapshot,
   renderImagesTab,
-} from "./playbook-brand-kit.js?v=1791";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1791";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1791";
-import { isFlagOn } from "./feature-flags.js?v=1791";
-import { parseHashParams } from "./url-state.js?v=1791";
+} from "./playbook-brand-kit.js?v=1793";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1793";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1793";
+import { isFlagOn } from "./feature-flags.js?v=1793";
+import { parseHashParams } from "./url-state.js?v=1793";
 import {
   networkVoicesOn,
   baseNetwork,
@@ -40,20 +40,23 @@ import {
   isOptimized,
   maturity,
   partsDone,
+  partsNew,
+  isNewPart,
+  voiceParts,
   progressRingHtml,
   networkLabel,
   networkIcon,
   memoryCardHtml,
-} from "./network-voice.js?v=1791";
+} from "./network-voice.js?v=1793";
 import {
   getSuggestions,
   accept as acceptVoiceSuggestion,
   dismiss as dismissVoiceSuggestion,
-} from "./voice-coach-store.js?v=1791";
-import { showToast } from "./components/toast.js?v=1791";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=1791";
-import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1791";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1791";
+} from "./voice-coach-store.js?v=1793";
+import { showToast } from "./components/toast.js?v=1793";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=1793";
+import { open as openVoiceWizard } from "./components/voice-wizard-modal.js?v=1793";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1793";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -433,6 +436,7 @@ export function snapshotEditable(d) {
       closingPatterns: d.closingPatterns || [],
       formattingStyle: d.formattingStyle || "",
       visualStyle: d.visualStyle || "",
+      hashtagStyle: d.hashtagStyle || "",
       voiceMode: d.voiceMode || "guided",
       voiceManual: d.voiceManual || "",
       brandPersonality: d.brandPersonality || "",
@@ -2134,6 +2138,11 @@ function renderVoiceEdit2(data) {
         renderTextarea("visualStyle", data.visualStyle, "Emoji use, capitalisation, hashtags, links…"),
         { index: 4 },
       ),
+      voiceParts().some((p) => p.field === "hashtagStyle")
+        ? pb2Block("Hashtags", renderTextarea("hashtagStyle", data.hashtagStyle, "How many, where, which kind…"), {
+            index: 4,
+          })
+        : "",
       pb2Block("Words to avoid", renderEditChips("voiceAvoid", data.voiceAvoid, "Add a word or phrase…"), {
         wide: true,
         index: 5,
@@ -2279,6 +2288,18 @@ function pb2VoiceFieldBlocks(data, ve, index) {
     pb2Block("Closes with", pb2Lines(ve.closingPatterns), { index: index + 1, caption: "Closing patterns" }),
     pb2Block("Formatting", pb2Text(data.formattingStyle), { index: index + 2 }),
     pb2Block("Emoji & casing", pb2Text(data.visualStyle), { index: index + 3 }),
+    // A part the product added (flag voiceNewSection): until the brand fills it
+    // in, it says New and what to write.
+    ...(voiceParts().some((p) => p.field === "hashtagStyle")
+      ? [
+          pb2Block("Hashtags", pb2Text(data.hashtagStyle, "Not set yet — add how this brand uses hashtags."), {
+            index: index + 4,
+            aside: String(data.hashtagStyle || "").trim()
+              ? ""
+              : `<span class="ap-status orange pb2-nv-status">New</span>`,
+          }),
+        ]
+      : []),
   ];
 }
 
@@ -2372,6 +2393,13 @@ function renderNetworkSwitcher(data) {
               return `<button type="button" class="ap-tabs-tab${on ? " active" : ""}" role="tab" aria-selected="${on}" data-nv-net="${n}"${borrowed ? ` title="Not optimized — writes like your ${esc(networkLabel(activeBase))} voice"` : ""}>
                 <i class="${networkIcon(n)}" aria-hidden="true"></i>
                 <span>${esc(networkLabel(n))}</span>
+                ${
+                  partsNew(data, n).some(Boolean)
+                    ? `<span class="pb2-nv-tab-new" title="New part to optimize" aria-label="New part to optimize"></span>`
+                    : n !== activeBase && nvOptimizedCount(data, n) === nvFields().length
+                      ? `<i class="ap-icon-rounded-check_fill pb2-nv-tab-done" title="Optimized" aria-label="Optimized"></i>`
+                      : ""
+                }
                 ${pending ? `<span class="ap-counter normal grey" title="${pending} for Archie to remember">${pending}</span>` : ""}
               </button>`;
             })
@@ -2389,7 +2417,7 @@ function renderNetworkSwitcher(data) {
 function nvOptimizeButton(data, net, { tone = "primary orange", short = false } = {}) {
   if (!canEditView() || editScope || net === baseNetwork(data)) return "";
   const done = nvOptimizedCount(data, net);
-  if (done === NV_FIELDS.length) return "";
+  if (done === nvFields().length) return "";
   const label = short ? "Optimize" : done ? "Optimize what's left" : `Optimize for ${networkLabel(net)}`;
   const aria = short ? ` aria-label="Optimize your ${esc(networkLabel(net))} voice"` : "";
   return `<button type="button" class="ap-button ${tone}" data-nv-optimize="${net}"${aria}><i class="ap-icon-sparkles" aria-hidden="true"></i><span>${esc(label)}</span></button>`;
@@ -2458,14 +2486,22 @@ function nvBaseBlocks(data, ve) {
 //   a part:     green Optimized · grey Same as LinkedIn (a network's state is
 //               its progress ring, progressRingHtml in network-voice.js)
 function nvSourceBadge(data, net, field) {
-  return isOverridden(data, net, field)
-    ? `<span class="ap-status green pb2-nv-status">Optimized</span>`
-    : `<span class="ap-status grey pb2-nv-status">Same as ${esc(networkLabel(baseNetwork(data)))}</span>`;
+  if (isOverridden(data, net, field)) return `<span class="ap-status green pb2-nv-status">Optimized</span>`;
+  if (isNewPart(field)) return `<span class="ap-status orange pb2-nv-status">New</span>`;
+  return `<span class="ap-status grey pb2-nv-status">Same as ${esc(networkLabel(baseNetwork(data)))}</span>`;
+}
+
+// The new parts a network still has to do, as titles.
+function nvNewTitles(data, net) {
+  const fresh = partsNew(data, net);
+  return nvFields()
+    .filter((_, i) => fresh[i])
+    .map(([, title]) => title);
 }
 
 // How many of a network's four parts are optimized — its own, not the base's.
 function nvOptimizedCount(data, net) {
-  return NV_FIELDS.filter(([field]) => isOverridden(data, net, field)).length;
+  return nvFields().filter(([field]) => isOverridden(data, net, field)).length;
 }
 
 // The arcs a wizard save just completed — set for one repaint, so they fill once.
@@ -2477,9 +2513,14 @@ const nvFreshFor = (n) => (nvFresh?.net === n ? nvFresh.arcs : []);
 function nvProgressText(data, net, { short = false } = {}) {
   if (net === baseNetwork(data)) return "Base voice";
   const done = nvOptimizedCount(data, net);
-  if (done === NV_FIELDS.length) return "Optimized";
-  if (short) return done ? `${done} of ${NV_FIELDS.length} optimized` : "Not optimized";
-  return done ? `${done} of ${NV_FIELDS.length} parts optimized` : "Not optimized yet";
+  const all = nvFields().length;
+  const fresh = nvNewTitles(data, net).length;
+  if (done === all) return "Optimized";
+  if (short) {
+    if (!done) return fresh ? `Not optimized · ${fresh} new` : "Not optimized";
+    return fresh ? `${done} of ${all} · ${fresh} new` : `${done} of ${all} optimized`;
+  }
+  return done ? `${done} of ${all} parts optimized` : "Not optimized yet";
 }
 
 // Where a network's voice stands — a progress band ON the page, above the
@@ -2489,15 +2530,21 @@ function nvProgressText(data, net, { short = false } = {}) {
 function nvIdentityBlock(data, net) {
   const label = networkLabel(net);
   const done = nvOptimizedCount(data, net);
+  const fresh = nvNewTitles(data, net);
   const offer = nvOptimizeButton(data, net);
-  const sub =
-    done === NV_FIELDS.length
+  const sub = fresh.length
+    ? `New in your voice: ${fresh.join(", ")}.`
+    : done === nvFields().length
       ? `Every part is written for ${label}.`
       : `The others follow your ${networkLabel(baseNetwork(data))} voice.`;
   return `<div class="pb2-nv-progress" role="status">
-      ${progressRingHtml(net, { done: partsDone(data, net), size: 48, fresh: nvFreshFor(net) })}
+      ${progressRingHtml(net, { done: partsDone(data, net), attention: partsNew(data, net), size: 48, fresh: nvFreshFor(net) })}
       <div class="pb2-nv-progress__text">
-        <p class="pb2-nv-progress__count">${esc(nvProgressText(data, net))}</p>
+        <p class="pb2-nv-progress__count">${esc(nvProgressText(data, net))}${
+          fresh.length
+            ? ` <span class="ap-status orange">${fresh.length} new ${fresh.length === 1 ? "part" : "parts"}</span>`
+            : ""
+        }</p>
         <p class="pb2-nv-progress__sub">${esc(sub)}</p>
       </div>
       ${offer ? `<div class="pb2-nv-progress__action">${offer}</div>` : ""}
@@ -2516,9 +2563,13 @@ function nvAllTiles(data) {
       const isBase = n === base;
       const action = isBase ? "" : nvOptimizeButton(data, n, { tone: "stroked blue", short: true });
       return `<li class="pb2-nv-tile${isBase ? " is-base" : ""}" data-nv-net="${n}">
-        ${progressRingHtml(n, { done: partsDone(data, n), base: isBase, size: 44, fresh: nvFreshFor(n) })}
+        ${progressRingHtml(n, { done: partsDone(data, n), base: isBase, attention: partsNew(data, n), size: 44, fresh: nvFreshFor(n) })}
         <button type="button" class="pb2-nv-tile__name" data-nv-net="${n}">${esc(networkLabel(n))}</button>
-        <span class="pb2-nv-tile__state">${esc(nvProgressText(data, n, { short: true }))}</span>
+        <span class="pb2-nv-tile__state${!isBase && nvOptimizedCount(data, n) === nvFields().length ? " is-done" : ""}">${
+          !isBase && nvOptimizedCount(data, n) === nvFields().length
+            ? `<i class="ap-icon-rounded-check_fill" aria-hidden="true"></i>`
+            : ""
+        }${esc(nvProgressText(data, n, { short: true }))}</span>
         ${action ? `<div class="pb2-nv-tile__action">${action}</div>` : ""}
       </li>`;
     })
@@ -2534,7 +2585,7 @@ function nvNetworkReadBlocks(data, net) {
   // The same four blocks as the base, in the same order and size. A part not
   // optimized yet shows the base's version inside, as a placeholder — the block
   // reads disabled (grey ground, grey-60 ink) under its "Same as LinkedIn" pill.
-  const parts = NV_FIELDS.map(([field, title], n) => {
+  const parts = nvFields().map(([field, title], n) => {
     const own = isOverridden(data, net, field);
     const value = nvFieldValue(data, net, field);
     const content = field === "signatureHooks" || field === "closingPatterns" ? pb2Lines(value) : pb2Text(value);
@@ -2565,6 +2616,7 @@ function nvNetworkReadBlocks(data, net) {
 const NV_PLACEHOLDERS = {
   formattingStyle: "How posts are structured on this network…",
   visualStyle: "Emoji, hashtags, links on this network…",
+  hashtagStyle: "How many hashtags, where, which kind…",
 };
 
 function nvFieldEdit(data, net, field, show = { list: pb2Lines, text: pb2Text }) {
@@ -2604,19 +2656,18 @@ function nvNetworkEditBlocks(data, net) {
       icon: MEMORY_MARK,
       caption: `${label} only`,
     }),
-    ...NV_FIELDS.map(([field, title], i) =>
+    ...nvFields().map(([field, title], i) =>
       pb2Block(title, nvFieldEdit(data, net, field), { index: i + 2, aside: nvSourceBadge(data, net, field) }),
     ),
     pb2AvoidBlock(data, 6, `Edit it on the ${networkLabel(baseNetwork(data))} tab`),
   ];
 }
 
-const NV_FIELDS = [
-  ["signatureHooks", "Opens with"],
-  ["closingPatterns", "Closes with"],
-  ["formattingStyle", "Formatting"],
-  ["visualStyle", "Emoji & casing"],
-];
+// The parts of a voice as [field, title] — from the one registry
+// (network-voice.js VOICE_PARTS), so a part the product adds appears everywhere.
+function nvFields() {
+  return voiceParts().map((p) => [p.field, p.title]);
+}
 
 function setNetworkInUrl(net) {
   const [path] = window.location.hash.slice(1).split("?");
@@ -2648,7 +2699,8 @@ function onNetworkVoiceClick(event) {
       onSave: ({ values, drafted }) => {
         const before = partsDone(data, net);
         const entry = nvWritableEntry(data, net);
-        for (const [field] of NV_FIELDS) {
+        for (const [field] of nvFields()) {
+          if (!(field in values)) continue; // a part the wizard didn't show
           if (values[field] === undefined) delete entry[field];
           else entry[field] = Array.isArray(values[field]) ? values[field].slice() : values[field];
         }
@@ -2660,7 +2712,7 @@ function onNetworkVoiceClick(event) {
         setNetworkInUrl(net);
         cfg.commit?.();
         const done = after.filter(Boolean).length;
-        showToast(`${networkLabel(net)} voice saved — ${done} of ${NV_FIELDS.length} parts optimized.`);
+        showToast(`${networkLabel(net)} voice saved — ${done} of ${nvFields().length} parts optimized.`);
         repaint();
         nvFresh = null;
       },
