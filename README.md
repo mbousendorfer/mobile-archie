@@ -2,7 +2,9 @@
 
 Interactive prototype for **Archie**, Agorapulse's AI content assistant — Sources → Ideas → Drafts → Schedule. Built on the Agorapulse V2 Design System.
 
-**`mobile-archie` is the mobile-only fork** of [rebel-racoon](https://github.com/mbousendorfer/rebel-racoon) (the desktop proto): a phone web app — chat full screen, the sidebar as a drawer, Drafts / Ideas / Sources as a bottom sheet, every modal a sheet. Local only: no GitHub Pages; `upstream` is fetch-only. The plan: [`docs/plans/mobile-fork.md`](docs/plans/mobile-fork.md).
+**`mobile-archie` is the mobile-only fork** of [rebel-racoon](https://github.com/mbousendorfer/rebel-racoon) (the desktop proto): a phone web app — chat full screen, the sidebar as a drawer, Drafts / Ideas / Sources as a bottom sheet, every modal a sheet — and a PWA you install on the phone's home screen, which opens offline.
+
+**Live: [https://mbousendorfer.github.io/mobile-archie/](https://mbousendorfer.github.io/mobile-archie/)** — deployed by GitHub Pages on every push to `main` (`.github/workflows/pages.yml`, no build step). The plan: [`docs/plans/mobile-fork.md`](docs/plans/mobile-fork.md); `upstream` (rebel-racoon) is fetch-only.
 
 ## Origine
 
@@ -19,12 +21,22 @@ With Claude Code the dev server auto-launches via `.claude/launch.json`.
 
 ### On a desktop
 
-Open the server's root: any window 768px wide or more is sent to `frame.html`,
+Open the server's root: any window 768px wide or more, with a mouse, is sent to `frame.html`,
 which shows the app in a 390×844 phone frame (an iframe, so the app gets a real
 phone viewport). Narrow the window under 768px, or open `index.html` inside a
 device emulator, to get it unframed.
 
-### On a phone
+### On a phone — install it
+
+Open [https://mbousendorfer.github.io/mobile-archie/](https://mbousendorfer.github.io/mobile-archie/) on the phone, then:
+
+- **iPhone (Safari)**: Share → _Add to Home Screen_.
+- **Android (Chrome)**: the install prompt, or ⋮ → _Install app_.
+
+It opens standalone (no browser chrome) and, once opened online, works offline:
+the service worker (`sw.js`) keeps the app and the Design System in its cache.
+
+### On a phone — against your local server
 
 `scripts/dev-server.py` (the `archie` launch config) listens on every interface.
 With the phone on the same Wi-Fi as the Mac:
@@ -34,7 +46,9 @@ ipconfig getifaddr en0
 ```
 
 then open `http://<that-ip>:<port>` on the phone (the port the server printed).
-Add it to the home screen for the standalone look (`manifest.webmanifest`).
+Over plain http on the LAN the service worker doesn't run (it needs https or
+localhost), so the app works but won't install or open offline — use the Pages
+URL for that.
 Check there what an emulator can't: the virtual keyboard (the composer must stay
 visible), the safe areas (notch, home indicator), and that focusing a field
 doesn't zoom.

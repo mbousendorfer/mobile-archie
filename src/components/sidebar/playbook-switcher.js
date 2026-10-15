@@ -2,11 +2,11 @@
 // active brand, the list to switch to, and what a switch re-points (see
 // switchPlaybook). Moved out of sidebar.js, unchanged.
 
-import { isWorkspaceMode, getActivePlaybook, setActivePlaybook } from "../../active-playbook.js?v=1911";
-import { escapeHtml } from "../../utils.js?v=1911";
-import { visibleContexts } from "../../playbook-access.js?v=1911";
-import { getPath, navigate } from "../../router.js?v=1911";
-import { closePanel as closeRightPanel } from "../right-panel.js?v=1911";
+import { isWorkspaceMode, getActivePlaybook, setActivePlaybook } from "../../active-playbook.js?v=1912";
+import { escapeHtml } from "../../utils.js?v=1912";
+import { visibleContexts } from "../../playbook-access.js?v=1912";
+import { getPath, navigate } from "../../router.js?v=1912";
+import { closePanel as closeRightPanel } from "../right-panel.js?v=1912";
 
 // ── The Playbook switcher — the scope, worn at the top of the rail ─────────
 //

@@ -1,10 +1,40 @@
 {
-  "name": "Archie",
+  "id": "./",
+  "name": "Archie — AI content assistant",
   "short_name": "Archie",
-  "start_url": "./index.html",
+  "description": "Turn sources into ideas, drafts and a posting schedule — Agorapulse's AI content assistant, on your phone.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
-  "icons": [{ "src": "assets/logos/archie-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+  "categories": ["productivity", "business", "social"],
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "assets/pwa/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/pwa/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/pwa/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/pwa/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/logos/archie-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/pwa/screenshot-chat.jpg",
+      "sizes": "750x1624",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "A chat: sources in, ideas and drafts out"
+    },
+    {
+      "src": "assets/pwa/screenshot-drafts.jpg",
+      "sizes": "750x1624",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Drafts, ready to review and schedule"
+    }
+  ]
 }

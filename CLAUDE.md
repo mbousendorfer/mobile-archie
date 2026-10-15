@@ -159,11 +159,12 @@ The **Design System is loaded from jsDelivr at `@latest`** (`index.html`: `@agor
 The plan that produced the fork: [`docs/plans/mobile-fork.md`](docs/plans/mobile-fork.md). Its rules, standing:
 
 - **Mobile-only.** Every rule targets a phone; there is no desktop layout and no breakpoint above 480px to maintain. Don't add one.
-- **The desktop frame is an iframe, never CSS.** An inline script at the top of `index.html` sends a top-level window ≥ 768px wide to `frame.html`, which loads `index.html` in a 390×844 iframe — so `dvh`, media queries and `position: fixed` (modals, dropdowns, toasts) behave as on a phone. A CSS frame would let fixed layers escape it.
+- **The desktop frame is an iframe, never CSS.** An inline script at the top of `index.html` sends a top-level window ≥ 768px wide **with a mouse** (`pointer: fine` — a phone in landscape or a tablet never) to `frame.html`, which loads `index.html` in a 390×844 iframe — so `dvh`, media queries and `position: fixed` (modals, dropdowns, toasts) behave as on a phone. A CSS frame would let fixed layers escape it.
 - **Shell = one column.** Topbar (56px + safe-top) over the content, `height: 100dvh`. The sidebar is a **drawer** (`is-sidebar-open` on `#appShell`, closed on `hashchange`, backdrop tap, Escape); the right panel is a **full-height bottom sheet** with `.ap-tabs` Drafts · Ideas · Sources. `?panel=` stays the source of truth, so the browser's Back closes the sheet. There is no collapsed rail, no panel resize, no sidebar↔panel coupling, no keyboard shortcut — don't bring them back.
 - **Modals are sheets.** The generic rule lives in `ds-patches.css`: anchored to the bottom, full width, top corners only, footer pinned with the bottom safe-area. Big modals add `app-dialog--full`. CTAs stay auto-width, right-grouped.
 - **Deeper levels are pushed**, not split: a Topic article, an Insights detail, the video-clips edit pane take the whole screen with a Back button. Long menus become an action sheet from the bottom.
 - **Units and touch.** `100dvh`, never `100vh`. `env(safe-area-inset-*)` on the topbar, the composer, the sheets and the drawer. Inputs are 16px (no iOS zoom on focus). Nothing is revealed on hover only: a hover reveal is either always visible or moved into a ⋯ menu. `tooltip.js` and `ref-preview.js` are off under `(hover: none)`.
+- **It is a PWA.** `manifest.webmanifest` (PNG + maskable icons in `assets/pwa/`, narrow screenshots) and `sw.js` at the root: navigations network-first, `?v=N` assets cache-first (old versions purged), everything else — the DS on jsDelivr included — stale-while-revalidate. So `npm run bump` is also what ships a change to installed apps. Bump `SHELL` in `sw.js` only when its strategy changes. The SW needs https or localhost.
 - **Verify at 375×812** (`resize_window` preset `mobile`): `document.documentElement.scrollWidth <= innerWidth` on every screen you touched, plus a real phone for the virtual keyboard and the safe areas.
 
 ## Design System — READ FIRST before UI/CSS work
@@ -240,7 +241,7 @@ Exception: the `sparklesMermaid` icon uses inline SVG for its gradient fill. Thi
 - Event wiring is **pure event delegation** with `data-*` attributes on the screen/modal/panel root. No inline `onclick`, no per-child `addEventListener` for interactive elements.
 - `?v=N` is ONE number for the whole app: `npm run bump` after any JS/CSS change, never a hand edit (§ Module loading).
 - The `html` tagged-template escapes interpolations by default — wrap trusted HTML fragments in `raw()`, and do **not** double-escape (don't call `escapeHtml()` on a value already interpolated into an `html` template).
-- One ask = one commit, **local**, on `main`; never create branches. The fork has no pushable remote: `upstream` (rebel-racoon) is fetch-only, to merge desktop changes in later — never push, never add a remote.
+- One ask = one commit, pushed to `main` on `origin` (github.com/mbousendorfer/mobile-archie — GitHub Pages deploys it to https://mbousendorfer.github.io/mobile-archie/); never create branches. `upstream` (rebel-racoon) is fetch-only, to merge desktop changes in later — never push to it.
 
 ## Docs
 
