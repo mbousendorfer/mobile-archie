@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Interactive prototype for exploring and validating Agorapulse UI redesigns — specifically **Archie**, an AI content assistant (sources → ideas → drafts → schedule). No build step, no bundler — static ES modules served locally. The codebase mixes English (code, UI copy) and French (some comments). Archie speaks in the first person ("I", "Let's") — never third-person "Archie" — in user-facing copy.
+Interactive prototype for exploring and validating Agorapulse UI redesigns — specifically **Archie**, an AI content assistant (sources → ideas → drafts → schedule). **This repo is `mobile-archie`, the mobile-only fork of `rebel-racoon`** (the desktop proto): every surface targets a phone (≤ 480px), and on a desktop the app runs inside a phone frame (§ Mobile). No build step, no bundler — static ES modules served locally. The codebase mixes English (code, UI copy) and French (some comments). Archie speaks in the first person ("I", "Let's") — never third-person "Archie" — in user-facing copy.
 
 ## Before you build a feature — read the docs
 
@@ -16,17 +16,17 @@ Interactive prototype for exploring and validating Agorapulse UI redesigns — s
 2. **[`docs/reference/FEATURES.md`](docs/reference/FEATURES.md)** — the § covering the surface you're touching, so you extend what exists instead of building a parallel version beside it.
 3. Then the doc for the dimension in play:
 
-| You're touching…                      | Read                                                                                                      |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| a Playbook field or section           | [`CONCEPTS.md`](docs/reference/CONCEPTS.md) §1 + [`FEATURES.md`](docs/reference/FEATURES.md) §9           |
-| anything in the Topic Feed            | [`FEATURES.md`](docs/reference/FEATURES.md) §17 + [`specs/AC-TOPIC-FEED.md`](docs/specs/AC-TOPIC-FEED.md) |
-| any HTML/CSS                          | [`DESIGN-SYSTEM.md`](docs/reference/DESIGN-SYSTEM.md) + [`UI-PATTERNS.md`](docs/reference/UI-PATTERNS.md) |
-| a new route or screen                 | [`ROUTES.md`](docs/reference/ROUTES.md) + [`ARCHITECTURE.md`](docs/reference/ARCHITECTURE.md)             |
-| state that has to live somewhere      | [`STORES.md`](docs/reference/STORES.md)                                                                   |
-| user-facing copy                      | [`copy-principles.md`](docs/copy/copy-principles.md) + [`GLOSSARY.md`](docs/reference/GLOSSARY.md)        |
-| sidebar / right-panel sizing behavior | [`PANEL-SIDEBAR-RULES.md`](docs/reference/PANEL-SIDEBAR-RULES.md)                                         |
-| Insights / objectives                 | [`FEATURES.md`](docs/reference/FEATURES.md) §19                                                           |
-| a surface named in § Decisions        | its section in [`DECISIONS.md`](docs/reference/DECISIONS.md)                                              |
+| You're touching…                 | Read                                                                                                      |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| a Playbook field or section      | [`CONCEPTS.md`](docs/reference/CONCEPTS.md) §1 + [`FEATURES.md`](docs/reference/FEATURES.md) §9           |
+| anything in the Topic Feed       | [`FEATURES.md`](docs/reference/FEATURES.md) §17 + [`specs/AC-TOPIC-FEED.md`](docs/specs/AC-TOPIC-FEED.md) |
+| any HTML/CSS                     | [`DESIGN-SYSTEM.md`](docs/reference/DESIGN-SYSTEM.md) + [`UI-PATTERNS.md`](docs/reference/UI-PATTERNS.md) |
+| a new route or screen            | [`ROUTES.md`](docs/reference/ROUTES.md) + [`ARCHITECTURE.md`](docs/reference/ARCHITECTURE.md)             |
+| state that has to live somewhere | [`STORES.md`](docs/reference/STORES.md)                                                                   |
+| user-facing copy                 | [`copy-principles.md`](docs/copy/copy-principles.md) + [`GLOSSARY.md`](docs/reference/GLOSSARY.md)        |
+| the drawer / the panel sheet     | [`PANEL-SIDEBAR-RULES.md`](docs/reference/PANEL-SIDEBAR-RULES.md) + § Mobile below                        |
+| Insights / objectives            | [`FEATURES.md`](docs/reference/FEATURES.md) §19                                                           |
+| a surface named in § Decisions   | its section in [`DECISIONS.md`](docs/reference/DECISIONS.md)                                              |
 
 Then say, in the proposal itself: **which object the feature attaches to, and why it belongs there** rather than on a neighbour. If a doc contradicts what you were about to build, the doc wins until the user overrules it — and when the user does overrule it, update the doc in the same commit.
 
@@ -42,6 +42,8 @@ Then say, in the proposal itself: **which object the feature attaches to, and wh
 npm install   # tooling only (prettier / husky / lint-staged) — the DS comes from the CDN
 npm start     # runs `npx serve -p 8000` — open http://localhost:8000
 ```
+
+On a desktop, `/` redirects to `frame.html` (the app in a 390×844 iframe). On a real phone, `scripts/dev-server.py` listens on `0.0.0.0`: open `http://<mac-ip>:<port>` on the same Wi-Fi.
 
 With Claude Code the dev server auto-launches via `.claude/launch.json` (server name `archie`, `python3 -m http.server` on an auto-assigned port). There is **no test suite**; verify changes by running the app (see the verify/run skills) and the checks: `npm run check:ds` (every token / icon / `.ap-*` class resolves against the DS the app loads), `check:dead`, `check:versions`, `check:templates`.
 
@@ -96,7 +98,7 @@ src/
 
 The catalogue — every store, its scope, its full public API — lives in [`STORES.md`](docs/reference/STORES.md#catalogue-des-stores); read it before adding state, and update it in the same commit.
 
-**Per-session** stores: `sources-stream` (sources — `Map(sessionId → Source[])`, per-session subscribers, `clearSession()`), `library`, `posts-store`, `assistant`, `composer-mentions`. That's the model: what a user brings into a chat belongs to that chat ([`docs/reference/CONCEPTS.md`](docs/reference/CONCEPTS.md) §3). **Global** are the catalogs, legitimately — they pre-exist any chat: `contexts`, `connectors`, `folders`, `sessions`, `schedule`, `schedule-presets`, `top-posts`, `topic-feeds`, `topics` — plus `sources-stream`'s **uploads**, a transient pre-source pool the Add-source modal reads as a whole. `library.js` subscribes to sources-stream and re-emits per-session so any session's content surfaces repaint when a source lands. **Almost no persistence** — a few preferences in `localStorage` (user mode, flags, role, the active Playbook, sidebar collapse, Sort & group, the status card, the Insights layout), the `sessionStorage` handoffs, and one real exception: the Image Generator keeps its styles / creations in `localStorage` + IndexedDB. Every key, with its owner: [`STORES.md` § Persistence](docs/reference/STORES.md#persistence). A new key goes in that table.
+**Per-session** stores: `sources-stream` (sources — `Map(sessionId → Source[])`, per-session subscribers, `clearSession()`), `library`, `posts-store`, `assistant`, `composer-mentions`. That's the model: what a user brings into a chat belongs to that chat ([`docs/reference/CONCEPTS.md`](docs/reference/CONCEPTS.md) §3). **Global** are the catalogs, legitimately — they pre-exist any chat: `contexts`, `connectors`, `folders`, `sessions`, `schedule`, `schedule-presets`, `top-posts`, `topic-feeds`, `topics` — plus `sources-stream`'s **uploads**, a transient pre-source pool the Add-source modal reads as a whole. `library.js` subscribes to sources-stream and re-emits per-session so any session's content surfaces repaint when a source lands. **Almost no persistence** — a few preferences in `localStorage` (user mode, flags, role, the active Playbook, Sort & group, the status card, the Insights layout), the `sessionStorage` handoffs, and one real exception: the Image Generator keeps its styles / creations in `localStorage` + IndexedDB. Every key, with its owner: [`STORES.md` § Persistence](docs/reference/STORES.md#persistence). A new key goes in that table.
 
 ### Decisions — one line each, the reasoning in [`DECISIONS.md`](docs/reference/DECISIONS.md)
 
@@ -151,6 +153,18 @@ Never hand-edit a `?v=`. `scripts/cache-version.mjs` owns the number (it also co
 ⚠️ **A cached entry point pins the whole old import graph.** After a JS change, verify a _visible_ effect (a removed node, a changed class) in the browser: a CSS-only confirmation proves nothing about the JS.
 
 The **Design System is loaded from jsDelivr at `@latest`** (`index.html`: `@agorapulse/ui-theme` tokens + CSS-UI + Averta, `@agorapulse/ui-symbol` icons) and nothing of it is vendored — the published package is the only source, as the `design-guidelines` skill prescribes. Everything else is local: no other CDN / `esm.sh` import in app code (the bug-report modal lazy-loads html2canvas from cdnjs, the one exception). `package.json` holds tooling only (prettier/husky/lint-staged). The pre-commit hook runs `check-template-comments.py`, `cache-version.mjs check`, and `prettier --write` on staged files.
+
+## Mobile — the rules of the fork
+
+The plan that produced the fork: [`docs/plans/mobile-fork.md`](docs/plans/mobile-fork.md). Its rules, standing:
+
+- **Mobile-only.** Every rule targets a phone; there is no desktop layout and no breakpoint above 480px to maintain. Don't add one.
+- **The desktop frame is an iframe, never CSS.** An inline script at the top of `index.html` sends a top-level window ≥ 768px wide to `frame.html`, which loads `index.html` in a 390×844 iframe — so `dvh`, media queries and `position: fixed` (modals, dropdowns, toasts) behave as on a phone. A CSS frame would let fixed layers escape it.
+- **Shell = one column.** Topbar (56px + safe-top) over the content, `height: 100dvh`. The sidebar is a **drawer** (`is-sidebar-open` on `#appShell`, closed on `hashchange`, backdrop tap, Escape); the right panel is a **full-height bottom sheet** with `.ap-tabs` Drafts · Ideas · Sources. `?panel=` stays the source of truth, so the browser's Back closes the sheet. There is no collapsed rail, no panel resize, no sidebar↔panel coupling, no keyboard shortcut — don't bring them back.
+- **Modals are sheets.** The generic rule lives in `ds-patches.css`: anchored to the bottom, full width, top corners only, footer pinned with the bottom safe-area. Big modals add `app-dialog--full`. CTAs stay auto-width, right-grouped.
+- **Deeper levels are pushed**, not split: a Topic article, an Insights detail, the video-clips edit pane take the whole screen with a Back button. Long menus become an action sheet from the bottom.
+- **Units and touch.** `100dvh`, never `100vh`. `env(safe-area-inset-*)` on the topbar, the composer, the sheets and the drawer. Inputs are 16px (no iOS zoom on focus). Nothing is revealed on hover only: a hover reveal is either always visible or moved into a ⋯ menu. `tooltip.js` and `ref-preview.js` are off under `(hover: none)`.
+- **Verify at 375×812** (`resize_window` preset `mobile`): `document.documentElement.scrollWidth <= innerWidth` on every screen you touched, plus a real phone for the virtual keyboard and the safe areas.
 
 ## Design System — READ FIRST before UI/CSS work
 
@@ -226,7 +240,7 @@ Exception: the `sparklesMermaid` icon uses inline SVG for its gradient fill. Thi
 - Event wiring is **pure event delegation** with `data-*` attributes on the screen/modal/panel root. No inline `onclick`, no per-child `addEventListener` for interactive elements.
 - `?v=N` is ONE number for the whole app: `npm run bump` after any JS/CSS change, never a hand edit (§ Module loading).
 - The `html` tagged-template escapes interpolations by default — wrap trusted HTML fragments in `raw()`, and do **not** double-escape (don't call `escapeHtml()` on a value already interpolated into an `html` template).
-- One ask = one commit, pushed to `main` (GitHub Pages deploys it); never create branches. Other sessions push to `main` too: fetch before pushing, and merge — never rebase — when behind.
+- One ask = one commit, **local**, on `main`; never create branches. The fork has no pushable remote: `upstream` (rebel-racoon) is fetch-only, to merge desktop changes in later — never push, never add a remote.
 
 ## Docs
 
